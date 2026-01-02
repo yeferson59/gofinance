@@ -5,7 +5,7 @@ import (
 )
 
 func (c *CompositeInterest) Future() (float64, error) {
-	periods, rateInterest, err := c.GetEqualsRateInterestPeriods()
+	periods, rateInterest, err := c.getEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
 	}

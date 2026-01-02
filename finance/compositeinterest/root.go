@@ -7,32 +7,6 @@ import (
 type CompoundingFrequency string
 type TypeRate string
 
-const (
-	Daily        CompoundingFrequency = "daily"
-	Monthly      CompoundingFrequency = "monthly"
-	Bimonthly    CompoundingFrequency = "Bimontly"
-	QuarterlyOne CompoundingFrequency = "quarterlyOne"
-	QuarterlyTwo CompoundingFrequency = "quarterlyTwo"
-	SemiAnnually CompoundingFrequency = "semiAnnually"
-	Annually     CompoundingFrequency = "annualy"
-)
-
-const (
-	RateEffectyPeriodic TypeRate = "periodic"
-	RateEffectyAnnualy  TypeRate = "annual"
-	RateEffectyNominal  TypeRate = "nominal"
-)
-
-var countCompoundingFrequency = map[CompoundingFrequency]float64{
-	Daily:        365,
-	Monthly:      12,
-	Bimonthly:    6,
-	QuarterlyOne: 4,
-	QuarterlyTwo: 3,
-	SemiAnnually: 2,
-	Annually:     1,
-}
-
 type Period struct {
 	daily        *float64
 	monthly      *float64
@@ -78,39 +52,7 @@ func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency)
 	}
 }
 
-func (p *Period) GetPeriods() (*float64, error) {
-	if p.daily != nil {
-		return p.daily, nil
-	}
-
-	if p.monthly != nil {
-		return p.monthly, nil
-	}
-
-	if p.bimonthly != nil {
-		return p.bimonthly, nil
-	}
-
-	if p.quarterlyOne != nil {
-		return p.quarterlyOne, nil
-	}
-
-	if p.quarterlyTwo != nil {
-		return p.quarterlyTwo, nil
-	}
-
-	if p.semiAnnually != nil {
-		return p.semiAnnually, nil
-	}
-
-	if p.annually != nil {
-		return p.annually, nil
-	}
-
-	return nil, errors.New("failed get valid periods")
-}
-
-func (p *Period) GetPeriod() (float64, CompoundingFrequency, error) {
+func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
 	if p.daily != nil {
 		return *p.daily, Daily, nil
 	}
@@ -172,8 +114,8 @@ func New(present, future float64, rateInterest *RateInterest, periods *Period) (
 	}, nil
 }
 
-func (c *CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, error) {
-	valuePeriod, compoundingFrequency, err := c.periods.GetPeriod()
+func (c *CompositeInterest) getEqualsRateInterestPeriods() (float64, float64, error) {
+	valuePeriod, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
 		return 0, 0, nil
 	}
@@ -187,7 +129,7 @@ func (c *CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, er
 	}
 
 	if compoundingFrequency != c.rateInterest.compoundingFrequency {
-		valueInterest, err := c.rateInterest.getCompoundingFrequency(c.rateInterest.compoundingFrequency)
+		valueInterest, err := getCompoundingFrequency(c.rateInterest.compoundingFrequency)
 		if err != nil {
 			return 0, 0, nil
 		}

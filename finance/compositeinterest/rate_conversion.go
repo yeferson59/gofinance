@@ -1,25 +1,15 @@
 package compositeinterest
 
 import (
-	"errors"
 	"math"
 )
-
-func (rt *RateInterest) getCompoundingFrequency(compoundingFrequency CompoundingFrequency) (float64, error) {
-	value, ok := countCompoundingFrequency[compoundingFrequency]
-	if !ok {
-		return 0, errors.New("Invalid value compounding frequency")
-	}
-
-	return value, nil
-}
 
 func (rt *RateInterest) RatePeriodic() (float64, error) {
 	if rt.typeRate == RateEffectyPeriodic {
 		return rt.value, nil
 	}
 
-	value, err := rt.getCompoundingFrequency(rt.compoundingFrequency)
+	value, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
@@ -43,7 +33,7 @@ func (rt *RateInterest) RateNominal() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := rt.getCompoundingFrequency(rt.compoundingFrequency)
+	value, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
@@ -66,7 +56,7 @@ func (rt *RateInterest) RateEffectyAnnualy() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := rt.getCompoundingFrequency(rt.compoundingFrequency)
+	value, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
@@ -91,12 +81,12 @@ func (rt *RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundi
 		return 0, err
 	}
 
-	newValue, err := rt.getCompoundingFrequency(newCompoundingFrequency)
+	newValue, err := getCompoundingFrequency(newCompoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	value, err := rt.getCompoundingFrequency(rt.compoundingFrequency)
+	value, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
