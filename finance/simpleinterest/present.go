@@ -3,7 +3,7 @@ package simpleinterest
 import "errors"
 
 func (s *InterestSimple) Present() (float64, error) {
-	valuePeriods, err := s.periods.GetPeriod()
+	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
 	}
@@ -20,7 +20,7 @@ func (s *InterestSimple) Present() (float64, error) {
 }
 
 func (s *InterestSimple) PresentWithFuture() (float64, error) {
-	valuePeriods, err := s.periods.GetPeriod()
+	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
 	}

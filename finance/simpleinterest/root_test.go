@@ -45,7 +45,7 @@ func TestGetPeriod(t *testing.T) {
 	period := NewPeriodTest(t)
 	expectedPeriod := 2.0
 
-	numberPeriod, err := period.GetPeriod()
+	numberPeriod, err := period.getPeriod()
 	if err != nil {
 		t.Error(err)
 	}

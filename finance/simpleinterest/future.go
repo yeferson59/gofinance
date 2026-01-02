@@ -6,11 +6,11 @@ func (s *InterestSimple) Future() (float64, error) {
 }
 
 func (s *InterestSimple) FutureWithRateInterest() (float64, error) {
-	valuePeriods, err := s.periods.GetPeriod()
+	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
 	}
-	s.future = s.present * (1 + (*valuePeriods * s.rateInterest))
+	s.future = s.present * (1 + ((*valuePeriods) * s.rateInterest))
 
 	return s.future, nil
 }

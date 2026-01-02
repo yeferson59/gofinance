@@ -41,7 +41,7 @@ func NewPeriod(numberPeriods float64, timePeriod Periods) *Period {
 	}
 }
 
-func (p *Period) GetPeriod() (*float64, error) {
+func (p *Period) getPeriod() (*float64, error) {
 	if p.days != nil {
 		return p.days, nil
 	}
@@ -79,6 +79,7 @@ func New(future, present, interest, rateInterest float64, periods *Period) *Inte
 	}
 }
 
-func (s *InterestSimple) GetPeriods() (*float64, error) {
-	return s.periods.GetPeriod()
+func (s *InterestSimple) GetPeriods() (float64, error) {
+	periods, err := s.periods.getPeriod()
+	return *periods, err
 }
