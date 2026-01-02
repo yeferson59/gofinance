@@ -18,29 +18,27 @@ type Period struct {
 	years  *float64
 }
 
-func NewPeriod(numbersPeriod float64, timePeriod Periods) *Period {
-	var periods *Period
-
+func NewPeriod(numberPeriods float64, timePeriod Periods) *Period {
 	switch timePeriod {
 	case Days:
-		periods = &Period{
-			days: &numbersPeriod,
+		return &Period{
+			days: &numberPeriods,
 		}
 	case Weeks:
-		periods = &Period{
-			weeks: &numbersPeriod,
+		return &Period{
+			weeks: &numberPeriods,
 		}
 	case Months:
-		periods = &Period{
-			months: &numbersPeriod,
+		return &Period{
+			months: &numberPeriods,
 		}
 	case Years:
-		periods = &Period{
-			years: &numbersPeriod,
+		return &Period{
+			years: &numberPeriods,
 		}
+	default:
+		return &Period{}
 	}
-
-	return periods
 }
 
 func (p *Period) GetPeriod() (*float64, error) {
