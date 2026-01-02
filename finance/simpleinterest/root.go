@@ -4,13 +4,6 @@ import "errors"
 
 type Periods string
 
-const (
-	Days   Periods = "days"
-	Weeks  Periods = "weeks"
-	Months Periods = "months"
-	Years  Periods = "years"
-)
-
 type Period struct {
 	days   *float64
 	weeks  *float64
