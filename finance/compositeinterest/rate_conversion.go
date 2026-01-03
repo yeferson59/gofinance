@@ -193,3 +193,79 @@ func (rt *RateInterest) RateAnticipatePeriodic() (float64, error) {
 
 	return ratePeriodic, nil
 }
+
+func (rt *RateInterest) ToAnticipateNominal() (float64, error) {
+	effectyAnnualy, err := rt.RateEffectyAnnualy()
+	if err != nil {
+		return 0, err
+	}
+
+	oldTypeRate, oldValue := rt.typeRate, rt.value
+
+	rt.typeRate = RateAnticipateEffectyAnnualy
+	rt.value = effectyAnnualy
+
+	rateNominal, err := rt.RateAnticipateNominal()
+
+	rt.typeRate = oldTypeRate
+	rt.value = oldValue
+
+	return rateNominal, err
+}
+
+func (rt *RateInterest) ToAnticipatePeriodic() (float64, error) {
+	effectyAnnualy, err := rt.RateEffectyAnnualy()
+	if err != nil {
+		return 0, err
+	}
+
+	oldTypeRate, oldValue := rt.typeRate, rt.value
+
+	rt.typeRate = RateAnticipateEffectyAnnualy
+	rt.value = effectyAnnualy
+
+	ratePeriodic, err := rt.RateAnticipatePeriodic()
+
+	rt.typeRate = oldTypeRate
+	rt.value = oldValue
+
+	return ratePeriodic, err
+}
+
+func (rt *RateInterest) ToNominal() (float64, error) {
+	effectyAnnualy, err := rt.RateAnticipateEffectyAnnualy()
+	if err != nil {
+		return 0, err
+	}
+
+	oldTypeRate, oldValue := rt.typeRate, rt.value
+
+	rt.typeRate = RateEffectyAnnualy
+	rt.value = effectyAnnualy
+
+	rateNominal, err := rt.RateNominal()
+
+	rt.typeRate = oldTypeRate
+	rt.value = oldValue
+
+	return rateNominal, err
+}
+
+func (rt *RateInterest) ToPeriodic() (float64, error) {
+	effectyAnnualy, err := rt.RateAnticipateEffectyAnnualy()
+	if err != nil {
+		return 0, err
+	}
+
+	oldTypeRate, oldValue := rt.typeRate, rt.value
+
+	rt.typeRate = RateEffectyAnnualy
+	rt.value = effectyAnnualy
+
+	ratePeriodic, err := rt.RatePeriodic()
+
+	rt.typeRate = oldTypeRate
+	rt.value = oldValue
+
+	return ratePeriodic, err
+}
