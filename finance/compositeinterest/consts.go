@@ -11,7 +11,10 @@ const (
 )
 
 const (
-	RateEffectyPeriodic TypeRate = "periodic"
-	RateEffectyAnnualy  TypeRate = "annual"
-	RateEffectyNominal  TypeRate = "nominal"
+	RateEffectyPeriodic           TypeRate = "periodic"
+	RateEffectyAnnualy            TypeRate = "annual"
+	RateEffectyNominal            TypeRate = "nominal"
+	RateAnticipateEffectyPeriodic TypeRate = "anticipatePeriodic"
+	RateAnticipateEffectyAnnualy  TypeRate = "anticipateAnnual"
+	RateAnticipateEffectyNominal  TypeRate = "anticipateNominal"
 )
