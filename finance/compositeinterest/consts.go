@@ -7,14 +7,14 @@ const (
 	QuarterlyOne CompoundingFrequency = "quarterlyOne"
 	QuarterlyTwo CompoundingFrequency = "quarterlyTwo"
 	SemiAnnually CompoundingFrequency = "semiAnnually"
-	Annually     CompoundingFrequency = "annualy"
+	Annually     CompoundingFrequency = "annually"
 )
 
 const (
 	RateEffectyPeriodic           TypeRate = "periodic"
-	RateEffectyAnnualy            TypeRate = "annual"
+	RateEffectyAnnually           TypeRate = "annual"
 	RateEffectyNominal            TypeRate = "nominal"
 	RateAnticipateEffectyPeriodic TypeRate = "anticipatePeriodic"
-	RateAnticipateEffectyAnnualy  TypeRate = "anticipateAnnual"
+	RateAnticipateEffectyAnnually TypeRate = "anticipateAnnual"
 	RateAnticipateEffectyNominal  TypeRate = "anticipateNominal"
 )
