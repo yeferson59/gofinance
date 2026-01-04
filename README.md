@@ -121,15 +121,28 @@ func main() {
         panic(err)
     }
 
-    // Use for compound interest calculations
-    ci := compositeinterest.New(
-        future,
-        present,
+    // Create interest rate with monthly compounding
+    rateInterest, err := compositeinterest.NewRateInterest(
+        0.08,
+        compositeinterest.Monthly,
+        compositeinterest.Nominal,
+    )
+    if err != nil {
+        panic(err)
+    }
+
+    // Create compound interest calculation
+    ci, err := compositeinterest.New(
+        1000,    // present value
+        1500,    // future value
         rateInterest,
         period,
     )
+    if err != nil {
+        panic(err)
+    }
 
-    // Calculate results...
+    fmt.Println("Compound interest:", ci)
 }
 ```
 
@@ -163,7 +176,7 @@ gofinance/
 │   │   ├── utils.go               # Utility functions
 │   │   └── data.go                # Data structures
 │   │
-│   └── annualities/               # Annuity calculations
+│   └── annuities/               # Annuity calculations
 │       └── root.go                # Annuity definitions
 │
 ├── go.mod                          # Module definition
