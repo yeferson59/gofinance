@@ -1,12 +1,56 @@
+// Package compositeinterest provides functionality for compound interest calculations.
+//
+// This package enables financial calculations related to compound interest,
+// including:
+//   - Calculation of Future Value (FV)
+//   - Calculation of Present Value (PV)
+//   - Calculation of periodic interest rate
+//   - Calculation of the number of periods
+//   - Conversion between different types of rates (periodic, nominal, effective annual)
+//   - Handling of anticipated rates (discount)
+//
+// The package supports multiple compounding frequencies:
+//   - Daily (365 periods per year)
+//   - Monthly (12 periods per year)
+//   - Bimonthly (6 periods per year)
+//   - Quarterly (4 or 3 periods per year)
+//   - Semi-annually (2 periods per year)
+//   - Annually (1 period per year)
+//
+// Basic usage example:
+//
+//	// Create a monthly interest rate of 1% periodic
+//	rateInterest, _ := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
+//
+//	// Create a period of 12 months
+//	period, _ := NewPeriod(12, Monthly)
+//
+//	// Create a compound interest object with $1000 initial capital
+//	ci, _ := New(1000, 0, rateInterest, period)
+//
+//	// Calculate the future value
+//	future, _ := ci.Future()
+//	// future ≈ 1126.83
 package compositeinterest
 
 import (
 	"errors"
 )
 
+// CompoundingFrequency defines the frequency of interest compounding in a year.
+// Valid values are: Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo,
+// SemiAnnually, Annually.
 type CompoundingFrequency string
+
+// TypeRate defines the type of interest rate to use in calculations.
+// Valid values include discount rates (anticipated) and ordinary rates.
+// Examples: RateEffectyPeriodic, RateEffectyNominal, RateEffectyAnnually,
+// RateAnticipateEffectyPeriodic, RateAnticipateEffectyNominal, RateAnticipateEffectyAnnually.
 type TypeRate string
 
+// Period represents the number of compounding periods for a compound interest calculation.
+// Only one of the fields will be different from nil, corresponding to the chosen compounding frequency.
+// Example: If Monthly is specified, only the monthly field will contain a value.
 type Period struct {
 	daily        *float64
 	monthly      *float64
@@ -17,6 +61,22 @@ type Period struct {
 	annually     *float64
 }
 
+// NewPeriod creates a new Period instance for the specified compounding frequency.
+//
+// Parameters:
+//   - numberPeriods: The number of periods (e.g., 12 for 12 months if frequency is Monthly)
+//   - compoundingFrequency: The compounding frequency (Daily, Monthly, etc.)
+//
+// Returns:
+//   - A Period instance with the specified period
+//   - An error if the frequency is invalid (although validation occurs in getPeriod)
+//
+// Example:
+//
+//	period, err := NewPeriod(12, Monthly)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency) (*Period, error) {
 	switch compoundingFrequency {
 	case Daily:
@@ -52,6 +112,13 @@ func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency)
 	}
 }
 
+// getPeriod extracts the period value and its associated frequency from the Period structure.
+// Only one of the fields will be different from nil, this method locates which one and returns it.
+//
+// Returns:
+//   - The numeric value of the period
+//   - The corresponding compounding frequency
+//   - An error if no period is set
 func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
 	if p.daily != nil {
 		return *p.daily, Daily, nil
@@ -81,15 +148,37 @@ func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
 		return *p.annually, Annually, nil
 	}
 
-	return 0, "", errors.New("failed get valid periods")
+	return 0, "", errors.New("failed to get valid periods")
 }
 
+// RateInterest represents an interest rate with its compounding frequency and type.
+// Fields:
+//   - value: The value of the rate (as decimal, e.g., 0.05 for 5%)
+//   - compoundingFrequency: The frequency with which interest is compounded
+//   - typeRate: The type of rate (periodic, nominal, effective annual, etc.)
 type RateInterest struct {
 	value                float64
 	compoundingFrequency CompoundingFrequency
 	typeRate             TypeRate
 }
 
+// NewRateInterest creates a new RateInterest instance.
+//
+// Parameters:
+//   - value: The numeric value of the rate (e.g., 0.05 for 5%)
+//   - compoundingFrequency: The compounding frequency
+//   - typeRate: The type of rate to use
+//
+// Returns:
+//   - A RateInterest instance
+//   - An error if parameters are invalid
+//
+// Example:
+//
+//	rate, err := NewRateInterest(0.12, Monthly, RateEffectyNominal)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func NewRateInterest(value float64, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (*RateInterest, error) {
 	return &RateInterest{
 		value:                value,
@@ -98,6 +187,14 @@ func NewRateInterest(value float64, compoundingFrequency CompoundingFrequency, t
 	}, nil
 }
 
+// CompositeInterest contains all the necessary parameters for compound interest calculations.
+// Fields:
+//   - future: The future value (if known)
+//   - present: The present value or initial capital
+//   - rateInterest: The interest rate to apply
+//   - periods: The number of compounding periods
+//
+// Use the methods Future(), Present(), Interest() and Periods() to calculate unknown values.
 type CompositeInterest struct {
 	future       float64
 	present      float64
@@ -105,6 +202,27 @@ type CompositeInterest struct {
 	periods      *Period
 }
 
+// New creates a new CompositeInterest instance with the specified parameters.
+//
+// Parameters:
+//   - present: The present value or initial capital (0 if unknown)
+//   - future: The future value (0 if unknown)
+//   - rateInterest: The interest rate to apply
+//   - periods: The number of periods
+//
+// Note: You must provide at least three of the four values (present, future, rateInterest, periods).
+// The fourth value will be calculated using the corresponding method.
+//
+// Returns:
+//   - A CompositeInterest instance
+//   - An error if parameters are invalid
+//
+// Example:
+//
+//	ci, err := New(1000, 0, rateInterest, period)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func New(present, future float64, rateInterest *RateInterest, periods *Period) (*CompositeInterest, error) {
 	return &CompositeInterest{
 		present:      present,
@@ -114,6 +232,15 @@ func New(present, future float64, rateInterest *RateInterest, periods *Period) (
 	}, nil
 }
 
+// getEqualsRateInterestPeriods converts all parameters to the same base for calculations.
+// Specifically:
+//   - Converts the rate to periodic if necessary
+//   - Adjusts the periods if the compounding frequency does not match the rate
+//
+// Returns:
+//   - The adjusted number of periods
+//   - The equivalent periodic rate
+//   - An error if valid values cannot be obtained
 func (c *CompositeInterest) getEqualsRateInterestPeriods() (float64, float64, error) {
 	valuePeriod, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
