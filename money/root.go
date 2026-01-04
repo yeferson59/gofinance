@@ -1,15 +1,12 @@
 package money
 
 import (
-	"sync"
-
 	"github.com/quagmt/udecimal"
 )
 
 type Money struct {
 	value    udecimal.Decimal
 	currency Currency
-	mutex    sync.RWMutex
 }
 
 func New(value int64, precision uint8, currency Currency) (*Money, error) {

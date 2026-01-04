@@ -1,6 +1,11 @@
 package simpleinterest
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
 
 func TestSuccessSimpleFuture(t *testing.T) {
 	periods := NewPeriod(2, Days)
@@ -8,17 +13,11 @@ func TestSuccessSimpleFuture(t *testing.T) {
 	expectedFuture := 6_000.0
 
 	future, err := simpleInterest.Future()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 
-	if future == 0 {
-		t.Error(future)
-	}
+	assert.True(t, future != 0, "future should not be 0")
 
-	if future != expectedFuture {
-		t.Error(future)
-	}
+	assert.Equal(t, expectedFuture, future)
 }
 
 func TestSuccessSimpleFutureWithRateInterest(t *testing.T) {
@@ -27,17 +26,11 @@ func TestSuccessSimpleFutureWithRateInterest(t *testing.T) {
 	expectedFuture := 5_500.0
 
 	future, err := simpleInterest.FutureWithRateInterest()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 
-	if future == 0 {
-		t.Error(future)
-	}
+	assert.True(t, future != 0, "future should not be 0")
 
-	if future != expectedFuture {
-		t.Error(future)
-	}
+	assert.Equal(t, expectedFuture, future)
 }
 
 func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
@@ -69,24 +62,18 @@ func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 		for _, data := range testData {
 			value, err := data.simpleInterest.FutureWithRateInterest()
 
-			if value > 6_000.0 {
-				t.Error(value)
-			}
+			assert.True(t, value <= 6_000.0, "value should be <= 6000")
 
-			if err != nil {
-				t.Error(err)
-			}
+			require.NoError(t, err)
 		}
 	})
 
-	t.Run("not error", func(t *testing.T) {
+	t.Run("error on invalid periods", func(t *testing.T) {
 		for _, data := range testData {
 			data.simpleInterest.periods = &Period{}
 			_, err := data.simpleInterest.FutureWithRateInterest()
 
-			if err == nil {
-				t.Error(err)
-			}
+			assert.Error(t, err)
 		}
 	})
 }

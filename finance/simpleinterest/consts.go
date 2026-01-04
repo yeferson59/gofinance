@@ -1,5 +1,6 @@
 package simpleinterest
 
+// Constants for period types.
 const (
 	Days   Periods = "days"
 	Weeks  Periods = "weeks"

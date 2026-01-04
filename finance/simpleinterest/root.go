@@ -1,9 +1,15 @@
+// Package simpleinterest provides calculations for simple interest financial formulas.
+// It includes functions to compute future value, present value, interest, rate, and periods
+// based on the simple interest formula: Interest = Principal × Rate × Time.
 package simpleinterest
 
 import "errors"
 
+// Periods represents the time unit for periods (days, weeks, months, years).
 type Periods string
 
+// Period holds the value for different time periods.
+// Only one field should be non-nil at a time.
 type Period struct {
 	days   *float64
 	weeks  *float64
@@ -11,6 +17,9 @@ type Period struct {
 	years  *float64
 }
 
+// NewPeriod creates a new Period with the specified number and time unit.
+// Valid time units are Days, Weeks, Months, Years.
+// Returns an empty Period if timePeriod is invalid.
 func NewPeriod(numberPeriods float64, timePeriod Periods) *Period {
 	switch timePeriod {
 	case Days:
@@ -34,6 +43,8 @@ func NewPeriod(numberPeriods float64, timePeriod Periods) *Period {
 	}
 }
 
+// getPeriod returns the period value and an error if no valid period is set.
+// This is an internal method.
 func (p *Period) getPeriod() (*float64, error) {
 	if p.days != nil {
 		return p.days, nil
@@ -54,6 +65,8 @@ func (p *Period) getPeriod() (*float64, error) {
 	return nil, errors.New("failed get valid periods")
 }
 
+// SimpleInterest holds the values for simple interest calculations.
+// Fields are set via New and modified by calculation methods.
 type SimpleInterest struct {
 	future       float64
 	present      float64
@@ -62,6 +75,9 @@ type SimpleInterest struct {
 	periods      *Period
 }
 
+// New creates a new SimpleInterest instance with the provided values.
+// Parameters can be 0 if they will be calculated later.
+// periods can be nil for some calculations.
 func New(future, present, interest, rateInterest float64, periods *Period) *SimpleInterest {
 	return &SimpleInterest{
 		future:       future,
@@ -72,6 +88,8 @@ func New(future, present, interest, rateInterest float64, periods *Period) *Simp
 	}
 }
 
+// GetPeriods returns the period value from the associated Period.
+// Returns an error if periods is invalid.
 func (s *SimpleInterest) GetPeriods() (float64, error) {
 	periods, err := s.periods.getPeriod()
 	return *periods, err
