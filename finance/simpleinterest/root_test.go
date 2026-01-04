@@ -2,37 +2,21 @@ package simpleinterest
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func NewPeriodTest(t *testing.T) *Period {
 	numberPeriod := 2.0
 	period := NewPeriod(numberPeriod, Days)
 
-	if period == nil {
-		t.Errorf("period mustn't be %v", period)
-	}
-
-	if period.weeks != nil {
-		t.Errorf("weeks periods must be %v", period)
-	}
-
-	if period.months != nil {
-		t.Errorf("month periods must be %v", period)
-	}
-
-	if period.years != nil {
-		t.Errorf("years periods must be %v", period)
-	}
-
-	if period.days == nil {
-		t.Errorf("days periods mustn't be %v", period)
-	}
-
-	periods := *period.days
-
-	if periods != numberPeriod {
-		t.Errorf("period must be equals to %f and %f", numberPeriod, periods)
-	}
+	require.NotNil(t, period, "period should not be nil")
+	assert.Nil(t, period.weeks, "weeks should be nil for Days period")
+	assert.Nil(t, period.months, "months should be nil for Days period")
+	assert.Nil(t, period.years, "years should be nil for Days period")
+	assert.NotNil(t, period.days, "days should not be nil for Days period")
+	assert.Equal(t, numberPeriod, *period.days, "days value should match input")
 
 	return period
 }
@@ -47,87 +31,52 @@ func TestNewPeriodWithDifferentsTimes(t *testing.T) {
 		Periods Periods
 	}
 
-	test := []DataTest{
-		{
-			number:  2,
-			Periods: Days,
-		},
-		{
-			number:  3,
-			Periods: Weeks,
-		},
-		{
-			number:  3,
-			Periods: Months,
-		},
-		{
-			number:  4,
-			Periods: Years,
-		},
-		{
-			number:  4,
-			Periods: "",
-		},
+	tests := []DataTest{
+		{number: 2, Periods: Days},
+		{number: 3, Periods: Weeks},
+		{number: 3, Periods: Months},
+		{number: 4, Periods: Years},
+		{number: 4, Periods: ""},
 	}
 
 	t.Run("valid new correct period", func(t *testing.T) {
-		for _, value := range test {
-			period := NewPeriod(value.number, value.Periods)
+		for _, tt := range tests {
+			period := NewPeriod(tt.number, tt.Periods)
 
-			if value.Periods == Days {
-				if period.days == nil {
-					t.Error(period.days)
-				}
-			}
-
-			if value.Periods == Weeks {
-				if period.weeks == nil {
-					t.Error(period.weeks)
-				}
-			}
-
-			if value.Periods == Months {
-				if period.months == nil {
-					t.Error(period.months)
-				}
-			}
-
-			if value.Periods == Years {
-				if period.years == nil {
-					t.Error(period.years)
-				}
-			}
-
-			if value.Periods == "" {
-				if period.days != nil && period.weeks != nil && period.months != nil && period.years != nil {
-					t.Error(period.years)
-				}
+			switch tt.Periods {
+			case Days:
+				assert.NotNil(t, period.days, "days should not be nil for Days period")
+				assert.Equal(t, tt.number, *period.days)
+			case Weeks:
+				assert.NotNil(t, period.weeks, "weeks should not be nil for Weeks period")
+				assert.Equal(t, tt.number, *period.weeks)
+			case Months:
+				assert.NotNil(t, period.months, "months should not be nil for Months period")
+				assert.Equal(t, tt.number, *period.months)
+			case Years:
+				assert.NotNil(t, period.years, "years should not be nil for Years period")
+				assert.Equal(t, tt.number, *period.years)
+			case "":
+				assert.Nil(t, period.days, "all fields should be nil for invalid period")
+				assert.Nil(t, period.weeks)
+				assert.Nil(t, period.months)
+				assert.Nil(t, period.years)
 			}
 		}
 	})
 
 	t.Run("get valid value for period", func(t *testing.T) {
-		for _, value := range test {
-			period := NewPeriod(value.number, value.Periods)
-
+		for _, tt := range tests {
+			period := NewPeriod(tt.number, tt.Periods)
 			valuePeriod, err := period.getPeriod()
 
-			if value.Periods == "" {
-				if valuePeriod != nil {
-					t.Error(valuePeriod)
-				}
-				if err == nil {
-					t.Error(err)
-				}
+			if tt.Periods == "" {
+				assert.Nil(t, valuePeriod, "value should be nil for invalid period")
+				assert.Error(t, err, "should return error for invalid period")
 			} else {
-				periods := *valuePeriod
-				if periods != value.number {
-					t.Error(valuePeriod)
-				}
-
-				if err != nil {
-					t.Error(err)
-				}
+				require.NotNil(t, valuePeriod, "value should not be nil for valid period")
+				assert.Equal(t, tt.number, *valuePeriod, "period value should match input")
+				assert.NoError(t, err, "should not return error for valid period")
 			}
 		}
 	})
@@ -138,13 +87,9 @@ func TestGetPeriod(t *testing.T) {
 	expectedPeriod := 2.0
 
 	numberPeriod, err := period.getPeriod()
-	if err != nil {
-		t.Error(err)
-	}
-
-	if expectedPeriod != *numberPeriod {
-		t.Error("number period and expected period must be equals")
-	}
+	require.NoError(t, err, "should not return error")
+	require.NotNil(t, numberPeriod, "should return a value")
+	assert.Equal(t, expectedPeriod, *numberPeriod, "period value should match expected")
 }
 
 func TestNewSimpleInterest(t *testing.T) {
@@ -152,39 +97,21 @@ func TestNewSimpleInterest(t *testing.T) {
 
 	simpleInterest := New(0, 0, 0, 0, period)
 
-	if simpleInterest.future != 0 {
-		t.Error(simpleInterest.future)
-	}
-
-	if simpleInterest.present != 0 {
-		t.Error(simpleInterest.present)
-	}
-
-	if simpleInterest.interest != 0 {
-		t.Error(simpleInterest.interest)
-	}
-
-	if simpleInterest.rateInterest != 0 {
-		t.Error(simpleInterest.rateInterest)
-	}
-
-	if simpleInterest.periods == nil {
-		t.Error(simpleInterest.periods)
-	}
+	require.NotNil(t, simpleInterest, "simple interest should not be nil")
+	assert.Equal(t, 0.0, simpleInterest.future, "future should be 0")
+	assert.Equal(t, 0.0, simpleInterest.present, "present should be 0")
+	assert.Equal(t, 0.0, simpleInterest.interest, "interest should be 0")
+	assert.Equal(t, 0.0, simpleInterest.rateInterest, "rateInterest should be 0")
+	assert.NotNil(t, simpleInterest.periods, "periods should not be nil")
 }
 
 func TestGetPeriodWithSimpleInterest(t *testing.T) {
 	period := NewPeriodTest(t)
-
 	simpleInterest := New(0, 0, 0, 0, period)
 
 	valuePeriod, err := simpleInterest.GetPeriods()
 
-	if valuePeriod != 2 {
-		t.Error(valuePeriod)
-	}
-
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err, "should not return error")
+	assert.Equal(t, 2.0, valuePeriod, "period value should equal 2.0")
 }
+
