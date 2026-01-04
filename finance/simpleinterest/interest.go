@@ -1,6 +1,6 @@
 package simpleinterest
 
-func (s *InterestSimple) Interest() (float64, error) {
+func (s *SimpleInterest) Interest() (float64, error) {
 	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err

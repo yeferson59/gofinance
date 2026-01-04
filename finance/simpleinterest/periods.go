@@ -2,7 +2,7 @@ package simpleinterest
 
 import "errors"
 
-func (s *InterestSimple) Periods(timePeriod Periods) (*Period, error) {
+func (s *SimpleInterest) Periods(timePeriod Periods) (*Period, error) {
 	if s.present == 0 || s.rateInterest == 0 {
 		return nil, errors.New("invalid present or rate interest for operation")
 	}
@@ -12,7 +12,7 @@ func (s *InterestSimple) Periods(timePeriod Periods) (*Period, error) {
 	return s.periods, nil
 }
 
-func (s *InterestSimple) PeriodsWithPresentAndFuture(timePeriod Periods) (*Period, error) {
+func (s *SimpleInterest) PeriodsWithPresentAndFuture(timePeriod Periods) (*Period, error) {
 	if s.present == 0 || s.rateInterest == 0 {
 		return nil, errors.New("invalid present o rate interest for operation")
 	}

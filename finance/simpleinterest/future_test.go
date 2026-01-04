@@ -42,7 +42,7 @@ func TestSuccessSimpleFutureWithRateInterest(t *testing.T) {
 
 func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 	type DataTest struct {
-		simpleInterest *InterestSimple
+		simpleInterest *SimpleInterest
 	}
 
 	periods := NewPeriod(2, Days)

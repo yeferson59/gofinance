@@ -54,7 +54,7 @@ func (p *Period) getPeriod() (*float64, error) {
 	return nil, errors.New("failed get valid periods")
 }
 
-type InterestSimple struct {
+type SimpleInterest struct {
 	future       float64
 	present      float64
 	interest     float64
@@ -62,8 +62,8 @@ type InterestSimple struct {
 	periods      *Period
 }
 
-func New(future, present, interest, rateInterest float64, periods *Period) *InterestSimple {
-	return &InterestSimple{
+func New(future, present, interest, rateInterest float64, periods *Period) *SimpleInterest {
+	return &SimpleInterest{
 		future:       future,
 		present:      present,
 		interest:     interest,
@@ -72,7 +72,7 @@ func New(future, present, interest, rateInterest float64, periods *Period) *Inte
 	}
 }
 
-func (s *InterestSimple) GetPeriods() (float64, error) {
+func (s *SimpleInterest) GetPeriods() (float64, error) {
 	periods, err := s.periods.getPeriod()
 	return *periods, err
 }

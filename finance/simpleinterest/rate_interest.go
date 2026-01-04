@@ -2,7 +2,7 @@ package simpleinterest
 
 import "errors"
 
-func (s *InterestSimple) RateInterest() (float64, error) {
+func (s *SimpleInterest) RateInterest() (float64, error) {
 	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
@@ -19,7 +19,7 @@ func (s *InterestSimple) RateInterest() (float64, error) {
 	return s.rateInterest, nil
 }
 
-func (s *InterestSimple) RateInterestWithPresentAndFuture() (float64, error) {
+func (s *SimpleInterest) RateInterestWithPresentAndFuture() (float64, error) {
 	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err

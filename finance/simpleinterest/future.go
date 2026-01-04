@@ -1,11 +1,11 @@
 package simpleinterest
 
-func (s *InterestSimple) Future() (float64, error) {
+func (s *SimpleInterest) Future() (float64, error) {
 	s.future = s.present + s.interest
 	return s.future, nil
 }
 
-func (s *InterestSimple) FutureWithRateInterest() (float64, error) {
+func (s *SimpleInterest) FutureWithRateInterest() (float64, error) {
 	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
