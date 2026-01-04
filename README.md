@@ -7,12 +7,14 @@ A robust, type-safe Go library for financial calculations and money management. 
 ## ✨ Features
 
 ### 💵 **Money Management**
+
 - Precise decimal-based money handling using `udecimal` for accuracy
 - Multi-currency support with ISO code standards
 - Thread-safe operations with built-in mutex protection
 - Clean string representation of monetary values
 
 ### 📊 **Simple Interest Calculations**
+
 - Calculate future and present values
 - Determine interest rates and periods
 - Support for multiple time units:
@@ -20,6 +22,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 - Comprehensive interest computation
 
 ### 🔄 **Compound Interest Calculations**
+
 - Complex interest rate calculations with flexible compounding frequencies
 - Support for multiple compounding periods:
   - Daily, Monthly, Bimonthly
@@ -28,6 +31,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 - Advanced financial data structures
 
 ### 📈 **Annuities**
+
 - Annuity calculations for financial planning
 - Support for various annuity types and scenarios
 
@@ -36,6 +40,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Go 1.25.5 or higher
 - Basic knowledge of financial mathematics
 
@@ -232,16 +237,21 @@ go tool cover -html=coverage.out
 ## 📚 Key Concepts
 
 ### Simple Interest
+
 Simple interest is calculated on the principal amount only. The formula is:
+
 - **Interest = Principal × Rate × Time**
 
 Use this when interest is not compounded.
 
 ### Compound Interest
+
 Compound interest is calculated on the principal plus accumulated interest. It's more common in real-world scenarios:
+
 - **A = P(1 + r/n)^(nt)**
 
 Where:
+
 - A = Final amount
 - P = Principal
 - r = Annual rate
@@ -249,6 +259,7 @@ Where:
 - t = Time in years
 
 ### Annuities
+
 An annuity is a series of equal payments made at regular intervals. Useful for loans, pensions, and investments.
 
 ---
@@ -301,6 +312,7 @@ This project is open source and available under the terms specified in the repos
 ## 👨‍💻 Author
 
 **Yeferson Toloza**
+
 - GitHub: [@yeferson59](https://github.com/yeferson59)
 - Project: [GoFinance](https://github.com/yeferson59/gofinance)
 
@@ -309,6 +321,7 @@ This project is open source and available under the terms specified in the repos
 ## 📞 Support
 
 If you have questions or issues:
+
 - Open an issue on GitHub
 - Check existing documentation
 - Review the test files for usage examples
