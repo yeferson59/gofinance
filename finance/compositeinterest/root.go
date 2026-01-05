@@ -78,6 +78,10 @@ type Period struct {
 //	    log.Fatal(err)
 //	}
 func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency) (*Period, error) {
+	if numberPeriods <= 0 {
+		return nil, errors.New("value periods must be greater to zero")
+	}
+
 	switch compoundingFrequency {
 	case Daily:
 		return &Period{
