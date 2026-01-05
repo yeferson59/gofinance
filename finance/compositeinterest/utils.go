@@ -24,3 +24,21 @@ func getCompoundingFrequency(compoundingFrequency CompoundingFrequency) (float64
 
 	return value, nil
 }
+
+func getCompoundingFrequencytoMonths(compoundingFrequency CompoundingFrequency) (float64, error) {
+	value, ok := countCompoundingFrequencyMonths[compoundingFrequency]
+	if !ok {
+		return 0, errors.New("invalid value compounding frequency")
+	}
+
+	return value, nil
+}
+
+func getOrderTime(compoundingFrequency CompoundingFrequency) (float64, error) {
+	value, ok := orderTime[compoundingFrequency]
+	if !ok {
+		return 0, errors.New("invalid value compounding frequency")
+	}
+
+	return value, nil
+}

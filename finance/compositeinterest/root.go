@@ -264,12 +264,34 @@ func (c *CompositeInterest) getEqualsRateInterestPeriods() (float64, float64, er
 	}
 
 	if compoundingFrequency != c.rateInterest.compoundingFrequency {
-		valueInterest, err := getCompoundingFrequency(c.rateInterest.compoundingFrequency)
+		periodsMonths, err := getCompoundingFrequencytoMonths(compoundingFrequency)
 		if err != nil {
-			return 0, 0, nil
+			return 0, 0, err
+		}
+		interestMonths, err := getCompoundingFrequencytoMonths(c.rateInterest.compoundingFrequency)
+		if err != nil {
+			return 0, 0, err
 		}
 
-		valuePeriod = valuePeriod * valueInterest
+		weightPeriod, err := getOrderTime(compoundingFrequency)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		weightInterest, err := getOrderTime(c.rateInterest.compoundingFrequency)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		if weightInterest > weightPeriod {
+			if periodsMonths > valuePeriod {
+				valuePeriod = periodsMonths * valuePeriod
+			} else {
+				valuePeriod = valuePeriod / interestMonths
+			}
+		} else {
+			valuePeriod = periodsMonths * valuePeriod
+		}
 	}
 
 	return valuePeriod, rateInterest, nil
