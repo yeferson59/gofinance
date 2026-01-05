@@ -228,6 +228,10 @@ type CompositeInterest struct {
 //	    log.Fatal(err)
 //	}
 func New(present, future float64, rateInterest *RateInterest, periods *Period) (*CompositeInterest, error) {
+	if present == 0 && future == 0 && rateInterest == nil && periods == nil {
+		return nil, errors.New("can't be zero values for create composite instance")
+	}
+
 	return &CompositeInterest{
 		present:      present,
 		future:       future,
