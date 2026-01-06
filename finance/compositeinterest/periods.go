@@ -1,6 +1,9 @@
 package compositeinterest
 
-import "math"
+import (
+	"errors"
+	"math"
+)
 
 // Periods calculates the number of periods needed using the formula: n = ln(FV/PV) / ln(1 + i)
 // where:
@@ -24,6 +27,10 @@ func (c *CompositeInterest) Periods() (float64, error) {
 	_, rateInterest, err := c.getEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
+	}
+
+	if c.present == 0 {
+		return 0, errors.New("invalid present for operation")
 	}
 
 	periods := (math.Log((c.future / c.present)) / math.Log(1+rateInterest))

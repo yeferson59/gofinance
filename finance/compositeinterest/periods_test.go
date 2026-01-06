@@ -327,3 +327,19 @@ func TestPeriodsWithHighInterestRate(t *testing.T) {
 
 	assert.InDelta(t, 24.0, periods, 1.5)
 }
+
+func TestPeriodsWithZeroPresent(t *testing.T) {
+	rateInterest, err := NewRateInterest(0.10, Monthly, RateEffectyPeriodic)
+	require.NoError(t, err)
+
+	period, err := NewPeriod(24, Monthly)
+	require.NoError(t, err)
+
+	ci, err := New(0, 10960.5, rateInterest, period)
+	require.NoError(t, err)
+
+	periods, err := ci.Periods()
+	require.Error(t, err)
+
+	assert.Equal(t, 0.0, periods)
+}

@@ -65,6 +65,40 @@ func TestGetCompoundingFrequencyInvalid(t *testing.T) {
 	assert.Equal(t, "invalid value compounding frequency", err.Error())
 }
 
+func TestGetCompoundingFrequencytoMonthsInvalid(t *testing.T) {
+	invalidFreq := CompoundingFrequency("invalid")
+	value, err := getCompoundingFrequencytoMonths(invalidFreq)
+
+	assert.Error(t, err)
+	assert.Equal(t, 0.0, value)
+	assert.Equal(t, "invalid value compounding frequency", err.Error())
+}
+
+func TestGetOrderTimeInvalid(t *testing.T) {
+	invalidFreq := CompoundingFrequency("invalid")
+	value, err := getOrderTime(invalidFreq)
+
+	assert.Error(t, err)
+	assert.Equal(t, 0.0, value)
+	assert.Equal(t, "invalid value compounding frequency", err.Error())
+}
+
+func TestGetCompoundingFrequencytoMonthsEmpty(t *testing.T) {
+	emptyFreq := CompoundingFrequency("")
+	value, err := getCompoundingFrequencytoMonths(emptyFreq)
+
+	assert.Error(t, err)
+	assert.Equal(t, 0.0, value)
+}
+
+func TestGetOrderTimeEmpty(t *testing.T) {
+	emptyFreq := CompoundingFrequency("")
+	value, err := getOrderTime(emptyFreq)
+
+	assert.Error(t, err)
+	assert.Equal(t, 0.0, value)
+}
+
 func TestGetCompoundingFrequencyEmpty(t *testing.T) {
 	emptyFreq := CompoundingFrequency("")
 	value, err := getCompoundingFrequency(emptyFreq)
@@ -207,19 +241,6 @@ func TestNewRateInterestWithDifferentTypes(t *testing.T) {
 			assert.Equal(t, tc.value, rateInterest.value)
 		})
 	}
-}
-
-func TestNewCompositeInterest(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.05, Monthly, RateEffectyPeriodic)
-	require.NoError(t, err)
-
-	period, err := NewPeriod(12, Monthly)
-	require.NoError(t, err)
-
-	ci, err := New(1000, 1636.36, rateInterest, period)
-	require.NoError(t, err)
-
-	assert.NotNil(t, ci)
 }
 
 func TestCompoundingFrequencyMapComplete(t *testing.T) {
