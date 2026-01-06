@@ -35,6 +35,7 @@ package compositeinterest
 
 import (
 	"errors"
+	"math"
 )
 
 // CompoundingFrequency defines the frequency of interest compounding in a year.
@@ -284,14 +285,14 @@ func (c *CompositeInterest) getEqualsRateInterestPeriods() (float64, float64, er
 		}
 
 		if weightInterest > weightPeriod {
-			if periodsMonths > valuePeriod {
-				valuePeriod = periodsMonths * valuePeriod
-			} else {
-				valuePeriod = valuePeriod / interestMonths
+			if periodsMonths < 1 {
+				return math.Round(periodsMonths * valuePeriod), rateInterest, nil
 			}
-		} else {
-			valuePeriod = periodsMonths * valuePeriod
+
+			return (valuePeriod / interestMonths), rateInterest, nil
 		}
+
+		return (periodsMonths * valuePeriod), rateInterest, nil
 	}
 
 	return valuePeriod, rateInterest, nil

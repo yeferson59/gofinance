@@ -4,7 +4,7 @@ lint:
 	@golangci-lint --config=.golangci.yaml run ./... -v
 
 test:
-	@go test -race -failfast -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+	@go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
 	@go tool cover -html=coverage.out
 
 fmt:

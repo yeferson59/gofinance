@@ -337,6 +337,19 @@ func TestMoreExampleFuture(t *testing.T) {
 		tx.InDelta(expected, future, 0.00001)
 	})
 
+	t.Run("run simple operation with day period for future", func(t *testing.T) {
+		tx := require.New(t)
+
+		cr := createCompositeInterest(912.5, Daily, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+
+		future, err := cr.Future()
+		tx.NoError(err)
+
+		expected := 4_689_240.66147257
+
+		tx.InDelta(expected, future, 0.00001)
+	})
+
 	t.Run("run simple operation with bimonthly period for future", func(t *testing.T) {
 		tx := require.New(t)
 
