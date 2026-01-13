@@ -20,7 +20,7 @@ import "math"
 //	ci, _ := New(0, 1126.83, rateInterest, period)
 //	present, err := ci.Present()
 //	// present will be approximately 1000
-func (c *CompositeInterest) Present() (float64, error) {
+func (c CompositeInterest) Present() (float64, error) {
 	periods, rateInterest, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err

@@ -23,7 +23,7 @@ import (
 //	ci, _ := New(1000, 1126.83, rateInterest, period)
 //	periods, err := ci.Periods()
 //	// periods will be approximately 12 (for the example with monthly rate)
-func (c *CompositeInterest) Periods() (float64, error) {
+func (c CompositeInterest) Periods() (float64, error) {
 	_, rateInterest, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err

@@ -21,7 +21,7 @@ import (
 //	ci, _ := New(1000, 1126.83, rateInterest, period)
 //	rate, err := ci.Interest()
 //	// rate will be approximately 0.01 (1% periodic)
-func (c *CompositeInterest) Interest() (float64, error) {
+func (c CompositeInterest) Interest() (float64, error) {
 	periods, _, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err

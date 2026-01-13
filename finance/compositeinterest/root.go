@@ -228,12 +228,12 @@ type CompositeInterest struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func New(present, future float64, rateInterest *RateInterest, periods *Period) (*CompositeInterest, error) {
+func New(present, future float64, rateInterest *RateInterest, periods *Period) (CompositeInterest, error) {
 	if present == 0 && future == 0 && rateInterest == nil && periods == nil {
-		return nil, errors.New("can't be zero values for create composite instance")
+		return CompositeInterest{}, errors.New("can't be zero values for create composite instance")
 	}
 
-	return &CompositeInterest{
+	return CompositeInterest{
 		present:      present,
 		future:       future,
 		rateInterest: rateInterest,
@@ -250,7 +250,7 @@ func New(present, future float64, rateInterest *RateInterest, periods *Period) (
 //   - The adjusted number of periods
 //   - The equivalent periodic rate
 //   - An error if valid values cannot be obtained
-func (c *CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, error) {
+func (c CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, error) {
 	valuePeriod, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
 		return 0, 0, nil

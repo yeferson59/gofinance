@@ -232,7 +232,7 @@ func TestFutureWithDifferentRateTypes(t *testing.T) {
 	}
 }
 
-func createCompositeInterest(numberPeriod float64, periodF CompoundingFrequency, rateInterest float64, compounding CompoundingFrequency, typeRate TypeRate, present, future float64, tx *require.Assertions) *CompositeInterest {
+func createCompositeInterest(numberPeriod float64, periodF CompoundingFrequency, rateInterest float64, compounding CompoundingFrequency, typeRate TypeRate, present, future float64, tx *require.Assertions) CompositeInterest {
 	period, err := NewPeriod(numberPeriod, periodF)
 	tx.NoError(err)
 
