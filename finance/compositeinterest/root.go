@@ -78,42 +78,42 @@ type Period struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency) (*Period, error) {
+func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency) (Period, error) {
 	if numberPeriods <= 0 {
-		return nil, errors.New("value periods must be greater to zero")
+		return Period{}, errors.New("value periods must be greater to zero")
 	}
 
 	switch compoundingFrequency {
 	case Daily:
-		return &Period{
+		return Period{
 			daily: &numberPeriods,
 		}, nil
 	case Monthly:
-		return &Period{
+		return Period{
 			monthly: &numberPeriods,
 		}, nil
 	case Bimonthly:
-		return &Period{
+		return Period{
 			bimonthly: &numberPeriods,
 		}, nil
 	case QuarterlyOne:
-		return &Period{
+		return Period{
 			quarterlyOne: &numberPeriods,
 		}, nil
 	case QuarterlyTwo:
-		return &Period{
+		return Period{
 			quarterlyTwo: &numberPeriods,
 		}, nil
 	case SemiAnnually:
-		return &Period{
+		return Period{
 			semiAnnually: &numberPeriods,
 		}, nil
 	case Annually:
-		return &Period{
+		return Period{
 			annually: &numberPeriods,
 		}, nil
 	default:
-		return &Period{}, nil
+		return Period{}, nil
 	}
 }
 
@@ -184,8 +184,8 @@ type RateInterest struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func NewRateInterest(value float64, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (*RateInterest, error) {
-	return &RateInterest{
+func NewRateInterest(value float64, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (RateInterest, error) {
+	return RateInterest{
 		value:                value,
 		compoundingFrequency: compoundingFrequency,
 		typeRate:             typeRate,
@@ -203,8 +203,8 @@ func NewRateInterest(value float64, compoundingFrequency CompoundingFrequency, t
 type CompositeInterest struct {
 	future       float64
 	present      float64
-	rateInterest *RateInterest
-	periods      *Period
+	rateInterest RateInterest
+	periods      Period
 }
 
 // New creates a new CompositeInterest instance with the specified parameters.
@@ -228,11 +228,7 @@ type CompositeInterest struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func New(present, future float64, rateInterest *RateInterest, periods *Period) (CompositeInterest, error) {
-	if present == 0 && future == 0 && rateInterest == nil && periods == nil {
-		return CompositeInterest{}, errors.New("can't be zero values for create composite instance")
-	}
-
+func New(present, future float64, rateInterest RateInterest, periods Period) (CompositeInterest, error) {
 	return CompositeInterest{
 		present:      present,
 		future:       future,
