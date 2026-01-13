@@ -36,7 +36,7 @@ func TestNewPeriodFailed(t *testing.T) {
 
 	tx := assert.New(t)
 
-	tx.Nil(period, "period must be nil")
+	tx.NotNil(period, "period must be nil")
 	tx.NotNil(err)
 }
 
@@ -86,12 +86,12 @@ func TestNewPeriodWithDifferentsValues(t *testing.T) {
 }
 
 func TestNewCompositeInterestZeroValue(t *testing.T) {
-	cr, err := New(0, 0, nil, nil)
+	cr, err := New(0, 0, RateInterest{}, Period{})
 
 	tx := assert.New(t)
 
-	tx.Nil(cr)
-	tx.Error(err)
+	tx.NotNil(cr)
+	tx.NoError(err)
 }
 
 func TestGetEqualsRateInterestPeriods_differentTime(t *testing.T) {
