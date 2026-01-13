@@ -24,7 +24,7 @@ import (
 //	periods, err := ci.Periods()
 //	// periods will be approximately 12 (for the example with monthly rate)
 func (c *CompositeInterest) Periods() (float64, error) {
-	_, rateInterest, err := c.getEqualsRateInterestPeriods()
+	_, rateInterest, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
 	}

@@ -21,7 +21,7 @@ import "math"
 //	present, err := ci.Present()
 //	// present will be approximately 1000
 func (c *CompositeInterest) Present() (float64, error) {
-	periods, rateInterest, err := c.getEqualsRateInterestPeriods()
+	periods, rateInterest, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
 	}

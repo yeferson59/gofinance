@@ -241,7 +241,7 @@ func New(present, future float64, rateInterest *RateInterest, periods *Period) (
 	}, nil
 }
 
-// getEqualsRateInterestPeriods converts all parameters to the same base for calculations.
+// GetEqualsRateInterestPeriods converts all parameters to the same base for calculations.
 // Specifically:
 //   - Converts the rate to periodic if necessary
 //   - Adjusts the periods if the compounding frequency does not match the rate
@@ -250,7 +250,7 @@ func New(present, future float64, rateInterest *RateInterest, periods *Period) (
 //   - The adjusted number of periods
 //   - The equivalent periodic rate
 //   - An error if valid values cannot be obtained
-func (c *CompositeInterest) getEqualsRateInterestPeriods() (float64, float64, error) {
+func (c *CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, error) {
 	valuePeriod, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
 		return 0, 0, nil

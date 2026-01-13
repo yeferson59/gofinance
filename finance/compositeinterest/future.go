@@ -20,7 +20,7 @@ import (
 //	future, err := ci.Future()
 //	// If all is correct, future will be the amount after the specified periods
 func (c *CompositeInterest) Future() (float64, error) {
-	periods, rateInterest, err := c.getEqualsRateInterestPeriods()
+	periods, rateInterest, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
 	}
