@@ -53,20 +53,20 @@ import (
 )
 
 func main() {
-    // Create a monthly interest rate of 1% (periodic)
-    rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-    
-    // Create a period of 12 months
-    period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
-    
-    // Create a compound interest object
-    // Parameters: (present=1000, future=0, rateInterest, period)
-    ci, _ := compositeinterest.New(1000, 0, rate, period)
-    
-    // Calculate future value
-    future, _ := ci.Future()
-    fmt.Printf("Future value: $%.2f\n", future)
-    // Output: Future value: $1126.83
+  // Create a monthly interest rate of 1% (periodic)
+  rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+
+  // Create a period of 12 months
+  period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+
+  // Create a compound interest object
+  // Parameters: (present=1000, future=0, rateInterest, period)
+  ci, _ := compositeinterest.New(1000, 0, rate, period)
+
+  // Calculate future value
+  future, _ := ci.Future()
+  fmt.Printf("Future value: $%.2f\n", future)
+  // Output: Future value: $1126.83
 }
 ```
 
@@ -126,6 +126,7 @@ fmt.Printf("Effective annual rate: %.4f\n", annual)
 ## Mathematical Formulas
 
 ### Future Value
+
 ```
 FV = PV × (1 + i)^n
 
@@ -137,16 +138,19 @@ where:
 ```
 
 ### Present Value
+
 ```
 PV = FV / (1 + i)^n
 ```
 
 ### Interest Rate
+
 ```
 i = (FV / PV)^(1/n) - 1
 ```
 
 ### Number of Periods
+
 ```
 n = ln(FV / PV) / ln(1 + i)
 ```
@@ -154,6 +158,7 @@ n = ln(FV / PV) / ln(1 + i)
 ### Rate Conversions
 
 **Nominal to Periodic:**
+
 ```
 i_periodic = j / m
 
@@ -163,11 +168,13 @@ where:
 ```
 
 **Periodic to Effective Annual:**
+
 ```
 i_a = (1 + i_periodic)^m - 1
 ```
 
 **Nominal to Effective Annual:**
+
 ```
 i_a = (1 + j/m)^m - 1
 ```
@@ -175,7 +182,9 @@ i_a = (1 + j/m)^m - 1
 ## Main Types
 
 ### CompoundingFrequency
+
 Defines the frequency at which interest compounds:
+
 - `Daily`: Daily (365)
 - `Monthly`: Monthly (12)
 - `Bimonthly`: Bimonthly (6)
@@ -185,7 +194,9 @@ Defines the frequency at which interest compounds:
 - `Annually`: Annually (1)
 
 ### TypeRate
+
 Defines the type of rate:
+
 - `RateEffectyPeriodic`: Ordinary periodic rate
 - `RateEffectyNominal`: Ordinary nominal rate
 - `RateEffectyAnnually`: Ordinary effective annual rate
@@ -194,48 +205,54 @@ Defines the type of rate:
 - `RateAnticipateEffectyAnnually`: Anticipated effective annual rate
 
 ### Period
+
 Represents a specific period:
+
 ```go
 period, err := NewPeriod(12, Monthly)
 ```
 
 ### RateInterest
+
 Represents a rate with its frequency and type:
+
 ```go
 rate, err := NewRateInterest(0.12, Monthly, RateEffectyNominal)
 ```
 
 ### CompositeInterest
+
 Contains all parameters for a calculation:
+
 ```go
 ci, err := New(1000, 1636.36, rate, period)
 ```
 
 ## Main Methods
 
-| Method | Description | Use |
-|--------|-------------|-----|
-| `Future()` | Calculates future value | When you know: PV, i, n |
-| `Present()` | Calculates present value | When you know: FV, i, n |
-| `Interest()` | Calculates interest rate | When you know: PV, FV, n |
-| `Periods()` | Calculates number of periods | When you know: PV, FV, i |
+| Method       | Description                  | Use                      |
+| ------------ | ---------------------------- | ------------------------ |
+| `Future()`   | Calculates future value      | When you know: PV, i, n  |
+| `Present()`  | Calculates present value     | When you know: FV, i, n  |
+| `Interest()` | Calculates interest rate     | When you know: PV, FV, n |
+| `Periods()`  | Calculates number of periods | When you know: PV, FV, i |
 
 ## Rate Conversion Methods
 
-| Method | Converts to |
-|--------|------------|
-| `RatePeriodic()` | Periodic Rate |
-| `RateNominal()` | Nominal Rate |
-| `RateEffectyAnnually()` | Effective Annual Rate |
-| `RatePeriodicToPeriodic()` | Periodic to different frequency |
-| `RateNominalToNominal()` | Nominal to different frequency |
-| `RateAnticipateEffectyAnnually()` | Anticipated Effective Annual |
-| `RateAnticipateNominal()` | Anticipated Nominal |
-| `RateAnticipatePeriodic()` | Anticipated Periodic |
-| `ToAnticipateNominal()` | Ordinary to Anticipated Nominal |
-| `ToAnticipatePeriodic()` | Ordinary to Anticipated Periodic |
-| `ToNominal()` | Anticipated to Ordinary Nominal |
-| `ToPeriodic()` | Anticipated to Ordinary Periodic |
+| Method                            | Converts to                      |
+| --------------------------------- | -------------------------------- |
+| `RatePeriodic()`                  | Periodic Rate                    |
+| `RateNominal()`                   | Nominal Rate                     |
+| `RateEffectyAnnually()`           | Effective Annual Rate            |
+| `RatePeriodicToPeriodic()`        | Periodic to different frequency  |
+| `RateNominalToNominal()`          | Nominal to different frequency   |
+| `RateAnticipateEffectyAnnually()` | Anticipated Effective Annual     |
+| `RateAnticipateNominal()`         | Anticipated Nominal              |
+| `RateAnticipatePeriodic()`        | Anticipated Periodic             |
+| `ToAnticipateNominal()`           | Ordinary to Anticipated Nominal  |
+| `ToAnticipatePeriodic()`          | Ordinary to Anticipated Periodic |
+| `ToNominal()`                     | Anticipated to Ordinary Nominal  |
+| `ToPeriodic()`                    | Anticipated to Ordinary Periodic |
 
 ## Advanced Examples
 
@@ -273,6 +290,7 @@ go test -run TestFutureWithPeriodicRate ./finance/compositeinterest
 ```
 
 ### Test Files
+
 - `future_test.go` - 10 tests for future value calculations
 - `present_test.go` - 12 tests for present value calculations
 - `rate_interest_test.go` - 13 tests for rate calculations
@@ -298,6 +316,7 @@ go test -run TestFutureWithPeriodicRate ./finance/compositeinterest
 ## Contributing
 
 Contributions are welcome. Please ensure:
+
 1. Write tests for new features
 2. Maintain test coverage above 85%
 3. Document the code properly

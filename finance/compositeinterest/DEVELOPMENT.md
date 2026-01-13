@@ -29,44 +29,54 @@ compositeinterest/
 ## Key Financial Concepts
 
 ### 1. Periodic Rate (i)
+
 The interest rate applied in each compounding period.
 
 **Example:**
+
 - 12% nominal monthly = 1% periodic (12% / 12)
 - 12% nominal quarterly = 3% periodic (12% / 4)
 
 **Usage in formulas:**
+
 ```
 FV = PV × (1 + i)^n
 ```
 
 ### 2. Nominal Rate (j)
+
 Annual rate divided by the compounding frequency.
 Does not account for the effects of multiple compounding.
 
 **Conversion:**
+
 ```
 i = j / m  (where m is the frequency per year)
 ```
 
 ### 3. Effective Annual Rate (i_a)
+
 The actual rate earned in one year considering compounding.
 
 **Conversion from nominal:**
+
 ```
 i_a = (1 + j/m)^m - 1
 ```
 
 **Conversion from periodic:**
+
 ```
 i_a = (1 + i)^m - 1
 ```
 
 ### 4. Anticipated Rates
+
 Charged at the beginning of the period (discounts).
 More common in bills of exchange and securities.
 
 **Relationship with ordinary rates:**
+
 ```
 d_a = i_a / (1 + i_a)  (where d_a is annual anticipated rate)
 ```
@@ -74,6 +84,7 @@ d_a = i_a / (1 + i_a)  (where d_a is annual anticipated rate)
 ## Typical Workflow
 
 ### 1. Create a Rate
+
 ```go
 rate, err := compositeinterest.NewRateInterest(
     0.12,                                    // value
@@ -83,6 +94,7 @@ rate, err := compositeinterest.NewRateInterest(
 ```
 
 ### 2. Create a Period
+
 ```go
 period, err := compositeinterest.NewPeriod(
     12,                              // number of periods
@@ -91,6 +103,7 @@ period, err := compositeinterest.NewPeriod(
 ```
 
 ### 3. Create a CompositeInterest Object
+
 ```go
 ci, err := compositeinterest.New(
     1000,        // present (present value)
@@ -101,6 +114,7 @@ ci, err := compositeinterest.New(
 ```
 
 ### 4. Calculate the Desired Value
+
 ```go
 future, err := ci.Future()
 // or
@@ -121,6 +135,7 @@ The `getEqualsRateInterestPeriods()` method is crucial:
 2. **Adjusts periods:** If the period frequency doesn't match the rate frequency, the number of periods is multiplied
 
 **Example:**
+
 ```
 If rate is: 12% nominal monthly
 Result periodic: 1% monthly
@@ -135,11 +150,13 @@ Adjusted period: 12 (1 year × 12 months/year)
 ### Error Handling
 
 Errors can occur in:
+
 1. **getPeriod():** If no period is set
 2. **getCompoundingFrequency():** If the frequency doesn't exist
 3. **Logarithmic calculations:** In `Periods()` if division by zero occurs
 
 **Best practice:**
+
 ```go
 future, err := ci.Future()
 if err != nil {
@@ -169,21 +186,22 @@ go tool cover -html=coverage.out
 ### Writing New Tests
 
 **Recommended structure:**
+
 ```go
 func TestNewFunctionality(t *testing.T) {
     // Arrange: Prepare data
     rate, err := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
     require.NoError(t, err)
-    
+
     period, err := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
     require.NoError(t, err)
-    
+
     // Act: Execute the operation
     ci, err := compositeinterest.New(1000, 0, rate, period)
     require.NoError(t, err)
-    
+
     result, err := ci.Future()
-    
+
     // Assert: Verify results
     require.NoError(t, err)
     assert.InDelta(t, 1126.83, result, 0.01)
@@ -191,6 +209,7 @@ func TestNewFunctionality(t *testing.T) {
 ```
 
 **Using Testify:**
+
 - `require.NoError()` for fatal errors
 - `assert.Equal()` for exact values
 - `assert.InDelta()` for values with tolerance
@@ -257,6 +276,7 @@ for i := 0; i < 1000; i++ {
 ### Useful Techniques
 
 1. **Print intermediate values:**
+
 ```go
 rate, _ := NewRateInterest(0.12, Monthly, RateEffectyNominal)
 periodic, _ := rate.RatePeriodic()
@@ -264,6 +284,7 @@ log.Printf("Periodic rate: %.6f\n", periodic)
 ```
 
 2. **Verify conversions:**
+
 ```go
 original := 0.01
 periodic, _ := rate.RatePeriodic()
@@ -272,6 +293,7 @@ fmt.Printf("Original: %.6f\nPeriodic: %.6f\nNominal: %.6f\n", original, periodic
 ```
 
 3. **Use test helper for debugging:**
+
 ```go
 func debugRate(t *testing.T, rate *RateInterest) {
     periodic, _ := rate.RatePeriodic()
@@ -286,11 +308,13 @@ func debugRate(t *testing.T, rate *RateInterest) {
 ### Adding a New Frequency
 
 1. **Add constant in `consts.go`:**
+
 ```go
 const Weekly CompoundingFrequency = "weekly"
 ```
 
 2. **Update `data.go`:**
+
 ```go
 var countCompoundingFrequency = map[CompoundingFrequency]float64{
     // ...
@@ -302,6 +326,7 @@ var countCompoundingFrequency = map[CompoundingFrequency]float64{
 3. **Update `root.go` (Period struct if necessary)**
 
 4. **Write tests:**
+
 ```go
 func TestGetCompoundingFrequencyWeekly(t *testing.T) {
     value, err := getCompoundingFrequency(Weekly)
@@ -313,6 +338,7 @@ func TestGetCompoundingFrequencyWeekly(t *testing.T) {
 ### Adding a New Conversion Function
 
 1. **Add in `rate_conversion.go`:**
+
 ```go
 func (rt *RateInterest) NewConversion() (float64, error) {
     // implementation
@@ -327,11 +353,13 @@ func (rt *RateInterest) NewConversion() (float64, error) {
 ## Additional Resources
 
 ### Recommended Books
+
 - "Financial Mathematics" - Héctor Vidaurri
 - "Financial Engineering and Computation" - Phelim P. Boyle
 - "Introduction to Financial Mathematics" - Chris Kenyon
 
 ### Useful Links
+
 - [Go Documentation](https://golang.org/doc/)
 - [Testify README](https://github.com/stretchr/testify)
 - [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
@@ -353,6 +381,7 @@ A: Probably because present value = future value (no gain), or the period isn't 
 ## Contributing
 
 To contribute to development:
+
 1. Fork the repository
 2. Create a branch (`git checkout -b feature/your-feature`)
 3. Commit your changes (`git commit -am 'Add your-feature'`)
@@ -360,6 +389,7 @@ To contribute to development:
 5. Open a Pull Request
 
 **Requirements for PR:**
+
 - Tests for new features
 - Updated documentation
 - Test coverage > 85%

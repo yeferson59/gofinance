@@ -26,7 +26,7 @@ import (
 
 func main() {
     // Scenario: $1,000 invested at 1% monthly for 12 months
-    
+
     // Create rate: 1% periodic monthly
     rate, err := compositeinterest.NewRateInterest(
         0.01,
@@ -81,20 +81,20 @@ import (
 func main() {
     // Scenario: I want to have $10,000 in 2 years
     // How much should I invest today at 5% annual?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.05,
         compositeinterest.Annually,
         compositeinterest.RateEffectyAnnually,
     )
-    
+
     period, _ := compositeinterest.NewPeriod(2, compositeinterest.Annually)
-    
+
     // Present: 0 (to calculate), Future: 10000
     ci, _ := compositeinterest.New(0, 10000, rate, period)
-    
+
     present, _ := ci.Present()
-    
+
     fmt.Printf("Desired future value: $10,000.00\n")
     fmt.Printf("Rate: 5%% annual\n")
     fmt.Printf("Period: 2 years\n")
@@ -116,19 +116,19 @@ import (
 func main() {
     // Scenario: I invested $1,000 and after 12 months I have $1,126.83
     // What's the monthly rate?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.01,
         compositeinterest.Monthly,
         compositeinterest.RateEffectyPeriodic,
     )
-    
+
     period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
-    
+
     ci, _ := compositeinterest.New(1000, 1126.83, rate, period)
-    
+
     interest, _ := ci.Interest()
-    
+
     fmt.Printf("Initial capital: $1,000.00\n")
     fmt.Printf("Final capital: $1,126.83\n")
     fmt.Printf("Period: 12 months\n")
@@ -149,19 +149,19 @@ import (
 
 func main() {
     // Scenario: With $1,000 and 5% periodic, how many months to reach $1,500?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.05,
         compositeinterest.Monthly,
         compositeinterest.RateEffectyPeriodic,
     )
-    
+
     period, _ := compositeinterest.NewPeriod(1, compositeinterest.Monthly)
-    
+
     ci, _ := compositeinterest.New(1000, 1500, rate, period)
-    
+
     periods, _ := ci.Periods()
-    
+
     fmt.Printf("Initial capital: $1,000.00\n")
     fmt.Printf("Target capital: $1,500.00\n")
     fmt.Printf("Rate: 5%% periodic\n")
@@ -187,16 +187,16 @@ import (
 func main() {
     // Scenario: Annual nominal rate of 12% compounded monthly
     // What's the monthly periodic rate?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.12,
         compositeinterest.Monthly,
         compositeinterest.RateEffectyNominal,
     )
-    
+
     // Convert to periodic
     periodic, _ := rate.RatePeriodic()
-    
+
     fmt.Printf("Annual nominal rate: 12%%\n")
     fmt.Printf("Frequency: Monthly\n")
     fmt.Printf("Periodic rate: %.4f (%.2f%%)\n", periodic, periodic*100)
@@ -217,15 +217,15 @@ import (
 func main() {
     // Scenario: What's the effective annual rate equivalent
     // of a 12% nominal rate compounded monthly?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.12,
         compositeinterest.Monthly,
         compositeinterest.RateEffectyNominal,
     )
-    
+
     annual, _ := rate.RateEffectyAnnually()
-    
+
     fmt.Printf("Annual nominal rate: 12%%\n")
     fmt.Printf("Effective annual rate: %.4f (%.2f%%)\n", annual, annual*100)
     // Output: Effective annual rate: 0.1268 (12.68%)
@@ -245,16 +245,16 @@ import (
 func main() {
     // Scenario: I have a monthly rate of 1%
     // What's its equivalent quarterly rate?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.01,
         compositeinterest.Monthly,
         compositeinterest.RateEffectyPeriodic,
     )
-    
+
     // Convert to equivalent quarterly rate
     quarterly, _ := rate.RatePeriodicToPeriodic(compositeinterest.QuarterlyOne)
-    
+
     fmt.Printf("Monthly rate: 1%%\n")
     fmt.Printf("Equivalent quarterly rate: %.4f (%.2f%%)\n", quarterly, quarterly*100)
     // Output: Equivalent quarterly rate: 0.0303 (3.03%)
@@ -274,20 +274,20 @@ import (
 func main() {
     // Scenario: I have an ordinary rate of 10% annual
     // What's its equivalent anticipated (discount) rate?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.10,
         compositeinterest.Annually,
         compositeinterest.RateEffectyAnnually,
     )
-    
+
     // Convert to anticipated nominal rate
     anticipated, _ := rate.ToAnticipateNominal()
-    
+
     fmt.Printf("Ordinary rate: 10%% annual\n")
     fmt.Printf("Equivalent anticipated rate: %.4f (%.2f%%)\n", anticipated, anticipated*100)
     // Output: Equivalent anticipated rate: 0.0909 (9.09%)
-    
+
     // Verify reverse conversion
     rate2, _ := compositeinterest.NewRateInterest(
         anticipated,
@@ -316,19 +316,19 @@ import (
 func main() {
     // Scenario: $300,000 mortgage at 4.5% annual for 30 years
     // (simplified, without periodic payments)
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.045,
         compositeinterest.Annually,
         compositeinterest.RateEffectyAnnually,
     )
-    
+
     period, _ := compositeinterest.NewPeriod(30, compositeinterest.Annually)
-    
+
     ci, _ := compositeinterest.New(300000, 0, rate, period)
-    
+
     totalDebt, _ := ci.Future()
-    
+
     fmt.Printf("═════════════════════════════════════════\n")
     fmt.Printf("       MORTGAGE SIMULATION\n")
     fmt.Printf("═════════════════════════════════════════\n")
@@ -355,7 +355,7 @@ import (
 func main() {
     capital := 10000.0
     years := 5
-    
+
     // Option 1: 6% nominal monthly
     rate1, _ := compositeinterest.NewRateInterest(
         0.06,
@@ -365,7 +365,7 @@ func main() {
     period1, _ := compositeinterest.NewPeriod(float64(years*12), compositeinterest.Monthly)
     ci1, _ := compositeinterest.New(capital, 0, rate1, period1)
     future1, _ := ci1.Future()
-    
+
     // Option 2: 6.17% effective annual
     rate2, _ := compositeinterest.NewRateInterest(
         0.0617,
@@ -375,7 +375,7 @@ func main() {
     period2, _ := compositeinterest.NewPeriod(float64(years), compositeinterest.Annually)
     ci2, _ := compositeinterest.New(capital, 0, rate2, period2)
     future2, _ := ci2.Future()
-    
+
     // Option 3: 0.5% periodic monthly
     rate3, _ := compositeinterest.NewRateInterest(
         0.005,
@@ -385,25 +385,25 @@ func main() {
     period3, _ := compositeinterest.NewPeriod(float64(years*12), compositeinterest.Monthly)
     ci3, _ := compositeinterest.New(capital, 0, rate3, period3)
     future3, _ := ci3.Future()
-    
+
     fmt.Printf("═════════════════════════════════════════════════════\n")
     fmt.Printf("     INVESTMENT OPTIONS COMPARISON\n")
     fmt.Printf("═════════════════════════════════════════════════════\n")
     fmt.Printf("Initial capital: $%,.2f\n", capital)
     fmt.Printf("Period: %d years\n\n", years)
-    
+
     fmt.Printf("OPTION 1: 6%% nominal monthly\n")
     fmt.Printf("  Future value: $%,.2f\n", future1)
     fmt.Printf("  Gain: $%,.2f\n\n", future1-capital)
-    
+
     fmt.Printf("OPTION 2: 6.17%% effective annual\n")
     fmt.Printf("  Future value: $%,.2f\n", future2)
     fmt.Printf("  Gain: $%,.2f\n\n", future2-capital)
-    
+
     fmt.Printf("OPTION 3: 0.5%% periodic monthly\n")
     fmt.Printf("  Future value: $%,.2f\n", future3)
     fmt.Printf("  Gain: $%,.2f\n", future3-capital)
-    
+
     fmt.Printf("─────────────────────────────────────────────────────\n")
     if future1 > future2 && future1 > future3 {
         fmt.Printf("✓ BEST OPTION: #1\n")
@@ -430,21 +430,21 @@ func main() {
     // Scenario: A company has a $50,000 bill of exchange
     // due in 6 months. A bank discounts it at 10% annual anticipated rate.
     // How much does the company receive?
-    
+
     rate, _ := compositeinterest.NewRateInterest(
         0.10,
         compositeinterest.Annually,
         compositeinterest.RateAnticipateEffectyAnnually,
     )
-    
+
     // 6 months is 0.5 years
     period, _ := compositeinterest.NewPeriod(0.5, compositeinterest.Annually)
-    
+
     ci, _ := compositeinterest.New(0, 50000, rate, period)
-    
+
     received, _ := ci.Present()
     discount := 50000 - received
-    
+
     fmt.Printf("═════════════════════════════════════════\n")
     fmt.Printf("    BILL OF EXCHANGE DISCOUNT\n")
     fmt.Printf("═════════════════════════════════════════\n")
@@ -474,13 +474,13 @@ import (
 
 func main() {
     // Find equivalent rates for all frequencies
-    
+
     baseRate, _ := compositeinterest.NewRateInterest(
         0.12,
         compositeinterest.Monthly,
         compositeinterest.RateEffectyNominal,
     )
-    
+
     frequencies := []struct {
         name  string
         freq  compositeinterest.CompoundingFrequency
@@ -493,16 +493,16 @@ func main() {
         {"Semi-annually", compositeinterest.SemiAnnually},
         {"Annually", compositeinterest.Annually},
     }
-    
+
     fmt.Printf("═════════════════════════════════════════════════════\n")
     fmt.Printf("  EQUIVALENT NOMINAL RATES TO 12%% MONTHLY\n")
     fmt.Printf("═════════════════════════════════════════════════════\n")
-    
+
     for _, f := range frequencies {
         equivalent, _ := baseRate.RateNominalToNominal(f.freq)
         fmt.Printf("%-20s: %.4f (%.2f%%)\n", f.name, equivalent, equivalent*100)
     }
-    
+
     fmt.Printf("═════════════════════════════════════════════════════\n")
 }
 ```
