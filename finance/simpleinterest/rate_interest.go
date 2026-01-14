@@ -11,15 +11,13 @@ func (s *SimpleInterest) RateInterest() (float64, error) {
 		return 0, err
 	}
 
-	periods := *valuePeriods
-
-	if s.present == 0 || periods == 0 {
+	if s.present == 0 || valuePeriods == 0 {
 		return 0, errors.New("invalid present or periods for operation")
 	}
 
-	s.rateInterest = (s.interest / (s.present * periods))
+	rateInterest := (s.interest / (s.present * valuePeriods))
 
-	return s.rateInterest, nil
+	return rateInterest, nil
 }
 
 // RateInterestWithPresentAndFuture calculates the interest rate using future, present value, and periods.
@@ -31,13 +29,13 @@ func (s *SimpleInterest) RateInterestWithPresentAndFuture() (float64, error) {
 		return 0, err
 	}
 
-	periods := *valuePeriods
+	periods := valuePeriods
 
 	if s.present == 0 || periods == 0 {
 		return 0, errors.New("invalid present or periods for operation")
 	}
 
-	s.rateInterest = (((s.future / s.present) - 1) / periods)
+	rateInterest := (((s.future / s.present) - 1) / periods)
 
-	return s.rateInterest, nil
+	return rateInterest, nil
 }

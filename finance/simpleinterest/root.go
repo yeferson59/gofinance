@@ -11,58 +11,58 @@ type Periods string
 // Period holds the value for different time periods.
 // Only one field should be non-nil at a time.
 type Period struct {
-	days   *float64
-	weeks  *float64
-	months *float64
-	years  *float64
+	days   float64
+	weeks  float64
+	months float64
+	years  float64
 }
 
 // NewPeriod creates a new Period with the specified number and time unit.
 // Valid time units are Days, Weeks, Months, Years.
 // Returns an empty Period if timePeriod is invalid.
-func NewPeriod(numberPeriods float64, timePeriod Periods) *Period {
+func NewPeriod(numberPeriods float64, timePeriod Periods) Period {
 	switch timePeriod {
 	case Days:
-		return &Period{
-			days: &numberPeriods,
+		return Period{
+			days: numberPeriods,
 		}
 	case Weeks:
-		return &Period{
-			weeks: &numberPeriods,
+		return Period{
+			weeks: numberPeriods,
 		}
 	case Months:
-		return &Period{
-			months: &numberPeriods,
+		return Period{
+			months: numberPeriods,
 		}
 	case Years:
-		return &Period{
-			years: &numberPeriods,
+		return Period{
+			years: numberPeriods,
 		}
 	default:
-		return &Period{}
+		return Period{}
 	}
 }
 
 // getPeriod returns the period value and an error if no valid period is set.
 // This is an internal method.
-func (p *Period) getPeriod() (*float64, error) {
-	if p.days != nil {
+func (p *Period) getPeriod() (float64, error) {
+	if p.days != 0.0 {
 		return p.days, nil
 	}
 
-	if p.months != nil {
+	if p.months != 0.0 {
 		return p.months, nil
 	}
 
-	if p.weeks != nil {
+	if p.weeks != 0.0 {
 		return p.weeks, nil
 	}
 
-	if p.years != nil {
+	if p.years != 0.0 {
 		return p.years, nil
 	}
 
-	return nil, errors.New("failed get valid periods")
+	return 0, errors.New("failed get valid periods")
 }
 
 // SimpleInterest holds the values for simple interest calculations.
@@ -72,14 +72,14 @@ type SimpleInterest struct {
 	present      float64
 	interest     float64
 	rateInterest float64
-	periods      *Period
+	periods      Period
 }
 
 // New creates a new SimpleInterest instance with the provided values.
 // Parameters can be 0 if they will be calculated later.
 // periods can be nil for some calculations.
-func New(future, present, interest, rateInterest float64, periods *Period) *SimpleInterest {
-	return &SimpleInterest{
+func New(future, present, interest, rateInterest float64, periods Period) SimpleInterest {
+	return SimpleInterest{
 		future:       future,
 		present:      present,
 		interest:     interest,
@@ -92,5 +92,5 @@ func New(future, present, interest, rateInterest float64, periods *Period) *Simp
 // Returns an error if periods is invalid.
 func (s *SimpleInterest) GetPeriods() (float64, error) {
 	periods, err := s.periods.getPeriod()
-	return *periods, err
+	return periods, err
 }

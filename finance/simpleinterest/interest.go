@@ -9,7 +9,7 @@ func (s *SimpleInterest) Interest() (float64, error) {
 		return 0, err
 	}
 
-	s.interest = s.present * (*valuePeriods) * s.rateInterest
+	interest := s.present * valuePeriods * s.rateInterest
 
-	return s.interest, nil
+	return interest, nil
 }

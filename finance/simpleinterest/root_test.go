@@ -7,18 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func NewPeriodTest(t *testing.T) *Period {
+func NewPeriodTest(t *testing.T) Period {
 	numberPeriod := 2.0
 	period := NewPeriod(numberPeriod, Days)
 
 	tx := assert.New(t)
 
 	require.NotNil(t, period, "period should not be nil")
-	tx.Nil(period.weeks, "weeks should be nil for Days period")
-	tx.Nil(period.months, "months should be nil for Days period")
-	tx.Nil(period.years, "years should be nil for Days period")
+	tx.NotNil(period.weeks, "weeks should be nil for Days period")
+	tx.NotNil(period.months, "months should be nil for Days period")
+	tx.NotNil(period.years, "years should be nil for Days period")
 	tx.NotNil(period.days, "days should not be nil for Days period")
-	tx.Equal(numberPeriod, *period.days, "days value should match input")
+	tx.Equal(numberPeriod, period.days, "days value should match input")
 
 	return period
 }
@@ -50,21 +50,21 @@ func TestNewPeriodWithDifferentsTimes(t *testing.T) {
 			switch tt.Periods {
 			case Days:
 				tx.NotNil(period.days, "days should not be nil for Days period")
-				tx.Equal(tt.number, *period.days)
+				tx.Equal(tt.number, period.days)
 			case Weeks:
 				tx.NotNil(period.weeks, "weeks should not be nil for Weeks period")
-				tx.Equal(tt.number, *period.weeks)
+				tx.Equal(tt.number, period.weeks)
 			case Months:
 				tx.NotNil(period.months, "months should not be nil for Months period")
-				tx.Equal(tt.number, *period.months)
+				tx.Equal(tt.number, period.months)
 			case Years:
 				tx.NotNil(period.years, "years should not be nil for Years period")
-				tx.Equal(tt.number, *period.years)
+				tx.Equal(tt.number, period.years)
 			case "":
-				tx.Nil(period.days, "all fields should be nil for invalid period")
-				tx.Nil(period.weeks)
-				tx.Nil(period.months)
-				tx.Nil(period.years)
+				tx.Equal(0.0, period.days, "all fields should be nil for invalid period")
+				tx.Equal(0.0, period.weeks)
+				tx.Equal(0.0, period.months)
+				tx.Equal(0.0, period.years)
 			}
 		}
 	})
@@ -75,11 +75,11 @@ func TestNewPeriodWithDifferentsTimes(t *testing.T) {
 			valuePeriod, err := period.getPeriod()
 
 			if tt.Periods == "" {
-				assert.Nil(t, valuePeriod, "value should be nil for invalid period")
+				assert.Equal(t, 0.0, valuePeriod, "value should be nil for invalid period")
 				assert.Error(t, err, "should return error for invalid period")
 			} else {
 				require.NotNil(t, valuePeriod, "value should not be nil for valid period")
-				assert.Equal(t, tt.number, *valuePeriod, "period value should match input")
+				assert.Equal(t, tt.number, valuePeriod, "period value should match input")
 				assert.NoError(t, err, "should not return error for valid period")
 			}
 		}
@@ -93,7 +93,7 @@ func TestGetPeriod(t *testing.T) {
 	numberPeriod, err := period.getPeriod()
 	require.NoError(t, err, "should not return error")
 	require.NotNil(t, numberPeriod, "should return a value")
-	assert.Equal(t, expectedPeriod, *numberPeriod, "period value should match expected")
+	assert.Equal(t, expectedPeriod, numberPeriod, "period value should match expected")
 }
 
 func TestNewSimpleInterest(t *testing.T) {

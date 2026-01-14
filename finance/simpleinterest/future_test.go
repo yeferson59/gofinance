@@ -35,7 +35,7 @@ func TestSuccessSimpleFutureWithRateInterest(t *testing.T) {
 
 func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 	type DataTest struct {
-		simpleInterest *SimpleInterest
+		simpleInterest SimpleInterest
 	}
 
 	periods := NewPeriod(2, Days)
@@ -70,7 +70,7 @@ func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 
 	t.Run("error on invalid periods", func(t *testing.T) {
 		for _, data := range testData {
-			data.simpleInterest.periods = &Period{}
+			data.simpleInterest.periods = Period{}
 			_, err := data.simpleInterest.FutureWithRateInterest()
 
 			assert.Error(t, err)

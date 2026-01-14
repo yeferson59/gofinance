@@ -4,8 +4,9 @@ package simpleinterest
 // Formula: Future = Present + Interest
 // Returns an error if calculation fails, but currently always succeeds.
 func (s *SimpleInterest) Future() (float64, error) {
-	s.future = s.present + s.interest
-	return s.future, nil
+	future := s.present + s.interest
+
+	return future, nil
 }
 
 // FutureWithRateInterest calculates the future value using present value, rate, and periods.
@@ -16,7 +17,8 @@ func (s *SimpleInterest) FutureWithRateInterest() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	s.future = s.present * (1 + ((*valuePeriods) * s.rateInterest))
 
-	return s.future, nil
+	future := s.present * (1 + (valuePeriods * s.rateInterest))
+
+	return future, nil
 }

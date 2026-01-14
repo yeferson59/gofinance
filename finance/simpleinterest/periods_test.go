@@ -8,14 +8,14 @@ import (
 )
 
 func TestPeriods(t *testing.T) {
-	simpleInterest := New(0, 5_000, 500, 0.05, nil) // interest=500, present=5000, rate=0.05
-	expectedPeriods := 500 / (5_000 * 0.05)         // 2
+	simpleInterest := New(0, 5_000, 500, 0.05, Period{}) // interest=500, present=5000, rate=0.05
+	expectedPeriods := 500 / (5_000 * 0.05)              // 2
 
 	period, err := simpleInterest.Periods(Days)
 	require.NoError(t, err)
 
 	value, _ := period.getPeriod()
-	assert.Equal(t, expectedPeriods, *value)
+	assert.Equal(t, expectedPeriods, value)
 
 	// Test error case: present=0
 	simpleInterest.present = 0
@@ -30,14 +30,14 @@ func TestPeriods(t *testing.T) {
 }
 
 func TestPeriodsWithPresentAndFuture(t *testing.T) {
-	simpleInterest := New(5_500, 5_000, 0, 0.05, nil) // future=5500, present=5000, rate=0.05
+	simpleInterest := New(5_500, 5_000, 0, 0.05, Period{}) // future=5500, present=5000, rate=0.05
 	expectedPeriods := 2.0
 
 	period, err := simpleInterest.PeriodsWithPresentAndFuture(Days)
 	require.NoError(t, err)
 
 	value, _ := period.getPeriod()
-	assert.InDelta(t, expectedPeriods, *value, 1e-10)
+	assert.InDelta(t, expectedPeriods, value, 1e-10)
 
 	// Test error case: present=0
 	simpleInterest.present = 0

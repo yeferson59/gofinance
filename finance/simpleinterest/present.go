@@ -11,15 +11,13 @@ func (s *SimpleInterest) Present() (float64, error) {
 		return 0, err
 	}
 
-	period := *valuePeriods
-
-	if period == 0 || s.rateInterest == 0 {
+	if valuePeriods == 0 || s.rateInterest == 0 {
 		return 0, errors.New("invalid period or rate interest for operation")
 	}
 
-	s.present = ((s.interest) / (period * s.rateInterest))
+	present := ((s.interest) / (valuePeriods * s.rateInterest))
 
-	return s.present, nil
+	return present, nil
 }
 
 // PresentWithFuture calculates the present value using future value, rate, and periods.
@@ -31,13 +29,11 @@ func (s *SimpleInterest) PresentWithFuture() (float64, error) {
 		return 0, err
 	}
 
-	periods := *valuePeriods
-
-	if periods == 0 || s.rateInterest == 0 {
+	if valuePeriods == 0 || s.rateInterest == 0 {
 		return 0, errors.New("invalid period or rate interest for operation")
 	}
 
-	s.present = (s.future / (1 + (periods * s.rateInterest)))
+	present := (s.future / (1 + (valuePeriods * s.rateInterest)))
 
-	return s.present, nil
+	return present, nil
 }

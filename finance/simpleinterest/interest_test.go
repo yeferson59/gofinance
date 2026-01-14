@@ -18,7 +18,7 @@ func TestInterest(t *testing.T) {
 	assert.Equal(t, expectedInterest, interest)
 
 	// Test error case
-	simpleInterest.periods = &Period{}
+	simpleInterest.periods = Period{}
 	_, err = simpleInterest.Interest()
 	assert.Error(t, err)
 }
