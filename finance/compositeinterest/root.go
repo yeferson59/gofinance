@@ -78,39 +78,39 @@ type Period struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency) (Period, error) {
-	if numberPeriods <= 0 {
+func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period, error) {
+	if value <= 0 {
 		return Period{}, errors.New("value periods must be greater to zero")
 	}
 
 	switch compoundingFrequency {
 	case Daily:
 		return Period{
-			daily: numberPeriods,
+			daily: value,
 		}, nil
 	case Monthly:
 		return Period{
-			monthly: numberPeriods,
+			monthly: value,
 		}, nil
 	case Bimonthly:
 		return Period{
-			bimonthly: numberPeriods,
+			bimonthly: value,
 		}, nil
 	case QuarterlyOne:
 		return Period{
-			quarterlyOne: numberPeriods,
+			quarterlyOne: value,
 		}, nil
 	case QuarterlyTwo:
 		return Period{
-			quarterlyTwo: numberPeriods,
+			quarterlyTwo: value,
 		}, nil
 	case SemiAnnually:
 		return Period{
-			semiAnnually: numberPeriods,
+			semiAnnually: value,
 		}, nil
 	case Annually:
 		return Period{
-			annually: numberPeriods,
+			annually: value,
 		}, nil
 	default:
 		return Period{}, nil
