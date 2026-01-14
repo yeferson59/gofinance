@@ -53,13 +53,13 @@ type TypeRate string
 // Only one of the fields will be different from nil, corresponding to the chosen compounding frequency.
 // Example: If Monthly is specified, only the monthly field will contain a value.
 type Period struct {
-	daily        *float64
-	monthly      *float64
-	bimonthly    *float64
-	quarterlyOne *float64
-	quarterlyTwo *float64
-	semiAnnually *float64
-	annually     *float64
+	daily        float64
+	monthly      float64
+	bimonthly    float64
+	quarterlyOne float64
+	quarterlyTwo float64
+	semiAnnually float64
+	annually     float64
 }
 
 // NewPeriod creates a new Period instance for the specified compounding frequency.
@@ -86,31 +86,31 @@ func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency)
 	switch compoundingFrequency {
 	case Daily:
 		return Period{
-			daily: &numberPeriods,
+			daily: numberPeriods,
 		}, nil
 	case Monthly:
 		return Period{
-			monthly: &numberPeriods,
+			monthly: numberPeriods,
 		}, nil
 	case Bimonthly:
 		return Period{
-			bimonthly: &numberPeriods,
+			bimonthly: numberPeriods,
 		}, nil
 	case QuarterlyOne:
 		return Period{
-			quarterlyOne: &numberPeriods,
+			quarterlyOne: numberPeriods,
 		}, nil
 	case QuarterlyTwo:
 		return Period{
-			quarterlyTwo: &numberPeriods,
+			quarterlyTwo: numberPeriods,
 		}, nil
 	case SemiAnnually:
 		return Period{
-			semiAnnually: &numberPeriods,
+			semiAnnually: numberPeriods,
 		}, nil
 	case Annually:
 		return Period{
-			annually: &numberPeriods,
+			annually: numberPeriods,
 		}, nil
 	default:
 		return Period{}, nil
@@ -125,32 +125,32 @@ func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency)
 //   - The corresponding compounding frequency
 //   - An error if no period is set
 func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
-	if p.daily != nil {
-		return *p.daily, Daily, nil
+	if p.daily != 0 {
+		return p.daily, Daily, nil
 	}
 
-	if p.monthly != nil {
-		return *p.monthly, Monthly, nil
+	if p.monthly != 0 {
+		return p.monthly, Monthly, nil
 	}
 
-	if p.bimonthly != nil {
-		return *p.bimonthly, Bimonthly, nil
+	if p.bimonthly != 0 {
+		return p.bimonthly, Bimonthly, nil
 	}
 
-	if p.quarterlyOne != nil {
-		return *p.quarterlyOne, QuarterlyOne, nil
+	if p.quarterlyOne != 0 {
+		return p.quarterlyOne, QuarterlyOne, nil
 	}
 
-	if p.quarterlyTwo != nil {
-		return *p.quarterlyTwo, QuarterlyTwo, nil
+	if p.quarterlyTwo != 0 {
+		return p.quarterlyTwo, QuarterlyTwo, nil
 	}
 
-	if p.semiAnnually != nil {
-		return *p.semiAnnually, SemiAnnually, nil
+	if p.semiAnnually != 0 {
+		return p.semiAnnually, SemiAnnually, nil
 	}
 
-	if p.annually != nil {
-		return *p.annually, Annually, nil
+	if p.annually != 0 {
+		return p.annually, Annually, nil
 	}
 
 	return 0, "", errors.New("failed to get valid periods")
