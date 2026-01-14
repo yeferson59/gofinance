@@ -125,31 +125,31 @@ func NewPeriod(numberPeriods float64, compoundingFrequency CompoundingFrequency)
 //   - The corresponding compounding frequency
 //   - An error if no period is set
 func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
-	if p.daily != 0 {
+	if p.daily != 0.0 {
 		return p.daily, Daily, nil
 	}
 
-	if p.monthly != 0 {
+	if p.monthly != 0.0 {
 		return p.monthly, Monthly, nil
 	}
 
-	if p.bimonthly != 0 {
+	if p.bimonthly != 0.0 {
 		return p.bimonthly, Bimonthly, nil
 	}
 
-	if p.quarterlyOne != 0 {
+	if p.quarterlyOne != 0.0 {
 		return p.quarterlyOne, QuarterlyOne, nil
 	}
 
-	if p.quarterlyTwo != 0 {
+	if p.quarterlyTwo != 0.0 {
 		return p.quarterlyTwo, QuarterlyTwo, nil
 	}
 
-	if p.semiAnnually != 0 {
+	if p.semiAnnually != 0.0 {
 		return p.semiAnnually, SemiAnnually, nil
 	}
 
-	if p.annually != 0 {
+	if p.annually != 0.0 {
 		return p.annually, Annually, nil
 	}
 
