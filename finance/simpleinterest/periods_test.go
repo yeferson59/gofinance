@@ -32,19 +32,19 @@ func TestPeriodsWithPresentAndFuture(t *testing.T) {
 	simpleInterest := New(5_500, 5_000, 0, 0.05, Period{}) // future=5500, present=5000, rate=0.05
 	expectedPeriods := 2.0
 
-	period, err := simpleInterest.PeriodsWithPresentAndFuture(Days)
+	period, err := simpleInterest.PeriodsWithPresentAndFuture()
 	require.NoError(t, err)
 
 	assert.InDelta(t, expectedPeriods, period, 1e-10)
 
 	// Test error case: present=0
 	simpleInterest.present = 0
-	_, err = simpleInterest.PeriodsWithPresentAndFuture(Days)
+	_, err = simpleInterest.PeriodsWithPresentAndFuture()
 	assert.Error(t, err)
 
 	// Test error case: rate=0
 	simpleInterest.present = 5_000
 	simpleInterest.rateInterest = 0
-	_, err = simpleInterest.PeriodsWithPresentAndFuture(Days)
+	_, err = simpleInterest.PeriodsWithPresentAndFuture()
 	assert.Error(t, err)
 }

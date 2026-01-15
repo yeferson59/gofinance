@@ -140,7 +140,7 @@ func BenchmarkSimpleInterest(b *testing.B) {
 			b.ReportAllocs()
 			b.StartTimer()
 			for b.Loop() {
-				_, _ = testcase.PeriodsWithPresentAndFuture(simpleinterest.Days)
+				_, _ = testcase.PeriodsWithPresentAndFuture()
 			}
 		}
 	})
