@@ -1,7 +1,6 @@
 package compositeinterest
 
 import (
-	"errors"
 	"math"
 )
 
@@ -24,13 +23,17 @@ import (
 //	periods, err := ci.Periods()
 //	// periods will be approximately 12 (for the example with monthly rate)
 func (c CompositeInterest) Periods() (float64, error) {
+	if value, _, err := c.periods.getPeriod(); err == nil && value != 0 {
+		return value, nil
+	}
+
 	_, rateInterest, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
 	}
 
-	if c.present == 0 {
-		return 0, errors.New("invalid present for operation")
+	if c.present == 0 || c.future == 0 || rateInterest == 0 {
+		return 0, ErrInvalidOperation
 	}
 
 	periods := (math.Log((c.future / c.present)) / math.Log(1+rateInterest))

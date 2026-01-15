@@ -22,9 +22,17 @@ import (
 //	rate, err := ci.Interest()
 //	// rate will be approximately 0.01 (1% periodic)
 func (c CompositeInterest) Interest() (float64, error) {
+	if c.rateInterest.value != 0 {
+		return c.rateInterest.value, nil
+	}
+
 	periods, _, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
+	}
+
+	if c.future == 0 || c.present == 0 || periods == 0 {
+		return 0, ErrInvalidOperation
 	}
 
 	rateInterest := math.Pow((c.future/c.present), (1/periods)) - 1

@@ -123,7 +123,7 @@ func TestFutureWithZeroPresent(t *testing.T) {
 	require.NoError(t, err)
 
 	future, err := ci.Future()
-	require.NoError(t, err)
+	require.Error(t, err)
 
 	assert.Equal(t, 0.0, future)
 }

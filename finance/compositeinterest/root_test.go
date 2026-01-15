@@ -36,8 +36,8 @@ func TestNewPeriodFailed(t *testing.T) {
 
 	tx := assert.New(t)
 
-	tx.NotNil(period, "period must be nil")
-	tx.NotNil(err)
+	tx.NotNil(period, "period must be not nil")
+	tx.Nil(err)
 }
 
 func TestNewPeriodWithDifferentsValues(t *testing.T) {

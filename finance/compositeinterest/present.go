@@ -1,6 +1,8 @@
 package compositeinterest
 
-import "math"
+import (
+	"math"
+)
 
 // Present calculates the present value (discount) using the formula: PV = FV / (1 + i)^n
 // where:
@@ -21,9 +23,17 @@ import "math"
 //	present, err := ci.Present()
 //	// present will be approximately 1000
 func (c CompositeInterest) Present() (float64, error) {
+	if c.present != 0 {
+		return c.present, nil
+	}
+
 	periods, rateInterest, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
+	}
+
+	if c.future == 0 || rateInterest == 0 || periods == 0 {
+		return 0, ErrInvalidOperation
 	}
 
 	present := (c.future / math.Pow(1+rateInterest, periods))

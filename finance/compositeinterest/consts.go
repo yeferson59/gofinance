@@ -1,5 +1,7 @@
 package compositeinterest
 
+import "errors"
+
 // Compounding frequencies of interest per year.
 // These constants define how many times interest compounds in a one-year period.
 const (
@@ -29,4 +31,8 @@ const (
 	RateAnticipateEffectyPeriodic TypeRate = "anticipatePeriodic"
 	RateAnticipateEffectyAnnually TypeRate = "anticipateAnnual"
 	RateAnticipateEffectyNominal  TypeRate = "anticipateNominal"
+)
+
+var (
+	ErrInvalidOperation = errors.New("invalid values for operation")
 )

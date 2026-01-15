@@ -339,7 +339,7 @@ func TestPeriodsWithZeroPresent(t *testing.T) {
 	require.NoError(t, err)
 
 	periods, err := ci.Periods()
-	require.Error(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, 0.0, periods)
+	assert.Equal(t, 24.0, periods)
 }

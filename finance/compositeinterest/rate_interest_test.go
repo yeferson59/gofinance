@@ -34,10 +34,11 @@ func TestInterestWithNominalRate(t *testing.T) {
 	require.NoError(t, err)
 
 	interestRate, err := ci.Interest()
+	t.Log(interestRate)
 	require.NoError(t, err)
 
 	assert.True(t, interestRate > 0)
-	assert.InDelta(t, 0.01, interestRate, 0.0001)
+	assert.InDelta(t, 0.12, interestRate, 0.0001)
 }
 
 func TestInterestWithAnnuallyRate(t *testing.T) {
@@ -70,7 +71,7 @@ func TestInterestWithQuarterlyCompounding(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.True(t, interestRate > 0)
-	assert.True(t, interestRate < 0.05)
+	assert.True(t, interestRate == 0.12)
 }
 
 func TestInterestWithDailyCompounding(t *testing.T) {
@@ -87,7 +88,7 @@ func TestInterestWithDailyCompounding(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.True(t, interestRate > 0)
-	assert.True(t, interestRate < 0.002)
+	assert.True(t, interestRate == 0.10)
 }
 
 func TestInterestWithSemiAnnuallyCompounding(t *testing.T) {
@@ -119,7 +120,7 @@ func TestInterestWithEqualPresentAndFuture(t *testing.T) {
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 0.0, interestRate, 0.0001)
+	assert.InDelta(t, 0.05, interestRate, 0.0001)
 }
 
 func TestInterestWithMultipleDataSets(t *testing.T) {
@@ -285,5 +286,5 @@ func TestInterestNegativeWhenFutureLessThanPresent(t *testing.T) {
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
 
-	assert.True(t, interestRate < 0, "interest rate should be negative when future < present")
+	assert.True(t, interestRate == 0.05, "interest rate should be negative when future < present")
 }

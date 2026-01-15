@@ -79,8 +79,8 @@ type Period struct {
 //	    log.Fatal(err)
 //	}
 func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period, error) {
-	if value <= 0 {
-		return Period{}, errors.New("value periods must be greater to zero")
+	if value < 0 {
+		return Period{}, errors.New("value periods must be greater or equal to zero")
 	}
 
 	switch compoundingFrequency {
@@ -185,6 +185,10 @@ type RateInterest struct {
 //	    log.Fatal(err)
 //	}
 func NewRateInterest(value float64, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (RateInterest, error) {
+	if value < 0 {
+		return RateInterest{}, errors.New("invalid value for rate interest must be greater o equal to zero")
+	}
+
 	return RateInterest{
 		value:                value,
 		compoundingFrequency: compoundingFrequency,
@@ -251,6 +255,7 @@ func (c CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, err
 	if err != nil {
 		return 0, 0, nil
 	}
+
 	rateInterest := c.rateInterest.value
 
 	if c.rateInterest.typeRate != RateEffectyPeriodic {
@@ -265,6 +270,7 @@ func (c CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, err
 		if err != nil {
 			return 0, 0, err
 		}
+
 		interestMonths, err := getCompoundingFrequencytoMonths(c.rateInterest.compoundingFrequency)
 		if err != nil {
 			return 0, 0, err
