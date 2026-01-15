@@ -6,7 +6,7 @@ import "errors"
 // Formula: Periods = Interest / (Present × Rate)
 // Returns an error if present or rate is zero.
 // The timePeriod specifies the unit for the returned Period.
-func (s *SimpleInterest) Periods(timePeriod Periods) (Period, error) {
+func (s SimpleInterest) Periods(timePeriod Periods) (Period, error) {
 	if s.present == 0 || s.rateInterest == 0 {
 		return Period{}, errors.New("invalid present or rate interest for operation")
 	}
@@ -20,7 +20,7 @@ func (s *SimpleInterest) Periods(timePeriod Periods) (Period, error) {
 // Formula: Periods = (Future / Present - 1) / Rate
 // Returns an error if present or rate is zero.
 // The timePeriod specifies the unit for the returned Period.
-func (s *SimpleInterest) PeriodsWithPresentAndFuture(timePeriod Periods) (Period, error) {
+func (s SimpleInterest) PeriodsWithPresentAndFuture(timePeriod Periods) (Period, error) {
 	if s.present == 0 || s.rateInterest == 0 {
 		return Period{}, errors.New("invalid present or rate interest for operation")
 	}

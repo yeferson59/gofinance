@@ -5,7 +5,7 @@ import "errors"
 // RateInterest calculates the interest rate using interest, present value, and periods.
 // Formula: Rate = Interest / (Present × Periods)
 // Returns an error if present or periods is zero.
-func (s *SimpleInterest) RateInterest() (float64, error) {
+func (s SimpleInterest) RateInterest() (float64, error) {
 	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
@@ -23,7 +23,7 @@ func (s *SimpleInterest) RateInterest() (float64, error) {
 // RateInterestWithPresentAndFuture calculates the interest rate using future, present value, and periods.
 // Formula: Rate = ((Future / Present) - 1) / Periods
 // Returns an error if present or periods is zero.
-func (s *SimpleInterest) RateInterestWithPresentAndFuture() (float64, error) {
+func (s SimpleInterest) RateInterestWithPresentAndFuture() (float64, error) {
 	valuePeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err

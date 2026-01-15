@@ -90,7 +90,7 @@ func New(future, present, interest, rateInterest float64, periods Period) Simple
 
 // GetPeriods returns the period value from the associated Period.
 // Returns an error if periods is invalid.
-func (s *SimpleInterest) GetPeriods() (float64, error) {
+func (s SimpleInterest) GetPeriods() (float64, error) {
 	periods, err := s.periods.getPeriod()
 	return periods, err
 }
