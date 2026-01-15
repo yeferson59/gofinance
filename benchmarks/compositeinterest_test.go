@@ -63,6 +63,136 @@ func BenchmarkNewRateInterest(b *testing.B) {
 	}
 }
 
+func BenchmarkRateInterest(b *testing.B) {
+	rate, _ := compositeinterest.NewRateInterest(0.25, compositeinterest.Bimonthly, compositeinterest.RateAnticipateEffectyAnnually)
+	rateTwo, _ := compositeinterest.NewRateInterest(0.18, compositeinterest.Monthly, compositeinterest.RateEffectyAnnually)
+
+	testcases := []compositeinterest.RateInterest{
+		rate,
+		rateTwo,
+	}
+
+	b.Run("rate periodic", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RatePeriodic()
+			}
+		}
+	})
+
+	b.Run("rate nominal", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RateNominal()
+			}
+		}
+	})
+
+	b.Run("rate effecty annually", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RateEffectyAnnually()
+			}
+		}
+	})
+
+	b.Run("rate anticipated periodic", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RateAnticipatePeriodic()
+			}
+		}
+	})
+
+	b.Run("rate anticipated nominal", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RateAnticipateNominal()
+			}
+		}
+	})
+
+	b.Run("rate anticipated effecty annually", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RateAnticipateEffectyAnnually()
+			}
+		}
+	})
+
+	b.Run("rate nominal to nominal", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RateNominalToNominal(compositeinterest.Annually)
+			}
+		}
+	})
+
+	b.Run("rate periodic to periodic", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.RatePeriodicToPeriodic(compositeinterest.Bimonthly)
+			}
+		}
+	})
+
+	b.Run("to nominal", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.ToNominal()
+			}
+		}
+	})
+
+	b.Run("to periodic", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.ToPeriodic()
+			}
+		}
+	})
+
+	b.Run("to anticipated nominal", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.ToAnticipateNominal()
+			}
+		}
+	})
+
+	b.Run("to anticipated periodic", func(b *testing.B) {
+		for _, testcase := range testcases {
+			b.ReportAllocs()
+			b.StartTimer()
+			for b.Loop() {
+				_, _ = testcase.ToAnticipatePeriodic()
+			}
+		}
+	})
+}
+
 func BenchmarkNewCompositeInterest(b *testing.B) {
 	testcases := []struct {
 		numberPeriod         float64
