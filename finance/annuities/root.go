@@ -23,7 +23,7 @@ func New(value, present, future float64, period compositeinterest.Period, rateIn
 	}, nil
 }
 
-func (a Annuity) GetWithPresent() (float64, error) {
+func (a Annuity) PaymentFromPresentValue() (float64, error) {
 	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
@@ -39,7 +39,7 @@ func (a Annuity) GetWithPresent() (float64, error) {
 	return annuity, nil
 }
 
-func (a Annuity) GetWithFuture() (float64, error) {
+func (a Annuity) PaymentFromFutureValue() (float64, error) {
 	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
