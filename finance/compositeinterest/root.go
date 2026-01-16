@@ -50,8 +50,7 @@ type CompoundingFrequency string
 type TypeRate string
 
 // Period represents the number of compounding periods for a compound interest calculation.
-// Only one of the fields will be different from nil, corresponding to the chosen compounding frequency.
-// Example: If Monthly is specified, only the monthly field will contain a value.
+// It stores a single period value along with its compounding frequency.
 type Period struct {
 	value     float64
 	frequency CompoundingFrequency
@@ -64,8 +63,8 @@ type Period struct {
 //   - compoundingFrequency: The compounding frequency (Daily, Monthly, etc.)
 //
 // Returns:
-//   - A Period instance with the specified period
-//   - An error if the frequency is invalid (although validation occurs in getPeriod)
+//   - A Period instance with the specified period value and frequency
+//   - An error if the value is negative or the frequency is invalid
 //
 // Example:
 //
@@ -94,7 +93,7 @@ func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period
 // Returns:
 //   - The numeric value of the period
 //   - The corresponding compounding frequency
-//   - An error if no period is set
+//   - An error if the frequency is invalid or uninitialized
 func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
 	// Direct lookup via frequency field
 	switch p.frequency {
