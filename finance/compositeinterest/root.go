@@ -60,6 +60,7 @@ type Period struct {
 	quarterlyTwo float64
 	semiAnnually float64
 	annually     float64
+	frequency    CompoundingFrequency // Track which field is set for O(1) lookup
 }
 
 // NewPeriod creates a new Period instance for the specified compounding frequency.
@@ -86,31 +87,38 @@ func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period
 	switch compoundingFrequency {
 	case Daily:
 		return Period{
-			daily: value,
+			daily:     value,
+			frequency: Daily,
 		}, nil
 	case Monthly:
 		return Period{
-			monthly: value,
+			monthly:   value,
+			frequency: Monthly,
 		}, nil
 	case Bimonthly:
 		return Period{
 			bimonthly: value,
+			frequency: Bimonthly,
 		}, nil
 	case QuarterlyOne:
 		return Period{
 			quarterlyOne: value,
+			frequency:    QuarterlyOne,
 		}, nil
 	case QuarterlyTwo:
 		return Period{
 			quarterlyTwo: value,
+			frequency:    QuarterlyTwo,
 		}, nil
 	case SemiAnnually:
 		return Period{
 			semiAnnually: value,
+			frequency:    SemiAnnually,
 		}, nil
 	case Annually:
 		return Period{
-			annually: value,
+			annually:  value,
+			frequency: Annually,
 		}, nil
 	default:
 		return Period{}, nil
@@ -125,35 +133,25 @@ func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period
 //   - The corresponding compounding frequency
 //   - An error if no period is set
 func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
-	if p.daily != 0.0 {
+	// Use O(1) lookup via frequency field instead of O(7) sequential checks
+	switch p.frequency {
+	case Daily:
 		return p.daily, Daily, nil
-	}
-
-	if p.monthly != 0.0 {
+	case Monthly:
 		return p.monthly, Monthly, nil
-	}
-
-	if p.bimonthly != 0.0 {
+	case Bimonthly:
 		return p.bimonthly, Bimonthly, nil
-	}
-
-	if p.quarterlyOne != 0.0 {
+	case QuarterlyOne:
 		return p.quarterlyOne, QuarterlyOne, nil
-	}
-
-	if p.quarterlyTwo != 0.0 {
+	case QuarterlyTwo:
 		return p.quarterlyTwo, QuarterlyTwo, nil
-	}
-
-	if p.semiAnnually != 0.0 {
+	case SemiAnnually:
 		return p.semiAnnually, SemiAnnually, nil
-	}
-
-	if p.annually != 0.0 {
+	case Annually:
 		return p.annually, Annually, nil
+	default:
+		return 0, "", errors.New("failed to get valid periods")
 	}
-
-	return 0, "", errors.New("failed to get valid periods")
 }
 
 // RateInterest represents an interest rate with its compounding frequency and type.

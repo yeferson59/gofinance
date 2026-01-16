@@ -8,7 +8,8 @@ func (a Annuity) Present() (float64, error) {
 		return 0, err
 	}
 
-	present := a.value * ((math.Pow(1+rateInterest, periods) - 1) / (rateInterest * math.Pow(1+rateInterest, periods)))
+	pow := math.Pow(1+rateInterest, periods)
+	present := a.value * ((pow - 1) / (rateInterest * pow))
 
 	return present, nil
 }

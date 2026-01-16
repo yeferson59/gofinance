@@ -37,7 +37,9 @@ func (rt RateInterest) RatePeriodic() (float64, error) {
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		nominalRate := compoundingPeriodsPerYear * (math.Pow((1+rt.value), (1/compoundingPeriodsPerYear)) - 1)
+		// Cache the power calculation to avoid redundant computation
+		pow := math.Pow((1 + rt.value), (1 / compoundingPeriodsPerYear))
+		nominalRate := compoundingPeriodsPerYear * (pow - 1)
 		periodicRate = nominalRate / compoundingPeriodsPerYear
 	}
 
@@ -68,7 +70,9 @@ func (rt RateInterest) RateNominal() (float64, error) {
 	var nominalRate float64
 
 	if rt.typeRate == RateEffectyAnnually {
-		nominalRate = compoundingPeriodsPerYear * (math.Pow((1+rt.value), (1/compoundingPeriodsPerYear)) - 1)
+		// Cache the power calculation to avoid redundant computation
+		pow := math.Pow((1 + rt.value), (1 / compoundingPeriodsPerYear))
+		nominalRate = compoundingPeriodsPerYear * (pow - 1)
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {
