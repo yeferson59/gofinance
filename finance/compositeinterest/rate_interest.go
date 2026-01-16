@@ -26,16 +26,16 @@ func (c CompositeInterest) Interest() (float64, error) {
 		return c.rateInterest.value, nil
 	}
 
-	periods, _, err := c.GetEqualsRateInterestPeriods()
+	numberOfPeriods, _, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return 0, err
 	}
 
-	if c.future == 0 || c.present == 0 || periods == 0 {
+	if c.future == 0 || c.present == 0 || numberOfPeriods == 0 {
 		return 0, ErrInvalidOperation
 	}
 
-	rateInterest := math.Pow((c.future/c.present), (1/periods)) - 1
+	periodicRate := math.Pow((c.future/c.present), (1/numberOfPeriods)) - 1
 
-	return rateInterest, nil
+	return periodicRate, nil
 }

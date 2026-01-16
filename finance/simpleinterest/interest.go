@@ -4,12 +4,12 @@ package simpleinterest
 // Formula: Interest = Present × Periods × Rate
 // Returns an error if periods is invalid.
 func (s SimpleInterest) Interest() (float64, error) {
-	valuePeriods, err := s.periods.getPeriod()
+	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
 	}
 
-	interest := s.present * valuePeriods * s.rateInterest
+	interest := s.present * numberOfPeriods * s.rateInterest
 
 	return interest, nil
 }

@@ -25,23 +25,23 @@ func (rt RateInterest) RatePeriodic() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	var ratePeriodic float64
+	var periodicRate float64
 
 	if rt.typeRate == RateEffectyNominal {
-		ratePeriodic = rt.value / value
+		periodicRate = rt.value / compoundingPeriodsPerYear
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		rateNominal := value * (math.Pow((1+rt.value), (1/value)) - 1)
-		ratePeriodic = rateNominal / value
+		nominalRate := compoundingPeriodsPerYear * (math.Pow((1+rt.value), (1/compoundingPeriodsPerYear)) - 1)
+		periodicRate = nominalRate / compoundingPeriodsPerYear
 	}
 
-	return ratePeriodic, nil
+	return periodicRate, nil
 }
 
 // RateNominal converts the interest rate to nominal type.
@@ -60,22 +60,22 @@ func (rt RateInterest) RateNominal() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	var rateNominal float64
+	var nominalRate float64
 
 	if rt.typeRate == RateEffectyAnnually {
-		rateNominal = value * (math.Pow((1+rt.value), (1/value)) - 1)
+		nominalRate = compoundingPeriodsPerYear * (math.Pow((1+rt.value), (1/compoundingPeriodsPerYear)) - 1)
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {
-		rateNominal = rt.value * value
+		nominalRate = rt.value * compoundingPeriodsPerYear
 	}
 
-	return rateNominal, nil
+	return nominalRate, nil
 }
 
 // RateEffectyAnnually converts the interest rate to effective annual rate.
@@ -93,23 +93,23 @@ func (rt RateInterest) RateEffectyAnnually() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	var rateEffectyAnnually float64
+	var effectiveAnnualRate float64
 
 	if rt.typeRate == RateEffectyNominal {
-		ratePeriodic := rt.value / value
-		rateEffectyAnnually = math.Pow(1+ratePeriodic, value) - 1
+		periodicRate := rt.value / compoundingPeriodsPerYear
+		effectiveAnnualRate = math.Pow(1+periodicRate, compoundingPeriodsPerYear) - 1
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {
-		rateEffectyAnnually = math.Pow(1+rt.value, value) - 1
+		effectiveAnnualRate = math.Pow(1+rt.value, compoundingPeriodsPerYear) - 1
 	}
 
-	return rateEffectyAnnually, nil
+	return effectiveAnnualRate, nil
 }
 
 // RatePeriodicToPeriodic converts a periodic rate to another periodic rate
@@ -126,26 +126,26 @@ func (rt RateInterest) RateEffectyAnnually() (float64, error) {
 //   - The equivalent periodic rate in the new frequency
 //   - An error if the valid compounding frequency cannot be obtained
 func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (float64, error) {
-	currentRatePeriodic, err := rt.RatePeriodic()
+	currentPeriodicRate, err := rt.RatePeriodic()
 	if err != nil {
 		return 0, err
 	}
 
-	newValue, err := getCompoundingFrequency(newCompoundingFrequency)
+	newPeriodsPerYear, err := getCompoundingFrequency(newCompoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	value, err := getCompoundingFrequency(rt.compoundingFrequency)
+	currentPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	exp := (1 / newValue) * value
+	exponent := (1 / newPeriodsPerYear) * currentPeriodsPerYear
 
-	newRatePeriodic := math.Pow(1+currentRatePeriodic, exp) - 1
+	newPeriodicRate := math.Pow(1+currentPeriodicRate, exponent) - 1
 
-	return newRatePeriodic, nil
+	return newPeriodicRate, nil
 }
 
 // RateNominalToNominal converts a nominal rate to another nominal rate
@@ -158,24 +158,24 @@ func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundin
 //   - The equivalent nominal annual rate in the new frequency
 //   - An error if there are problems in the conversion
 func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingFrequency) (float64, error) {
-	newPeriodic, err := rt.RatePeriodicToPeriodic(newCompoundingFrequency)
+	newPeriodicRate, err := rt.RatePeriodicToPeriodic(newCompoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	oldCompoundingFrequency, oldValue, oldTypeRate := rt.compoundingFrequency, rt.value, rt.typeRate
+	originalFrequency, originalValue, originalTypeRate := rt.compoundingFrequency, rt.value, rt.typeRate
 
 	rt.compoundingFrequency = newCompoundingFrequency
 	rt.typeRate = RateEffectyPeriodic
-	rt.value = newPeriodic
+	rt.value = newPeriodicRate
 
-	newNominal, err := rt.RateNominal()
+	newNominalRate, err := rt.RateNominal()
 
-	rt.compoundingFrequency = oldCompoundingFrequency
-	rt.typeRate = oldTypeRate
-	rt.value = oldValue
+	rt.compoundingFrequency = originalFrequency
+	rt.typeRate = originalTypeRate
+	rt.value = originalValue
 
-	return newNominal, err
+	return newNominalRate, err
 }
 
 // RateAnticipateEffectyAnnually converts an anticipated (discount) rate
@@ -192,23 +192,23 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	var rateEffectyAnnually float64
+	var effectiveAnnualRate float64
 
 	if rt.typeRate == RateAnticipateEffectyNominal {
-		ratePeriodic := rt.value / value
-		rateEffectyAnnually = math.Pow(1-ratePeriodic, -value) - 1
+		periodicRate := rt.value / compoundingPeriodsPerYear
+		effectiveAnnualRate = math.Pow(1-periodicRate, -compoundingPeriodsPerYear) - 1
 	}
 
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
-		rateEffectyAnnually = math.Pow(1-rt.value, -value) - 1
+		effectiveAnnualRate = math.Pow(1-rt.value, -compoundingPeriodsPerYear) - 1
 	}
 
-	return rateEffectyAnnually, nil
+	return effectiveAnnualRate, nil
 }
 
 // RateAnticipateNominal converts an anticipated rate to its equivalent nominal.
@@ -221,27 +221,27 @@ func (rt RateInterest) RateAnticipateNominal() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	var rateNominal float64
+	var nominalRate float64
 
 	if rt.typeRate == RateAnticipateEffectyAnnually {
-		rateEffectyAnnually, err := rt.RateAnticipateEffectyAnnually()
+		effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 		if err != nil {
 			return 0, err
 		}
 
-		rateNominal = value * (1 - math.Pow(1+rateEffectyAnnually, (-1/value)))
+		nominalRate = compoundingPeriodsPerYear * (1 - math.Pow(1+effectiveAnnualRate, (-1/compoundingPeriodsPerYear)))
 	}
 
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
-		rateNominal = rt.value * value
+		nominalRate = rt.value * compoundingPeriodsPerYear
 	}
 
-	return rateNominal, nil
+	return nominalRate, nil
 }
 
 // RateAnticipatePeriodic converts an anticipated rate to its equivalent periodic.
@@ -254,22 +254,22 @@ func (rt RateInterest) RateAnticipatePeriodic() (float64, error) {
 		return rt.value, nil
 	}
 
-	value, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
 	if err != nil {
 		return 0, err
 	}
 
-	var ratePeriodic float64
+	var periodicRate float64
 
 	if rt.typeRate == RateAnticipateEffectyNominal {
-		ratePeriodic = rt.value / value
+		periodicRate = rt.value / compoundingPeriodsPerYear
 	}
 
 	if rt.typeRate == RateAnticipateEffectyAnnually {
-		ratePeriodic = (1 - math.Pow(1+rt.value, (-1/value)))
+		periodicRate = (1 - math.Pow(1+rt.value, (-1/compoundingPeriodsPerYear)))
 	}
 
-	return ratePeriodic, nil
+	return periodicRate, nil
 }
 
 // ToAnticipateNominal converts an ordinary (vencida) rate to its equivalent anticipated nominal.
@@ -279,22 +279,22 @@ func (rt RateInterest) RateAnticipatePeriodic() (float64, error) {
 //   - The equivalent anticipated nominal rate
 //   - An error if there are problems in the conversion
 func (rt RateInterest) ToAnticipateNominal() (float64, error) {
-	effectyAnnually, err := rt.RateEffectyAnnually()
+	effectiveAnnualRate, err := rt.RateEffectyAnnually()
 	if err != nil {
 		return 0, err
 	}
 
-	oldTypeRate, oldValue := rt.typeRate, rt.value
+	originalTypeRate, originalValue := rt.typeRate, rt.value
 
 	rt.typeRate = RateAnticipateEffectyAnnually
-	rt.value = effectyAnnually
+	rt.value = effectiveAnnualRate
 
-	rateNominal, err := rt.RateAnticipateNominal()
+	nominalRate, err := rt.RateAnticipateNominal()
 
-	rt.typeRate = oldTypeRate
-	rt.value = oldValue
+	rt.typeRate = originalTypeRate
+	rt.value = originalValue
 
-	return rateNominal, err
+	return nominalRate, err
 }
 
 // ToAnticipatePeriodic converts an ordinary (vencida) rate to its equivalent anticipated periodic.
@@ -304,22 +304,22 @@ func (rt RateInterest) ToAnticipateNominal() (float64, error) {
 //   - The equivalent anticipated periodic rate
 //   - An error if there are problems in the conversion
 func (rt RateInterest) ToAnticipatePeriodic() (float64, error) {
-	effectyAnnually, err := rt.RateEffectyAnnually()
+	effectiveAnnualRate, err := rt.RateEffectyAnnually()
 	if err != nil {
 		return 0, err
 	}
 
-	oldTypeRate, oldValue := rt.typeRate, rt.value
+	originalTypeRate, originalValue := rt.typeRate, rt.value
 
 	rt.typeRate = RateAnticipateEffectyAnnually
-	rt.value = effectyAnnually
+	rt.value = effectiveAnnualRate
 
-	ratePeriodic, err := rt.RateAnticipatePeriodic()
+	periodicRate, err := rt.RateAnticipatePeriodic()
 
-	rt.typeRate = oldTypeRate
-	rt.value = oldValue
+	rt.typeRate = originalTypeRate
+	rt.value = originalValue
 
-	return ratePeriodic, err
+	return periodicRate, err
 }
 
 // ToNominal converts an anticipated rate to its equivalent ordinary (vencida) nominal.
@@ -329,22 +329,22 @@ func (rt RateInterest) ToAnticipatePeriodic() (float64, error) {
 //   - The equivalent vencida nominal rate
 //   - An error if there are problems in the conversion
 func (rt RateInterest) ToNominal() (float64, error) {
-	effectyAnnually, err := rt.RateAnticipateEffectyAnnually()
+	effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 	if err != nil {
 		return 0, err
 	}
 
-	oldTypeRate, oldValue := rt.typeRate, rt.value
+	originalTypeRate, originalValue := rt.typeRate, rt.value
 
 	rt.typeRate = RateEffectyAnnually
-	rt.value = effectyAnnually
+	rt.value = effectiveAnnualRate
 
-	rateNominal, err := rt.RateNominal()
+	nominalRate, err := rt.RateNominal()
 
-	rt.typeRate = oldTypeRate
-	rt.value = oldValue
+	rt.typeRate = originalTypeRate
+	rt.value = originalValue
 
-	return rateNominal, err
+	return nominalRate, err
 }
 
 // ToPeriodic converts an anticipated rate to its equivalent ordinary (vencida) periodic.
@@ -354,20 +354,20 @@ func (rt RateInterest) ToNominal() (float64, error) {
 //   - The equivalent vencida periodic rate
 //   - An error if there are problems in the conversion
 func (rt RateInterest) ToPeriodic() (float64, error) {
-	effectyAnnually, err := rt.RateAnticipateEffectyAnnually()
+	effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 	if err != nil {
 		return 0, err
 	}
 
-	oldTypeRate, oldValue := rt.typeRate, rt.value
+	originalTypeRate, originalValue := rt.typeRate, rt.value
 
 	rt.typeRate = RateEffectyAnnually
-	rt.value = effectyAnnually
+	rt.value = effectiveAnnualRate
 
-	ratePeriodic, err := rt.RatePeriodic()
+	periodicRate, err := rt.RatePeriodic()
 
-	rt.typeRate = oldTypeRate
-	rt.value = oldValue
+	rt.typeRate = originalTypeRate
+	rt.value = originalValue
 
-	return ratePeriodic, err
+	return periodicRate, err
 }
