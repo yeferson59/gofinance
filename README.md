@@ -41,7 +41,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 ### Prerequisites
 
-- Go 1.25.5 or higher
+- Go 1.25.6 or higher
 - Basic knowledge of financial mathematics
 
 ### Installation
