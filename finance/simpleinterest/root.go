@@ -9,7 +9,8 @@ import "errors"
 type Periods string
 
 // Period holds the value for different time periods.
-// Only one field should be non-zero at a time.
+// Exactly one of days, weeks, months, or years should be non-zero,
+// with the periods field tracking which one is active.
 type Period struct {
 	days   float64
 	weeks  float64
@@ -49,7 +50,7 @@ func NewPeriod(numberPeriods float64, timePeriod Periods) Period {
 }
 
 // getPeriod returns the period value and an error if no valid period is set.
-// This is an internal method using O(1) lookup via the periods field.
+// Uses O(1) lookup via the periods field (a Periods type indicator).
 func (p *Period) getPeriod() (float64, error) {
 	switch p.periods {
 	case Days:
