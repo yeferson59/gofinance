@@ -12,10 +12,10 @@ type Periods string
 // Exactly one of days, weeks, months, or years should be non-zero,
 // with the periods field tracking which one is active.
 type Period struct {
-	days   float64
-	weeks  float64
-	months float64
-	years  float64
+	days    float64
+	weeks   float64
+	months  float64
+	years   float64
 	periods Periods // Track which period type is active for O(1) lookup
 }
 
