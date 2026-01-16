@@ -9,12 +9,14 @@ import "errors"
 type Periods string
 
 // Period holds the value for different time periods.
-// Only one field should be non-nil at a time.
+// Exactly one of days, weeks, months, or years should be non-zero,
+// with the periods field tracking which one is active.
 type Period struct {
 	days   float64
 	weeks  float64
 	months float64
 	years  float64
+	periods Periods // Track which period type is active for O(1) lookup
 }
 
 // NewPeriod creates a new Period with the specified number and time unit.
@@ -24,19 +26,23 @@ func NewPeriod(numberPeriods float64, timePeriod Periods) Period {
 	switch timePeriod {
 	case Days:
 		return Period{
-			days: numberPeriods,
+			days:    numberPeriods,
+			periods: Days,
 		}
 	case Weeks:
 		return Period{
-			weeks: numberPeriods,
+			weeks:   numberPeriods,
+			periods: Weeks,
 		}
 	case Months:
 		return Period{
-			months: numberPeriods,
+			months:  numberPeriods,
+			periods: Months,
 		}
 	case Years:
 		return Period{
-			years: numberPeriods,
+			years:   numberPeriods,
+			periods: Years,
 		}
 	default:
 		return Period{}
@@ -44,25 +50,20 @@ func NewPeriod(numberPeriods float64, timePeriod Periods) Period {
 }
 
 // getPeriod returns the period value and an error if no valid period is set.
-// This is an internal method.
+// Uses O(1) lookup via the periods field (a Periods type indicator).
 func (p *Period) getPeriod() (float64, error) {
-	if p.days != 0.0 {
+	switch p.periods {
+	case Days:
 		return p.days, nil
-	}
-
-	if p.months != 0.0 {
-		return p.months, nil
-	}
-
-	if p.weeks != 0.0 {
+	case Weeks:
 		return p.weeks, nil
-	}
-
-	if p.years != 0.0 {
+	case Months:
+		return p.months, nil
+	case Years:
 		return p.years, nil
+	default:
+		return 0, errors.New("failed get valid periods")
 	}
-
-	return 0, errors.New("failed get valid periods")
 }
 
 // SimpleInterest holds the values for simple interest calculations.
