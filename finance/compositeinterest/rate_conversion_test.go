@@ -171,7 +171,7 @@ func TestRateAnticipateEffectyAnnuallyFromPeriodic(t *testing.T) {
 }
 
 func TestRateAnticipateEffectyAnnuallyAlreadyAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.1268, Monthly, RateAnticipateEffectyAnnually)
+	rateInterest, err := NewRateInterest(0.1268, Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateAnticipateEffectyAnnually()
@@ -181,7 +181,7 @@ func TestRateAnticipateEffectyAnnuallyAlreadyAnnually(t *testing.T) {
 }
 
 func TestRateAnticipateNominalFromAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.1268, Monthly, RateAnticipateEffectyAnnually)
+	rateInterest, err := NewRateInterest(0.1268, Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateAnticipateNominal()
@@ -273,7 +273,7 @@ func TestToAnticipatePeriodic(t *testing.T) {
 }
 
 func TestToNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.1268, Monthly, RateAnticipateEffectyAnnually)
+	rateInterest, err := NewRateInterest(0.1268, Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.ToNominal()
@@ -283,7 +283,7 @@ func TestToNominal(t *testing.T) {
 }
 
 func TestToPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.1268, Monthly, RateAnticipateEffectyAnnually)
+	rateInterest, err := NewRateInterest(0.1268, Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.ToPeriodic()

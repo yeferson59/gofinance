@@ -35,7 +35,7 @@ func BenchmarkNewRateInterest(b *testing.B) {
 		{
 			0.10,
 			compositeinterest.Annually,
-			compositeinterest.RateAnticipateEffectyAnnually,
+			compositeinterest.RateEffectyAnnually,
 		},
 		{
 			0.24,
@@ -64,7 +64,7 @@ func BenchmarkNewRateInterest(b *testing.B) {
 }
 
 func BenchmarkRateInterest(b *testing.B) {
-	rate, _ := compositeinterest.NewRateInterest(0.25, compositeinterest.Bimonthly, compositeinterest.RateAnticipateEffectyAnnually)
+	rate, _ := compositeinterest.NewRateInterest(0.25, compositeinterest.Bimonthly, compositeinterest.RateEffectyAnnually)
 	rateTwo, _ := compositeinterest.NewRateInterest(0.18, compositeinterest.Monthly, compositeinterest.RateEffectyAnnually)
 
 	testcases := []compositeinterest.RateInterest{

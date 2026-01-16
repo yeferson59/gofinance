@@ -229,7 +229,7 @@ func TestNewRateInterestWithDifferentTypes(t *testing.T) {
 		{"annual", 0.1268, Monthly, RateEffectyAnnually},
 		{"anticipate periodic", 0.01, Monthly, RateAnticipateEffectyPeriodic},
 		{"anticipate nominal", 0.12, Monthly, RateAnticipateEffectyNominal},
-		{"anticipate annual", 0.1268, Monthly, RateAnticipateEffectyAnnually},
+		{"anticipate annual", 0.1268, Monthly, RateEffectyAnnually},
 	}
 
 	for _, tc := range testCases {
