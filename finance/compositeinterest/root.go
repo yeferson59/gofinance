@@ -121,7 +121,7 @@ func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period
 			frequency: Annually,
 		}, nil
 	default:
-		return Period{}, nil
+		return Period{}, errors.New("invalid compounding frequency")
 	}
 }
 
