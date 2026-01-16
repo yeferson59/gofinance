@@ -53,14 +53,8 @@ type TypeRate string
 // Only one of the fields will be different from nil, corresponding to the chosen compounding frequency.
 // Example: If Monthly is specified, only the monthly field will contain a value.
 type Period struct {
-	daily        float64
-	monthly      float64
-	bimonthly    float64
-	quarterlyOne float64
-	quarterlyTwo float64
-	semiAnnually float64
-	annually     float64
-	frequency    CompoundingFrequency // Track which field is set for O(1) lookup
+	value     float64
+	frequency CompoundingFrequency
 }
 
 // NewPeriod creates a new Period instance for the specified compounding frequency.
@@ -85,40 +79,10 @@ func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period
 	}
 
 	switch compoundingFrequency {
-	case Daily:
+	case Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually:
 		return Period{
-			daily:     value,
-			frequency: Daily,
-		}, nil
-	case Monthly:
-		return Period{
-			monthly:   value,
-			frequency: Monthly,
-		}, nil
-	case Bimonthly:
-		return Period{
-			bimonthly: value,
-			frequency: Bimonthly,
-		}, nil
-	case QuarterlyOne:
-		return Period{
-			quarterlyOne: value,
-			frequency:    QuarterlyOne,
-		}, nil
-	case QuarterlyTwo:
-		return Period{
-			quarterlyTwo: value,
-			frequency:    QuarterlyTwo,
-		}, nil
-	case SemiAnnually:
-		return Period{
-			semiAnnually: value,
-			frequency:    SemiAnnually,
-		}, nil
-	case Annually:
-		return Period{
-			annually:  value,
-			frequency: Annually,
+			value:     value,
+			frequency: compoundingFrequency,
 		}, nil
 	default:
 		return Period{}, errors.New("invalid compounding frequency")
@@ -126,29 +90,16 @@ func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period
 }
 
 // getPeriod extracts the period value and its associated frequency from the Period structure.
-// Only one of the fields will be different from nil, this method locates which one and returns it.
 //
 // Returns:
 //   - The numeric value of the period
 //   - The corresponding compounding frequency
 //   - An error if no period is set
 func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
-	// Use O(1) lookup via frequency field instead of O(7) sequential checks
+	// Direct lookup via frequency field
 	switch p.frequency {
-	case Daily:
-		return p.daily, Daily, nil
-	case Monthly:
-		return p.monthly, Monthly, nil
-	case Bimonthly:
-		return p.bimonthly, Bimonthly, nil
-	case QuarterlyOne:
-		return p.quarterlyOne, QuarterlyOne, nil
-	case QuarterlyTwo:
-		return p.quarterlyTwo, QuarterlyTwo, nil
-	case SemiAnnually:
-		return p.semiAnnually, SemiAnnually, nil
-	case Annually:
-		return p.annually, Annually, nil
+	case Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually:
+		return p.value, p.frequency, nil
 	default:
 		return 0, "", errors.New("failed to get valid periods")
 	}
