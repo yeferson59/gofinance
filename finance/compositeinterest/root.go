@@ -50,16 +50,10 @@ type CompoundingFrequency string
 type TypeRate string
 
 // Period represents the number of compounding periods for a compound interest calculation.
-// Only one of the fields will be different from nil, corresponding to the chosen compounding frequency.
-// Example: If Monthly is specified, only the monthly field will contain a value.
+// It stores a single period value along with its compounding frequency.
 type Period struct {
-	daily        float64
-	monthly      float64
-	bimonthly    float64
-	quarterlyOne float64
-	quarterlyTwo float64
-	semiAnnually float64
-	annually     float64
+	value     float64
+	frequency CompoundingFrequency
 }
 
 // NewPeriod creates a new Period instance for the specified compounding frequency.
@@ -69,8 +63,8 @@ type Period struct {
 //   - compoundingFrequency: The compounding frequency (Daily, Monthly, etc.)
 //
 // Returns:
-//   - A Period instance with the specified period
-//   - An error if the frequency is invalid (although validation occurs in getPeriod)
+//   - A Period instance with the specified period value and frequency
+//   - An error if the value is negative or the frequency is invalid
 //
 // Example:
 //
@@ -84,76 +78,30 @@ func NewPeriod(value float64, compoundingFrequency CompoundingFrequency) (Period
 	}
 
 	switch compoundingFrequency {
-	case Daily:
+	case Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually:
 		return Period{
-			daily: value,
-		}, nil
-	case Monthly:
-		return Period{
-			monthly: value,
-		}, nil
-	case Bimonthly:
-		return Period{
-			bimonthly: value,
-		}, nil
-	case QuarterlyOne:
-		return Period{
-			quarterlyOne: value,
-		}, nil
-	case QuarterlyTwo:
-		return Period{
-			quarterlyTwo: value,
-		}, nil
-	case SemiAnnually:
-		return Period{
-			semiAnnually: value,
-		}, nil
-	case Annually:
-		return Period{
-			annually: value,
+			value:     value,
+			frequency: compoundingFrequency,
 		}, nil
 	default:
-		return Period{}, nil
+		return Period{}, errors.New("invalid compounding frequency")
 	}
 }
 
 // getPeriod extracts the period value and its associated frequency from the Period structure.
-// Only one of the fields will be different from nil, this method locates which one and returns it.
 //
 // Returns:
 //   - The numeric value of the period
 //   - The corresponding compounding frequency
-//   - An error if no period is set
+//   - An error if the frequency is invalid or uninitialized
 func (p *Period) getPeriod() (float64, CompoundingFrequency, error) {
-	if p.daily != 0.0 {
-		return p.daily, Daily, nil
+	// Direct lookup via frequency field
+	switch p.frequency {
+	case Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually:
+		return p.value, p.frequency, nil
+	default:
+		return 0, "", errors.New("failed to get valid periods")
 	}
-
-	if p.monthly != 0.0 {
-		return p.monthly, Monthly, nil
-	}
-
-	if p.bimonthly != 0.0 {
-		return p.bimonthly, Bimonthly, nil
-	}
-
-	if p.quarterlyOne != 0.0 {
-		return p.quarterlyOne, QuarterlyOne, nil
-	}
-
-	if p.quarterlyTwo != 0.0 {
-		return p.quarterlyTwo, QuarterlyTwo, nil
-	}
-
-	if p.semiAnnually != 0.0 {
-		return p.semiAnnually, SemiAnnually, nil
-	}
-
-	if p.annually != 0.0 {
-		return p.annually, Annually, nil
-	}
-
-	return 0, "", errors.New("failed to get valid periods")
 }
 
 // RateInterest represents an interest rate with its compounding frequency and type.

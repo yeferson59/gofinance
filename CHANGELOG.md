@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Performance**: Eliminated duplicate `math.Pow()` call in annuities Present() calculation
+- **Performance**: Optimized Period struct lookup from O(7) sequential checks to O(1) switch-based lookup
+- **Performance**: Cached repeated exponential calculations in rate conversion methods
+
+### Fixed
+- Improved error handling consistency in NewPeriod() - now returns error for invalid compounding frequency
+
 ## [1.1.0] - 2026-01-06
 
 ### Added

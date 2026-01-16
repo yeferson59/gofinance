@@ -197,11 +197,9 @@ func TestNewPeriodAnnually(t *testing.T) {
 
 func TestNewPeriodErrorWithInvalidFrequency(t *testing.T) {
 	invalidFreq := CompoundingFrequency("invalid")
-	period, err := NewPeriod(12, invalidFreq)
-	require.NoError(t, err)
-
-	_, _, err = period.getPeriod()
+	_, err := NewPeriod(12, invalidFreq)
 	assert.Error(t, err)
+	assert.EqualError(t, err, "invalid compounding frequency")
 }
 
 func TestNewPeriodErrorWithEmptyPeriod(t *testing.T) {
