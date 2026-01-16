@@ -34,7 +34,8 @@ func (a Annuity) PaymentFromPresentValue() (float64, error) {
 		return 0, err
 	}
 
-	annuity := present * (rateInterest * math.Pow(1+rateInterest, periods) / (math.Pow(1+rateInterest, periods) - 1))
+	pow := math.Pow(1+rateInterest, periods)
+	annuity := present * (rateInterest * pow / (pow - 1))
 
 	return annuity, nil
 }

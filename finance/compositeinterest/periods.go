@@ -36,7 +36,8 @@ func (c CompositeInterest) Periods() (float64, error) {
 		return 0, ErrInvalidOperation
 	}
 
-	numberOfPeriods := (math.Log((c.future / c.present)) / math.Log(1+periodicRate))
+	logBase := math.Log(1 + periodicRate)
+	numberOfPeriods := (math.Log((c.future / c.present)) / logBase)
 
 	return numberOfPeriods, nil
 }
