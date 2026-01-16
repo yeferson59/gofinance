@@ -251,51 +251,51 @@ func New(present, future float64, rateInterest RateInterest, periods Period) (Co
 //   - The equivalent periodic rate
 //   - An error if valid values cannot be obtained
 func (c CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, error) {
-	valuePeriod, compoundingFrequency, err := c.periods.getPeriod()
+	periodValue, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
 		return 0, 0, nil
 	}
 
-	rateInterest := c.rateInterest.value
+	periodicRate := c.rateInterest.value
 
 	if c.rateInterest.typeRate != RateEffectyPeriodic {
-		rateInterest, err = c.rateInterest.RatePeriodic()
+		periodicRate, err = c.rateInterest.RatePeriodic()
 		if err != nil {
 			return 0, 0, nil
 		}
 	}
 
 	if compoundingFrequency != c.rateInterest.compoundingFrequency {
-		periodsMonths, err := getCompoundingFrequencytoMonths(compoundingFrequency)
+		periodsInMonths, err := getCompoundingFrequencytoMonths(compoundingFrequency)
 		if err != nil {
 			return 0, 0, err
 		}
 
-		interestMonths, err := getCompoundingFrequencytoMonths(c.rateInterest.compoundingFrequency)
+		rateFrequencyInMonths, err := getCompoundingFrequencytoMonths(c.rateInterest.compoundingFrequency)
 		if err != nil {
 			return 0, 0, err
 		}
 
-		weightPeriod, err := getOrderTime(compoundingFrequency)
+		periodWeight, err := getOrderTime(compoundingFrequency)
 		if err != nil {
 			return 0, 0, err
 		}
 
-		weightInterest, err := getOrderTime(c.rateInterest.compoundingFrequency)
+		rateWeight, err := getOrderTime(c.rateInterest.compoundingFrequency)
 		if err != nil {
 			return 0, 0, err
 		}
 
-		if weightInterest > weightPeriod {
-			if periodsMonths < 1 {
-				return math.Round(periodsMonths * valuePeriod), rateInterest, nil
+		if rateWeight > periodWeight {
+			if periodsInMonths < 1 {
+				return math.Round(periodsInMonths * periodValue), periodicRate, nil
 			}
 
-			return (valuePeriod / interestMonths), rateInterest, nil
+			return (periodValue / rateFrequencyInMonths), periodicRate, nil
 		}
 
-		return (periodsMonths * valuePeriod), rateInterest, nil
+		return (periodsInMonths * periodValue), periodicRate, nil
 	}
 
-	return valuePeriod, rateInterest, nil
+	return periodValue, periodicRate, nil
 }

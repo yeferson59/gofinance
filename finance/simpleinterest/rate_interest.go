@@ -6,16 +6,16 @@ import "errors"
 // Formula: Rate = Interest / (Present × Periods)
 // Returns an error if present or periods is zero.
 func (s SimpleInterest) RateInterest() (float64, error) {
-	valuePeriods, err := s.periods.getPeriod()
+	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
 	}
 
-	if s.present == 0 || valuePeriods == 0 {
+	if s.present == 0 || numberOfPeriods == 0 {
 		return 0, errors.New("invalid present or periods for operation")
 	}
 
-	rateInterest := (s.interest / (s.present * valuePeriods))
+	rateInterest := (s.interest / (s.present * numberOfPeriods))
 
 	return rateInterest, nil
 }
@@ -24,18 +24,16 @@ func (s SimpleInterest) RateInterest() (float64, error) {
 // Formula: Rate = ((Future / Present) - 1) / Periods
 // Returns an error if present or periods is zero.
 func (s SimpleInterest) RateInterestWithPresentAndFuture() (float64, error) {
-	valuePeriods, err := s.periods.getPeriod()
+	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
 	}
 
-	periods := valuePeriods
-
-	if s.present == 0 || periods == 0 {
+	if s.present == 0 || numberOfPeriods == 0 {
 		return 0, errors.New("invalid present or periods for operation")
 	}
 
-	rateInterest := (((s.future / s.present) - 1) / periods)
+	rateInterest := (((s.future / s.present) - 1) / numberOfPeriods)
 
 	return rateInterest, nil
 }

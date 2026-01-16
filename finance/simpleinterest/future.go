@@ -13,12 +13,12 @@ func (s SimpleInterest) Future() (float64, error) {
 // Formula: Future = Present × (1 + Periods × Rate)
 // Returns an error if periods is invalid.
 func (s SimpleInterest) FutureWithRateInterest() (float64, error) {
-	valuePeriods, err := s.periods.getPeriod()
+	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return 0, err
 	}
 
-	future := s.present * (1 + (valuePeriods * s.rateInterest))
+	future := s.present * (1 + (numberOfPeriods * s.rateInterest))
 
 	return future, nil
 }

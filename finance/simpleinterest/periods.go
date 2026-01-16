@@ -11,9 +11,9 @@ func (s SimpleInterest) Periods() (float64, error) {
 		return 0, errors.New("invalid present or rate interest for operation")
 	}
 
-	valuePeriod := (s.interest / (s.present * s.rateInterest))
+	numberOfPeriods := (s.interest / (s.present * s.rateInterest))
 
-	return valuePeriod, nil
+	return numberOfPeriods, nil
 }
 
 // PeriodsWithPresentAndFuture calculates the periods using future, present value, and rate.
@@ -25,7 +25,7 @@ func (s SimpleInterest) PeriodsWithPresentAndFuture() (float64, error) {
 		return 0, errors.New("invalid present or rate interest for operation")
 	}
 
-	valuePeriod := (1 / s.rateInterest) * ((s.future / s.present) - 1)
+	numberOfPeriods := (1 / s.rateInterest) * ((s.future / s.present) - 1)
 
-	return valuePeriod, nil
+	return numberOfPeriods, nil
 }

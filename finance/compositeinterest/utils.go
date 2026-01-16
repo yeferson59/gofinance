@@ -17,28 +17,28 @@ import "errors"
 //	factor, err := getCompoundingFrequency(Monthly)
 //	// factor is 12 (12 months in a year)
 func getCompoundingFrequency(compoundingFrequency CompoundingFrequency) (float64, error) {
-	value, ok := countCompoundingFrequency[compoundingFrequency]
+	periodsPerYear, ok := countCompoundingFrequency[compoundingFrequency]
 	if !ok {
 		return 0, errors.New("invalid value compounding frequency")
 	}
 
-	return value, nil
+	return periodsPerYear, nil
 }
 
 func getCompoundingFrequencytoMonths(compoundingFrequency CompoundingFrequency) (float64, error) {
-	value, ok := countCompoundingFrequencyMonths[compoundingFrequency]
+	monthsPerPeriod, ok := countCompoundingFrequencyMonths[compoundingFrequency]
 	if !ok {
 		return 0, errors.New("invalid value compounding frequency")
 	}
 
-	return value, nil
+	return monthsPerPeriod, nil
 }
 
 func getOrderTime(compoundingFrequency CompoundingFrequency) (float64, error) {
-	value, ok := orderTime[compoundingFrequency]
+	orderWeight, ok := orderTime[compoundingFrequency]
 	if !ok {
 		return 0, errors.New("invalid value compounding frequency")
 	}
 
-	return value, nil
+	return orderWeight, nil
 }
