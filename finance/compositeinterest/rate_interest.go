@@ -35,7 +35,17 @@ func (c CompositeInterest) Interest() (float64, error) {
 		return 0, ErrInvalidOperation
 	}
 
-	periodicRate := math.Pow((c.future/c.present), (1/numberOfPeriods)) - 1
+	// Step 1: Calculate the ratio of Future to Present
+	futureToPresent := c.future / c.present
+
+	// Step 2: Calculate the reciprocal of periods (1/n)
+	reciprocalPeriods := 1 / numberOfPeriods
+
+	// Step 3: Raise the ratio to the power of 1/n to get the periodic growth factor
+	growthFactor := math.Pow(futureToPresent, reciprocalPeriods)
+
+	// Step 4: Subtract 1 to get the periodic rate
+	periodicRate := growthFactor - 1
 
 	return periodicRate, nil
 }

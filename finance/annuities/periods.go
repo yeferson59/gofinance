@@ -33,8 +33,24 @@ func (a Annuity) PeriodsWithPresent() (float64, error) {
 		return 0, err
 	}
 
-	logBase := math.Log(1 + rateInterest)
-	periods := (math.Log(a.value/(a.value-(present*rateInterest))) / logBase)
+	// Step 1: Calculate the denominator base: Present × rate
+	presentTimesRate := present * rateInterest
+
+	// Step 2: Calculate the denominator: PMT - (PV × rate)
+	denominatorValue := a.value - presentTimesRate
+
+	// Step 3: Calculate the ratio: PMT / (PMT - (PV × rate))
+	ratio := a.value / denominatorValue
+
+	// Step 4: Calculate the natural logarithm of the ratio (numerator)
+	logarithmRatio := math.Log(ratio)
+
+	// Step 5: Calculate the natural logarithm of the growth factor (denominator)
+	growthFactor := 1 + rateInterest
+	logarithmGrowth := math.Log(growthFactor)
+
+	// Step 6: Divide to get the number of periods
+	periods := logarithmRatio / logarithmGrowth
 
 	return periods, nil
 }
@@ -70,8 +86,27 @@ func (a Annuity) PeriodsWithFuture() (float64, error) {
 		return 0, err
 	}
 
-	logBase := math.Log(1 + rateInterest)
-	periods := ((math.Log((rateInterest*future)+a.value) - math.Log(a.value)) / logBase)
+	// Step 1: Calculate the numerator base: Future × rate
+	futureTimesRate := future * rateInterest
+
+	// Step 2: Calculate the numerator: (FV × rate) + PMT
+	numeratorValue := futureTimesRate + a.value
+
+	// Step 3: Calculate the natural logarithm of the numerator
+	logarithmNumerator := math.Log(numeratorValue)
+
+	// Step 4: Calculate the natural logarithm of the denominator (PMT)
+	logarithmDenominator := math.Log(a.value)
+
+	// Step 5: Calculate the numerator of the periods formula
+	logarithmRatio := logarithmNumerator - logarithmDenominator
+
+	// Step 6: Calculate the natural logarithm of the growth factor
+	growthFactor := 1 + rateInterest
+	logarithmGrowth := math.Log(growthFactor)
+
+	// Step 7: Divide to get the number of periods
+	periods := logarithmRatio / logarithmGrowth
 
 	return periods, nil
 }

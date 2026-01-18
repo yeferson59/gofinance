@@ -108,8 +108,20 @@ func (a Annuity) PaymentFromPresentValue() (float64, error) {
 		return 0, err
 	}
 
-	pow := math.Pow(1+rateInterest, periods)
-	annuity := present * (rateInterest * pow / (pow - 1))
+	// Step 1: Calculate the growth factor (1 + rate)
+	growthFactor := 1 + rateInterest
+
+	// Step 2: Raise the growth factor to the power of periods
+	growthPower := math.Pow(growthFactor, periods)
+
+	// Step 3: Calculate the numerator: rate × (1 + rate)^n
+	numerator := rateInterest * growthPower
+
+	// Step 4: Calculate the denominator: (1 + rate)^n - 1
+	denominator := growthPower - 1
+
+	// Step 5: Calculate the annuity payment: PV × [numerator / denominator]
+	annuity := present * (numerator / denominator)
 
 	return annuity, nil
 }
@@ -141,7 +153,17 @@ func (a Annuity) PaymentFromFutureValue() (float64, error) {
 		return 0, err
 	}
 
-	annuity := future * (rateInterest / (math.Pow(1+rateInterest, periods) - 1))
+	// Step 1: Calculate the growth factor (1 + rate)
+	growthFactor := 1 + rateInterest
+
+	// Step 2: Raise the growth factor to the power of periods
+	growthPower := math.Pow(growthFactor, periods)
+
+	// Step 3: Calculate the denominator: (1 + rate)^n - 1
+	denominator := growthPower - 1
+
+	// Step 4: Calculate the annuity payment: FV × [rate / denominator]
+	annuity := future * (rateInterest / denominator)
 
 	return annuity, nil
 }

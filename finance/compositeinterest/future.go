@@ -33,7 +33,14 @@ func (c CompositeInterest) Future() (float64, error) {
 		return 0, ErrInvalidOperation
 	}
 
-	future := c.present * math.Pow(1+periodicRate, numberOfPeriods)
+	// Step 1: Calculate the growth factor (1 + rate)
+	growthFactor := 1 + periodicRate
+
+	// Step 2: Raise the growth factor to the power of the number of periods
+	compoundGrowth := math.Pow(growthFactor, numberOfPeriods)
+
+	// Step 3: Multiply the present value by the compound growth to get future value
+	future := c.present * compoundGrowth
 
 	return future, nil
 }

@@ -36,8 +36,18 @@ func (c CompositeInterest) Periods() (float64, error) {
 		return 0, ErrInvalidOperation
 	}
 
-	logBase := math.Log(1 + periodicRate)
-	numberOfPeriods := (math.Log((c.future / c.present)) / logBase)
+	// Step 1: Calculate the ratio of Future to Present
+	futureToPresent := c.future / c.present
+
+	// Step 2: Calculate the natural logarithm of the ratio (numerator)
+	logarithmRatio := math.Log(futureToPresent)
+
+	// Step 3: Calculate the natural logarithm of the growth factor (denominator)
+	growthFactor := 1 + periodicRate
+	logarithmGrowth := math.Log(growthFactor)
+
+	// Step 4: Divide to get the number of periods
+	numberOfPeriods := logarithmRatio / logarithmGrowth
 
 	return numberOfPeriods, nil
 }

@@ -26,8 +26,20 @@ func (a Annuity) Present() (float64, error) {
 		return 0, err
 	}
 
-	pow := math.Pow(1+rateInterest, periods)
-	present := a.value * ((pow - 1) / (rateInterest * pow))
+	// Step 1: Calculate the growth factor (1 + rate)
+	growthFactor := 1 + rateInterest
+
+	// Step 2: Raise the growth factor to the power of periods
+	growthPower := math.Pow(growthFactor, periods)
+
+	// Step 3: Calculate the numerator: (1 + rate)^n - 1
+	numerator := growthPower - 1
+
+	// Step 4: Calculate the denominator: rate × (1 + rate)^n
+	denominator := rateInterest * growthPower
+
+	// Step 5: Calculate the present value: PMT × [numerator / denominator]
+	present := a.value * (numerator / denominator)
 
 	return present, nil
 }

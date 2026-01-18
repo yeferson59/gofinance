@@ -26,7 +26,17 @@ func (a Annuity) Future() (float64, error) {
 		return 0, err
 	}
 
-	future := a.value * ((math.Pow(1+rateInterest, periods) - 1) / rateInterest)
+	// Step 1: Calculate the growth factor (1 + rate)
+	growthFactor := 1 + rateInterest
+
+	// Step 2: Raise the growth factor to the power of periods
+	growthPower := math.Pow(growthFactor, periods)
+
+	// Step 3: Calculate the accumulation factor: ((1 + rate)^n - 1) / rate
+	accumulationFactor := (growthPower - 1) / rateInterest
+
+	// Step 4: Multiply the periodic payment by the accumulation factor
+	future := a.value * accumulationFactor
 
 	return future, nil
 }
