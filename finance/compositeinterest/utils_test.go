@@ -8,49 +8,49 @@ import (
 )
 
 func TestGetCompoundingFrequencyDaily(t *testing.T) {
-	value, err := getCompoundingFrequency(Daily)
+	value, err := Daily.getCompoundingFrequency()
 	require.NoError(t, err)
 
 	assert.Equal(t, 365.0, value)
 }
 
 func TestGetCompoundingFrequencyMonthly(t *testing.T) {
-	value, err := getCompoundingFrequency(Monthly)
+	value, err := Monthly.getCompoundingFrequency()
 	require.NoError(t, err)
 
 	assert.Equal(t, 12.0, value)
 }
 
 func TestGetCompoundingFrequencyBimonthly(t *testing.T) {
-	value, err := getCompoundingFrequency(Bimonthly)
+	value, err := Bimonthly.getCompoundingFrequency()
 	require.NoError(t, err)
 
 	assert.Equal(t, 6.0, value)
 }
 
 func TestGetCompoundingFrequencyQuarterlyOne(t *testing.T) {
-	value, err := getCompoundingFrequency(QuarterlyOne)
+	value, err := QuarterlyOne.getCompoundingFrequency()
 	require.NoError(t, err)
 
 	assert.Equal(t, 4.0, value)
 }
 
 func TestGetCompoundingFrequencyQuarterlyTwo(t *testing.T) {
-	value, err := getCompoundingFrequency(QuarterlyTwo)
+	value, err := QuarterlyTwo.getCompoundingFrequency()
 	require.NoError(t, err)
 
 	assert.Equal(t, 3.0, value)
 }
 
 func TestGetCompoundingFrequencySemiAnnually(t *testing.T) {
-	value, err := getCompoundingFrequency(SemiAnnually)
+	value, err := SemiAnnually.getCompoundingFrequency()
 	require.NoError(t, err)
 
 	assert.Equal(t, 2.0, value)
 }
 
 func TestGetCompoundingFrequencyAnnually(t *testing.T) {
-	value, err := getCompoundingFrequency(Annually)
+	value, err := Annually.getCompoundingFrequency()
 	require.NoError(t, err)
 
 	assert.Equal(t, 1.0, value)
@@ -58,7 +58,7 @@ func TestGetCompoundingFrequencyAnnually(t *testing.T) {
 
 func TestGetCompoundingFrequencyInvalid(t *testing.T) {
 	invalidFreq := CompoundingFrequency("invalid")
-	value, err := getCompoundingFrequency(invalidFreq)
+	value, err := invalidFreq.getCompoundingFrequency()
 
 	assert.Error(t, err)
 	assert.Equal(t, 0.0, value)
@@ -67,7 +67,7 @@ func TestGetCompoundingFrequencyInvalid(t *testing.T) {
 
 func TestGetCompoundingFrequencytoMonthsInvalid(t *testing.T) {
 	invalidFreq := CompoundingFrequency("invalid")
-	value, err := getCompoundingFrequencytoMonths(invalidFreq)
+	value, err := invalidFreq.getCompoundingFrequencytoMonths()
 
 	assert.Error(t, err)
 	assert.Equal(t, 0.0, value)
@@ -76,7 +76,7 @@ func TestGetCompoundingFrequencytoMonthsInvalid(t *testing.T) {
 
 func TestGetOrderTimeInvalid(t *testing.T) {
 	invalidFreq := CompoundingFrequency("invalid")
-	value, err := getOrderTime(invalidFreq)
+	value, err := invalidFreq.getOrderTime()
 
 	assert.Error(t, err)
 	assert.Equal(t, 0.0, value)
@@ -85,7 +85,7 @@ func TestGetOrderTimeInvalid(t *testing.T) {
 
 func TestGetCompoundingFrequencytoMonthsEmpty(t *testing.T) {
 	emptyFreq := CompoundingFrequency("")
-	value, err := getCompoundingFrequencytoMonths(emptyFreq)
+	value, err := emptyFreq.getCompoundingFrequencytoMonths()
 
 	assert.Error(t, err)
 	assert.Equal(t, 0.0, value)
@@ -93,7 +93,7 @@ func TestGetCompoundingFrequencytoMonthsEmpty(t *testing.T) {
 
 func TestGetOrderTimeEmpty(t *testing.T) {
 	emptyFreq := CompoundingFrequency("")
-	value, err := getOrderTime(emptyFreq)
+	value, err := emptyFreq.getOrderTime()
 
 	assert.Error(t, err)
 	assert.Equal(t, 0.0, value)
@@ -101,7 +101,7 @@ func TestGetOrderTimeEmpty(t *testing.T) {
 
 func TestGetCompoundingFrequencyEmpty(t *testing.T) {
 	emptyFreq := CompoundingFrequency("")
-	value, err := getCompoundingFrequency(emptyFreq)
+	value, err := emptyFreq.getCompoundingFrequency()
 
 	assert.Error(t, err)
 	assert.Equal(t, 0.0, value)
@@ -124,7 +124,7 @@ func TestGetCompoundingFrequencyAllValidValues(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			value, err := getCompoundingFrequency(tc.frequency)
+			value, err := tc.frequency.getCompoundingFrequency()
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedValue, value)
 		})
@@ -132,8 +132,8 @@ func TestGetCompoundingFrequencyAllValidValues(t *testing.T) {
 }
 
 func TestGetCompoundingFrequencyConsistency(t *testing.T) {
-	value1, err1 := getCompoundingFrequency(Monthly)
-	value2, err2 := getCompoundingFrequency(Monthly)
+	value1, err1 := Monthly.getCompoundingFrequency()
+	value2, err2 := Monthly.getCompoundingFrequency()
 
 	require.NoError(t, err1)
 	require.NoError(t, err2)
@@ -145,7 +145,7 @@ func TestGetCompoundingFrequencyMapValues(t *testing.T) {
 	frequencies := []CompoundingFrequency{Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually}
 
 	for _, freq := range frequencies {
-		value, err := getCompoundingFrequency(freq)
+		value, err := freq.getCompoundingFrequency()
 		require.NoError(t, err)
 		assert.True(t, value > 0, "all valid frequencies should have positive values")
 	}
@@ -265,7 +265,7 @@ func TestCompoundingFrequencyValues(t *testing.T) {
 	}
 
 	for freq, expectedValue := range testCases {
-		value, err := getCompoundingFrequency(freq)
+		value, err := freq.getCompoundingFrequency()
 		require.NoError(t, err)
 		assert.Equal(t, expectedValue, value)
 	}

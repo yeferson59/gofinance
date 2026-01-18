@@ -214,22 +214,22 @@ func (c CompositeInterest) GetEqualsRateInterestPeriods() (float64, float64, err
 	}
 
 	if compoundingFrequency != c.rateInterest.compoundingFrequency {
-		periodsInMonths, err := getCompoundingFrequencytoMonths(compoundingFrequency)
+		periodsInMonths, err := compoundingFrequency.getCompoundingFrequencytoMonths()
 		if err != nil {
 			return 0, 0, err
 		}
 
-		rateFrequencyInMonths, err := getCompoundingFrequencytoMonths(c.rateInterest.compoundingFrequency)
+		rateFrequencyInMonths, err := c.rateInterest.compoundingFrequency.getCompoundingFrequencytoMonths()
 		if err != nil {
 			return 0, 0, err
 		}
 
-		periodWeight, err := getOrderTime(compoundingFrequency)
+		periodWeight, err := compoundingFrequency.getOrderTime()
 		if err != nil {
 			return 0, 0, err
 		}
 
-		rateWeight, err := getOrderTime(c.rateInterest.compoundingFrequency)
+		rateWeight, err := c.rateInterest.compoundingFrequency.getOrderTime()
 		if err != nil {
 			return 0, 0, err
 		}

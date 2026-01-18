@@ -25,7 +25,7 @@ func (rt RateInterest) RatePeriodic() (float64, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}
@@ -62,7 +62,7 @@ func (rt RateInterest) RateNominal() (float64, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}
@@ -97,7 +97,7 @@ func (rt RateInterest) RateEffectyAnnually() (float64, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}
@@ -135,12 +135,12 @@ func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundin
 		return 0, err
 	}
 
-	newPeriodsPerYear, err := getCompoundingFrequency(newCompoundingFrequency)
+	newPeriodsPerYear, err := newCompoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}
 
-	currentPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
+	currentPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}
@@ -189,7 +189,7 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (float64, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}
@@ -218,7 +218,7 @@ func (rt RateInterest) RateAnticipateNominal() (float64, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}
@@ -251,7 +251,7 @@ func (rt RateInterest) RateAnticipatePeriodic() (float64, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := getCompoundingFrequency(rt.compoundingFrequency)
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
 		return 0, err
 	}

@@ -16,8 +16,8 @@ import "errors"
 //
 //	factor, err := getCompoundingFrequency(Monthly)
 //	// factor is 12 (12 months in a year)
-func getCompoundingFrequency(compoundingFrequency CompoundingFrequency) (float64, error) {
-	periodsPerYear, ok := countCompoundingFrequency[compoundingFrequency]
+func (cf CompoundingFrequency) getCompoundingFrequency() (float64, error) {
+	periodsPerYear, ok := countCompoundingFrequency[cf]
 	if !ok {
 		return 0, errors.New("invalid value compounding frequency")
 	}
@@ -25,8 +25,8 @@ func getCompoundingFrequency(compoundingFrequency CompoundingFrequency) (float64
 	return periodsPerYear, nil
 }
 
-func getCompoundingFrequencytoMonths(compoundingFrequency CompoundingFrequency) (float64, error) {
-	monthsPerPeriod, ok := countCompoundingFrequencyMonths[compoundingFrequency]
+func (cf CompoundingFrequency) getCompoundingFrequencytoMonths() (float64, error) {
+	monthsPerPeriod, ok := countCompoundingFrequencyMonths[cf]
 	if !ok {
 		return 0, errors.New("invalid value compounding frequency")
 	}
@@ -34,8 +34,8 @@ func getCompoundingFrequencytoMonths(compoundingFrequency CompoundingFrequency) 
 	return monthsPerPeriod, nil
 }
 
-func getOrderTime(compoundingFrequency CompoundingFrequency) (float64, error) {
-	orderWeight, ok := orderTime[compoundingFrequency]
+func (cf CompoundingFrequency) getOrderTime() (float64, error) {
+	orderWeight, ok := orderTime[cf]
 	if !ok {
 		return 0, errors.New("invalid value compounding frequency")
 	}
