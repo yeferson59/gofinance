@@ -9,13 +9,13 @@ type Money struct {
 	currency Currency
 }
 
-func New(value int64, precision uint8, currency Currency) (*Money, error) {
+func New(value int64, precision uint8, currency Currency) (Money, error) {
 	parsedValue, err := udecimal.NewFromInt64(value, precision)
 	if err != nil {
-		return nil, err
+		return Money{}, err
 	}
 
-	return &Money{
+	return Money{
 		value:    parsedValue,
 		currency: currency,
 	}, nil
