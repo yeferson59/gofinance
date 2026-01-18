@@ -1,39 +1,54 @@
 package simpleinterest
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/quagmt/udecimal"
+)
 
 // RateInterest calculates the interest rate using interest, present value, and periods.
 // Formula: Rate = Interest / (Present × Periods)
 // Returns an error if present or periods is zero.
-func (s SimpleInterest) RateInterest() (float64, error) {
+func (s SimpleInterest) RateInterest() (Decimal, error) {
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
-		return 0, err
+		return Decimal{}, err
 	}
 
-	if s.present == 0 || numberOfPeriods == 0 {
-		return 0, errors.New("invalid present or periods for operation")
+	if s.present.IsZero() || numberOfPeriods.IsZero() {
+		return Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	rateInterest := (s.interest / (s.present * numberOfPeriods))
+	rateInterest, err := (s.interest.Div(s.present.Mul(numberOfPeriods.Decimal)))
+	if err != nil {
+		return Decimal{}, err
+	}
 
-	return rateInterest, nil
+	return Decimal{rateInterest}, nil
 }
 
 // RateInterestWithPresentAndFuture calculates the interest rate using future, present value, and periods.
 // Formula: Rate = ((Future / Present) - 1) / Periods
 // Returns an error if present or periods is zero.
-func (s SimpleInterest) RateInterestWithPresentAndFuture() (float64, error) {
+func (s SimpleInterest) RateInterestWithPresentAndFuture() (Decimal, error) {
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
-		return 0, err
+		return Decimal{}, err
 	}
 
-	if s.present == 0 || numberOfPeriods == 0 {
-		return 0, errors.New("invalid present or periods for operation")
+	if s.present.IsZero() || numberOfPeriods.IsZero() {
+		return Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	rateInterest := (((s.future / s.present) - 1) / numberOfPeriods)
+	num, err := s.future.Div(s.present.Decimal)
+	if err != nil {
+		return Decimal{}, err
+	}
 
-	return rateInterest, nil
+	rateInterest, err := num.Sub(udecimal.One).Div(numberOfPeriods.Decimal)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	return Decimal{rateInterest}, nil
 }

@@ -3,7 +3,11 @@
 // based on the simple interest formula: Interest = Principal × Rate × Time.
 package simpleinterest
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/quagmt/udecimal"
+)
 
 // Periods represents the time unit for periods (days, weeks, months, years).
 type Periods string
@@ -12,36 +16,36 @@ type Periods string
 // Exactly one of days, weeks, months, or years should be non-zero,
 // with the periods field tracking which one is active.
 type Period struct {
-	days    float64
-	weeks   float64
-	months  float64
-	years   float64
-	periods Periods // Track which period type is active for O(1) lookup
+	days    Decimal
+	weeks   Decimal
+	months  Decimal
+	years   Decimal
+	periods Periods
 }
 
 // NewPeriod creates a new Period with the specified number and time unit.
 // Valid time units are Days, Weeks, Months, Years.
 // Returns an empty Period if timePeriod is invalid.
-func NewPeriod(numberPeriods float64, timePeriod Periods) Period {
+func NewPeriod(value Decimal, timePeriod Periods) Period {
 	switch timePeriod {
 	case Days:
 		return Period{
-			days:    numberPeriods,
+			days:    value,
 			periods: Days,
 		}
 	case Weeks:
 		return Period{
-			weeks:   numberPeriods,
+			weeks:   value,
 			periods: Weeks,
 		}
 	case Months:
 		return Period{
-			months:  numberPeriods,
+			months:  value,
 			periods: Months,
 		}
 	case Years:
 		return Period{
-			years:   numberPeriods,
+			years:   value,
 			periods: Years,
 		}
 	default:
@@ -51,7 +55,7 @@ func NewPeriod(numberPeriods float64, timePeriod Periods) Period {
 
 // getPeriod returns the period value and an error if no valid period is set.
 // Uses O(1) lookup via the periods field (a Periods type indicator).
-func (p *Period) getPeriod() (float64, error) {
+func (p *Period) getPeriod() (Decimal, error) {
 	switch p.periods {
 	case Days:
 		return p.days, nil
@@ -62,24 +66,24 @@ func (p *Period) getPeriod() (float64, error) {
 	case Years:
 		return p.years, nil
 	default:
-		return 0, errors.New("failed get valid periods")
+		return Decimal{}, errors.New("failed get valid periods")
 	}
 }
 
 // SimpleInterest holds the values for simple interest calculations.
 // Fields are set via New and modified by calculation methods.
 type SimpleInterest struct {
-	future       float64
-	present      float64
-	interest     float64
-	rateInterest float64
+	future       Decimal
+	present      Decimal
+	interest     Decimal
+	rateInterest Decimal
 	periods      Period
 }
 
 // New creates a new SimpleInterest instance with the provided values.
 // Parameters can be 0 if they will be calculated later.
 // periods can be nil for some calculations.
-func New(future, present, interest, rateInterest float64, periods Period) SimpleInterest {
+func New(future, present, interest, rateInterest Decimal, periods Period) SimpleInterest {
 	return SimpleInterest{
 		future:       future,
 		present:      present,
@@ -91,7 +95,25 @@ func New(future, present, interest, rateInterest float64, periods Period) Simple
 
 // GetPeriods returns the period value from the associated Period.
 // Returns an error if periods is invalid.
-func (s SimpleInterest) GetPeriods() (float64, error) {
+func (s SimpleInterest) GetPeriods() (Decimal, error) {
 	periods, err := s.periods.getPeriod()
 	return periods, err
+}
+
+type Decimal struct {
+	udecimal.Decimal
+}
+
+func NewFromFloat64(f float64) (Decimal, error) {
+	decimal, err := udecimal.NewFromFloat64(f)
+	return Decimal{
+		decimal,
+	}, err
+}
+
+func NewFromInt64(coef int64, prec uint8) (Decimal, error) {
+	decimal, err := udecimal.NewFromInt64(coef, prec)
+	return Decimal{
+		decimal,
+	}, err
 }

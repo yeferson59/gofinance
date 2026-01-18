@@ -8,14 +8,19 @@ import (
 )
 
 func TestInterest(t *testing.T) {
-	periods := NewPeriod(2, Days)
-	simpleInterest := New(0, 5_000, 0, 0.05, periods)
-	expectedInterest := 5_000 * 2 * 0.05 // 500
+	numPeriods, _ := NewFromInt64(2, 0)
+	present, _ := NewFromInt64(5_000, 0)
+	rate, _ := NewFromFloat64(0.05)
+
+	periods := NewPeriod(numPeriods, Days)
+	simpleInterest := New(Decimal{}, present, Decimal{}, rate, periods)
+
+	expectedInterest, _ := NewFromInt64(500, 0)
 
 	interest, err := simpleInterest.Interest()
 	require.NoError(t, err)
 
-	assert.Equal(t, expectedInterest, interest)
+	assert.Equal(t, expectedInterest.String(), interest.String())
 
 	// Test error case
 	simpleInterest.periods = Period{}

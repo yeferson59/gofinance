@@ -6,17 +6,27 @@ import (
 	"github.com/yeferson59/gofinance/finance/simpleinterest"
 )
 
+func mustDecimal(f float64) simpleinterest.Decimal {
+	d, _ := simpleinterest.NewFromFloat64(f)
+	return d
+}
+
+func mustDecimalInt(i int64) simpleinterest.Decimal {
+	d, _ := simpleinterest.NewFromInt64(i, 0)
+	return d
+}
+
 func BenchmarkNewPeriod(b *testing.B) {
 	testcases := []struct {
-		value float64
+		value simpleinterest.Decimal
 		time  simpleinterest.Periods
 	}{
 		{
-			1,
+			mustDecimal(1),
 			simpleinterest.Days,
 		},
 		{
-			2,
+			mustDecimal(2),
 			simpleinterest.Weeks,
 		},
 	}
@@ -32,27 +42,63 @@ func BenchmarkNewPeriod(b *testing.B) {
 
 func BenchmarkNewSimpleInterest(b *testing.B) {
 	testcases := []simpleinterest.Period{
-		simpleinterest.NewPeriod(1, simpleinterest.Days),
-		simpleinterest.NewPeriod(2, simpleinterest.Weeks),
-		simpleinterest.NewPeriod(0.5, simpleinterest.Years),
+		simpleinterest.NewPeriod(mustDecimal(1), simpleinterest.Days),
+		simpleinterest.NewPeriod(mustDecimal(2), simpleinterest.Weeks),
+		simpleinterest.NewPeriod(mustDecimal(0.5), simpleinterest.Years),
 	}
 
 	for _, testcase := range testcases {
 		b.ReportAllocs()
 		b.StartTimer()
 		for b.Loop() {
-			_ = simpleinterest.New(0, 1_000, 0, 0.5, testcase)
+			_ = simpleinterest.New(
+				mustDecimalInt(0),
+				mustDecimalInt(1_000),
+				mustDecimalInt(0),
+				mustDecimal(0.5),
+				testcase,
+			)
 		}
 	}
 }
 
 func BenchmarkSimpleInterest(b *testing.B) {
 	testcases := []simpleinterest.SimpleInterest{
-		simpleinterest.New(0, 1_000, 200, 0.9, simpleinterest.NewPeriod(1, simpleinterest.Days)),
-		simpleinterest.New(0, 1_500, 100, 0.10, simpleinterest.NewPeriod(2.9, simpleinterest.Months)),
-		simpleinterest.New(0, 1_200, 20, 0.6, simpleinterest.NewPeriod(0.9, simpleinterest.Years)),
-		simpleinterest.New(0, 1_000, 250, 0.1, simpleinterest.NewPeriod(1.5, simpleinterest.Weeks)),
-		simpleinterest.New(0, 1_000, 80, 0.25, simpleinterest.NewPeriod(2.5, simpleinterest.Days)),
+		simpleinterest.New(
+			mustDecimalInt(0),
+			mustDecimalInt(1_000),
+			mustDecimalInt(200),
+			mustDecimal(0.9),
+			simpleinterest.NewPeriod(mustDecimal(1), simpleinterest.Days),
+		),
+		simpleinterest.New(
+			mustDecimalInt(0),
+			mustDecimalInt(1_500),
+			mustDecimalInt(100),
+			mustDecimal(0.10),
+			simpleinterest.NewPeriod(mustDecimal(2.9), simpleinterest.Months),
+		),
+		simpleinterest.New(
+			mustDecimalInt(0),
+			mustDecimalInt(1_200),
+			mustDecimalInt(20),
+			mustDecimal(0.6),
+			simpleinterest.NewPeriod(mustDecimal(0.9), simpleinterest.Years),
+		),
+		simpleinterest.New(
+			mustDecimalInt(0),
+			mustDecimalInt(1_000),
+			mustDecimalInt(250),
+			mustDecimal(0.1),
+			simpleinterest.NewPeriod(mustDecimal(1.5), simpleinterest.Weeks),
+		),
+		simpleinterest.New(
+			mustDecimalInt(0),
+			mustDecimalInt(1_000),
+			mustDecimalInt(80),
+			mustDecimal(0.25),
+			simpleinterest.NewPeriod(mustDecimal(2.5), simpleinterest.Days),
+		),
 	}
 
 	b.Run("future", func(b *testing.B) {
