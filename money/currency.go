@@ -326,11 +326,25 @@ var currencyCode = map[Currency]string{
 	ZWL: "ZWL",
 }
 
-func (c *Currency) GetCurrencyISOCode() (string, error) {
-	isoCode, ok := currencyCode[*c]
+var currencyPrec = map[Currency]uint8{
+	COP: 2,
+	USD: 2,
+}
+
+func (c Currency) GetCurrencyISOCode() (string, error) {
+	isoCode, ok := currencyCode[c]
 	if !ok {
 		return "", errors.New("invalid currency ISO code")
 	}
 
 	return isoCode, nil
+}
+
+func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
+	prec, ok := currencyPrec[c]
+	if !ok {
+		return 0, errors.New("invalid currency ISO code")
+	}
+
+	return prec, nil
 }
