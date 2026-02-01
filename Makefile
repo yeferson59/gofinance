@@ -1,7 +1,10 @@
-.PHONY: lint test fmt
+.PHONY: lint tidy test fmt
 
 lint:
 	@golangci-lint --config=.golangci.yaml run ./... -v
+
+tidy:
+	@go mod tidy
 
 test:
 	@go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
