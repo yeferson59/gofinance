@@ -6,17 +6,18 @@ import (
 	"github.com/quagmt/udecimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/money"
 )
 
 func TestRateInterest(t *testing.T) {
-	numPeriods, _ := NewFromInt64(2, 0)
+	numPeriods, _ := money.NewFromInt64(2, 0)
 	periods := NewPeriod(numPeriods, Days)
 
-	present, _ := NewFromInt64(5_000, 0)
-	interest, _ := NewFromInt64(500, 0)
+	present, _ := money.New(5_000, 0, money.COP)
+	interest, _ := money.New(500, 0, money.COP)
 
-	simpleInterest := New(Decimal{}, present, interest, Decimal{}, periods)
-	expectedRate, _ := NewFromFloat64(500.0 / (5000.0 * 2.0))
+	simpleInterest := New(money.Money{}, present, interest, money.Decimal{}, periods)
+	expectedRate, _ := money.NewFromFloat64(500.0 / (5000.0 * 2.0))
 
 	rate, err := simpleInterest.RateInterest()
 	require.NoError(t, err)
@@ -24,27 +25,27 @@ func TestRateInterest(t *testing.T) {
 	assert.Equal(t, expectedRate.String(), rate.String())
 
 	// Test error case: present=0
-	zero, _ := NewFromInt64(0, 0)
+	zero, _ := money.New(0, 0, money.COP)
 	simpleInterest.present = zero
 	_, err = simpleInterest.RateInterest()
 	assert.Error(t, err)
 
 	// Test error case: periods=0
 	simpleInterest.present = present
-	zeroPeriod, _ := NewFromInt64(0, 0)
+	zeroPeriod, _ := money.NewFromInt64(0, 0)
 	simpleInterest.periods = NewPeriod(zeroPeriod, Days)
 	_, err = simpleInterest.RateInterest()
 	assert.Error(t, err)
 }
 
 func TestRateInterestWithPresentAndFuture(t *testing.T) {
-	numPeriods, _ := NewFromInt64(2, 0)
+	numPeriods, _ := money.NewFromInt64(2, 0)
 	periods := NewPeriod(numPeriods, Days)
 
-	future, _ := NewFromInt64(5_500, 0)
-	present, _ := NewFromInt64(5_000, 0)
+	future, _ := money.New(5_500, 0, money.COP)
+	present, _ := money.New(5_000, 0, money.COP)
 
-	simpleInterest := New(future, present, Decimal{}, Decimal{}, periods)
+	simpleInterest := New(future, present, money.Money{}, money.Decimal{}, periods)
 
 	rate, err := simpleInterest.RateInterestWithPresentAndFuture()
 	require.NoError(t, err)
@@ -56,14 +57,14 @@ func TestRateInterestWithPresentAndFuture(t *testing.T) {
 	assert.True(t, rate.Decimal.Cmp(maxValue) <= 0, "rate should be <= 0.06")
 
 	// Test error case: present=0
-	zeroValue, _ := NewFromInt64(0, 0)
+	zeroValue, _ := money.New(0, 0, money.COP)
 	simpleInterest.present = zeroValue
 	_, err = simpleInterest.RateInterestWithPresentAndFuture()
 	assert.Error(t, err)
 
 	// Test error case: periods=0
 	simpleInterest.present = present
-	zeroPeriod, _ := NewFromInt64(0, 0)
+	zeroPeriod, _ := money.NewFromInt64(0, 0)
 	simpleInterest.periods = NewPeriod(zeroPeriod, Days)
 	_, err = simpleInterest.RateInterestWithPresentAndFuture()
 	assert.Error(t, err)

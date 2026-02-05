@@ -1,6 +1,6 @@
 package money
 
-func (m *Money) String() (string, error) {
+func (m *Money) StringMoney() (string, error) {
 	isoCode, err := m.currency.GetCurrencyISOCode()
 	if err != nil {
 		return "", err
@@ -11,5 +11,5 @@ func (m *Money) String() (string, error) {
 		return "", err
 	}
 
-	return isoCode + " " + m.value.StringFixed(prec), nil
+	return isoCode + " " + m.StringFixed(prec), nil
 }

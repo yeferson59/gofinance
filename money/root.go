@@ -5,7 +5,7 @@ import (
 )
 
 type Money struct {
-	value    udecimal.Decimal
+	udecimal.Decimal
 	currency Currency
 }
 
@@ -16,7 +16,7 @@ func New(value int64, precision uint8, currency Currency) (Money, error) {
 	}
 
 	return Money{
-		value:    parsedValue,
+		Decimal:  parsedValue,
 		currency: currency,
 	}, nil
 }

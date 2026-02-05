@@ -5,40 +5,41 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/money"
 )
 
 func TestSuccessSimpleFuture(t *testing.T) {
-	num, _ := NewFromInt64(2, 0)
+	num, _ := money.NewFromInt64(2, 0)
 	periods := NewPeriod(num, Days)
 
-	present, _ := NewFromInt64(5_000, 0)
-	interest, _ := NewFromInt64(1_000, 0)
+	present, _ := money.New(5_000, 0, money.COP)
+	interest, _ := money.New(1_000, 0, money.COP)
 
-	simpleInterest := New(Decimal{}, present, interest, Decimal{}, periods)
-	expectedFuture, _ := NewFromInt64(6_000, 0)
+	simpleInterest := New(money.Money{}, present, interest, money.Decimal{}, periods)
+	expectedFuture, _ := money.New(6_000, 0, money.COP)
 
 	future, err := simpleInterest.Future()
 	require.NoError(t, err)
 
-	assert.True(t, future.String() != Decimal{}.String(), "future should not be 0")
+	assert.True(t, future.String() != money.Money{}.String(), "future should not be 0")
 
 	assert.Equal(t, expectedFuture.String(), future.String())
 }
 
 func TestSuccessSimpleFutureWithRateInterest(t *testing.T) {
-	numPeriods, _ := NewFromInt64(2, 0)
+	numPeriods, _ := money.NewFromInt64(2, 0)
 	periods := NewPeriod(numPeriods, Days)
 
-	present, _ := NewFromInt64(5_000, 0)
-	rate, _ := NewFromFloat64(0.05)
+	present, _ := money.New(5_000, 0, money.COP)
+	rate, _ := money.NewFromFloat64(0.05)
 
-	simpleInterest := New(Decimal{}, present, Decimal{}, rate, periods)
-	expectedFuture, _ := NewFromInt64(5_500, 0)
+	simpleInterest := New(money.Money{}, present, money.Money{}, rate, periods)
+	expectedFuture, _ := money.New(5_500, 0, money.COP)
 
 	future, err := simpleInterest.FutureWithRateInterest()
 	require.NoError(t, err)
 
-	assert.True(t, future.String() != Decimal{}.String(), "future should not be 0")
+	assert.True(t, future.String() != money.Money{}.String(), "future should not be 0")
 
 	assert.Equal(t, expectedFuture.String(), future.String())
 }
@@ -48,9 +49,9 @@ func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 		simpleInterest SimpleInterest
 	}
 
-	numPeriods, _ := NewFromInt64(2, 0)
+	numPeriods, _ := money.NewFromInt64(2, 0)
 	periods := NewPeriod(numPeriods, Days)
-	present, _ := NewFromInt64(5_000, 0)
+	present, _ := money.New(5_000, 0, money.COP)
 
 	testData := []DataTest{
 		{
@@ -74,7 +75,7 @@ func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 		for _, data := range testData {
 			value, err := data.simpleInterest.FutureWithRateInterest()
 
-			maxValue, _ := NewFromInt64(6_000, 0)
+			maxValue, _ := money.New(6_000, 0, money.COP)
 			assert.True(t, value.Decimal.Cmp(maxValue.Decimal) <= 0, "value should be <= 6000")
 
 			require.NoError(t, err)
@@ -92,7 +93,7 @@ func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 }
 
 // Helper function to create SimpleInterest with rate
-func NewWithRate(present Decimal, rate float64, periods Period) SimpleInterest {
-	rateDecimal, _ := NewFromFloat64(rate)
-	return New(Decimal{}, present, Decimal{}, rateDecimal, periods)
+func NewWithRate(present money.Money, rate float64, periods Period) SimpleInterest {
+	rateDecimal, _ := money.NewFromFloat64(rate)
+	return New(money.Money{}, present, money.Money{}, rateDecimal, periods)
 }

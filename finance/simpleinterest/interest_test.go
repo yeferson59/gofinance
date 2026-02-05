@@ -5,17 +5,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/money"
 )
 
 func TestInterest(t *testing.T) {
-	numPeriods, _ := NewFromInt64(2, 0)
-	present, _ := NewFromInt64(5_000, 0)
-	rate, _ := NewFromFloat64(0.05)
+	numPeriods, _ := money.NewFromInt64(2, 0)
+	present, _ := money.New(5_000, 0, money.COP)
+	rate, _ := money.NewFromFloat64(0.05)
 
 	periods := NewPeriod(numPeriods, Days)
-	simpleInterest := New(Decimal{}, present, Decimal{}, rate, periods)
+	simpleInterest := New(money.Money{}, present, money.Money{}, rate, periods)
 
-	expectedInterest, _ := NewFromInt64(500, 0)
+	expectedInterest, _ := money.New(500, 0, money.COP)
 
 	interest, err := simpleInterest.Interest()
 	require.NoError(t, err)

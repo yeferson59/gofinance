@@ -4,21 +4,22 @@ import (
 	"testing"
 
 	"github.com/yeferson59/gofinance/finance/simpleinterest"
+	"github.com/yeferson59/gofinance/money"
 )
 
-func mustDecimal(f float64) simpleinterest.Decimal {
-	d, _ := simpleinterest.NewFromFloat64(f)
+func mustDecimal(f float64) money.Decimal {
+	d, _ := money.NewFromFloat64(f)
 	return d
 }
 
-func mustDecimalInt(i int64) simpleinterest.Decimal {
-	d, _ := simpleinterest.NewFromInt64(i, 0)
-	return d
+func mustMoney(value int64, precision uint8, currency money.Currency) money.Money {
+	mon, _ := money.New(value, precision, currency)
+	return mon
 }
 
 func BenchmarkNewPeriod(b *testing.B) {
 	testcases := []struct {
-		value simpleinterest.Decimal
+		value money.Decimal
 		time  simpleinterest.Periods
 	}{
 		{
@@ -52,9 +53,9 @@ func BenchmarkNewSimpleInterest(b *testing.B) {
 		b.StartTimer()
 		for b.Loop() {
 			_ = simpleinterest.New(
-				mustDecimalInt(0),
-				mustDecimalInt(1_000),
-				mustDecimalInt(0),
+				mustMoney(0, 0, money.USD),
+				mustMoney(1_000, 0, money.USD),
+				mustMoney(0, 0, money.USD),
 				mustDecimal(0.5),
 				testcase,
 			)
@@ -65,37 +66,37 @@ func BenchmarkNewSimpleInterest(b *testing.B) {
 func BenchmarkSimpleInterest(b *testing.B) {
 	testcases := []simpleinterest.SimpleInterest{
 		simpleinterest.New(
-			mustDecimalInt(0),
-			mustDecimalInt(1_000),
-			mustDecimalInt(200),
+			mustMoney(0, 0, money.USD),
+			mustMoney(1_000, 0, money.USD),
+			mustMoney(200, 0, money.USD),
 			mustDecimal(0.9),
 			simpleinterest.NewPeriod(mustDecimal(1), simpleinterest.Days),
 		),
 		simpleinterest.New(
-			mustDecimalInt(0),
-			mustDecimalInt(1_500),
-			mustDecimalInt(100),
+			mustMoney(0, 0, money.USD),
+			mustMoney(1_500, 0, money.USD),
+			mustMoney(100, 0, money.USD),
 			mustDecimal(0.10),
 			simpleinterest.NewPeriod(mustDecimal(2.9), simpleinterest.Months),
 		),
 		simpleinterest.New(
-			mustDecimalInt(0),
-			mustDecimalInt(1_200),
-			mustDecimalInt(20),
+			mustMoney(0, 0, money.USD),
+			mustMoney(1_200, 0, money.USD),
+			mustMoney(20, 0, money.USD),
 			mustDecimal(0.6),
 			simpleinterest.NewPeriod(mustDecimal(0.9), simpleinterest.Years),
 		),
 		simpleinterest.New(
-			mustDecimalInt(0),
-			mustDecimalInt(1_000),
-			mustDecimalInt(250),
+			mustMoney(0, 0, money.USD),
+			mustMoney(1_000, 0, money.USD),
+			mustMoney(250, 0, money.USD),
 			mustDecimal(0.1),
 			simpleinterest.NewPeriod(mustDecimal(1.5), simpleinterest.Weeks),
 		),
 		simpleinterest.New(
-			mustDecimalInt(0),
-			mustDecimalInt(1_000),
-			mustDecimalInt(80),
+			mustMoney(0, 0, money.USD),
+			mustMoney(1_000, 0, money.USD),
+			mustMoney(80, 0, money.USD),
 			mustDecimal(0.25),
 			simpleinterest.NewPeriod(mustDecimal(2.5), simpleinterest.Days),
 		),
