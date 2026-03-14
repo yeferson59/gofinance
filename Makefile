@@ -1,4 +1,4 @@
-.PHONY: lint tidy test fmt
+.PHONY: lint tidy test fmt bench
 
 lint:
 	@golangci-lint --config=.golangci.yaml run ./... -v
@@ -14,3 +14,6 @@ fmt:
 	@go fmt ./...
 	@golangci-lint --config=.golangci.yaml fmt ./... -v
 	@goimports -w  -v .
+
+bench:
+	@go test -bench=. -benchmem ./...
