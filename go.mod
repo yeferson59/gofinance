@@ -1,8 +1,8 @@
 module github.com/yeferson59/gofinance
 
-go 1.25.6
+go 1.26.1
 
-require github.com/quagmt/udecimal v1.9.0
+require github.com/quagmt/udecimal v1.10.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
