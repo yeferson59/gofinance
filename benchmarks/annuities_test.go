@@ -5,6 +5,7 @@ import (
 
 	"github.com/yeferson59/gofinance/finance/annuities"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/money"
 )
 
 func BenchmarkNewAnnuity(b *testing.B) {
@@ -35,7 +36,10 @@ func BenchmarkNewAnnuity(b *testing.B) {
 		b.ReportAllocs()
 		b.StartTimer()
 		for b.Loop() {
-			_, _ = annuities.New(testcase.value, testcase.present, testcase.future, testcase.period, testcase.rateInterest)
+			valueMoney, _ := money.New(int64(testcase.value*100), 2, money.USD)
+			presentMoney, _ := money.New(int64(testcase.present*100), 2, money.USD)
+			futureMoney, _ := money.New(int64(testcase.future*100), 2, money.USD)
+			_, _ = annuities.New(valueMoney, presentMoney, futureMoney, testcase.period, testcase.rateInterest)
 		}
 	}
 }

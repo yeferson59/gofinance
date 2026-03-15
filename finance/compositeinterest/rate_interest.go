@@ -2,6 +2,9 @@ package compositeinterest
 
 import (
 	"math"
+
+	"github.com/quagmt/udecimal"
+	"github.com/yeferson59/gofinance/money"
 )
 
 // Interest calculates the periodic interest rate using the formula: i = (FV/PV)^(1/n) - 1
@@ -21,31 +24,31 @@ import (
 //	ci, _ := New(1000, 1126.83, rateInterest, period)
 //	rate, err := ci.Interest()
 //	// rate will be approximately 0.01 (1% periodic)
-func (c CompositeInterest) Interest() (float64, error) {
-	if c.rateInterest.value != 0 {
+func (c CompositeInterest) Interest() (money.Decimal, error) {
+	if !c.rateInterest.value.IsZero() {
 		return c.rateInterest.value, nil
 	}
 
 	numberOfPeriods, _, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return 0, err
+		return money.Decimal{}, err
 	}
 
-	if c.future == 0 || c.present == 0 || numberOfPeriods == 0 {
-		return 0, ErrInvalidOperation
+	if c.future.IsZero() || c.present.IsZero() || numberOfPeriods.IsZero() {
+		return money.Decimal{}, ErrInvalidOperation
 	}
 
 	// Step 1: Calculate the ratio of Future to Present
-	futureToPresent := c.future / c.present
+	futureToPresent := c.future.MustDiv(c.present.Decimal)
 
 	// Step 2: Calculate the reciprocal of periods (1/n)
-	reciprocalPeriods := 1 / numberOfPeriods
+	reciprocalPeriods := udecimal.One.MustDiv(numberOfPeriods.Decimal)
 
 	// Step 3: Raise the ratio to the power of 1/n to get the periodic growth factor
-	growthFactor := math.Pow(futureToPresent, reciprocalPeriods)
+	growthFactor := math.Pow(futureToPresent.InexactFloat64(), reciprocalPeriods.InexactFloat64())
 
 	// Step 4: Subtract 1 to get the periodic rate
 	periodicRate := growthFactor - 1
 
-	return periodicRate, nil
+	return money.MustFromFloat64(periodicRate), nil
 }

@@ -36,14 +36,16 @@ package annuities
 import (
 	"math"
 
+	"github.com/quagmt/udecimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/money"
 )
 
 // Annuity represents an ordinary annuity with periodic equal payments.
 // It stores a periodic payment amount and the underlying composite interest calculation.
 type Annuity struct {
 	// value is the periodic payment amount for the annuity
-	value float64
+	value money.Money
 	// compositeInterest holds the underlying composite interest calculation
 	compositeInterest compositeinterest.CompositeInterest
 }
@@ -69,7 +71,7 @@ type Annuity struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func New(value, present, future float64, period compositeinterest.Period, rateInterest compositeinterest.RateInterest) (Annuity, error) {
+func New(value, present, future money.Money, period compositeinterest.Period, rateInterest compositeinterest.RateInterest) (Annuity, error) {
 	compositeinterest, err := compositeinterest.New(present, future, rateInterest, period)
 	if err != nil {
 		return Annuity{}, err
@@ -97,33 +99,33 @@ func New(value, present, future float64, period compositeinterest.Period, rateIn
 //	ann, _ := New(0, 10000, 0, period, rate) // Loan of $10,000
 //	payment, err := ann.PaymentFromPresentValue()
 //	// payment is the monthly amount needed to pay off the loan
-func (a Annuity) PaymentFromPresentValue() (float64, error) {
+func (a Annuity) PaymentFromPresentValue() (money.Money, error) {
 	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return 0, err
+		return money.Money{}, err
 	}
 
 	present, err := a.compositeInterest.Present()
 	if err != nil {
-		return 0, err
+		return money.Money{}, err
 	}
 
 	// Step 1: Calculate the growth factor (1 + rate)
-	growthFactor := 1 + rateInterest
+	growthFactor := rateInterest.Add(udecimal.One)
 
 	// Step 2: Raise the growth factor to the power of periods
-	growthPower := math.Pow(growthFactor, periods)
+	growthPower := math.Pow(growthFactor.InexactFloat64(), periods.InexactFloat64())
 
 	// Step 3: Calculate the numerator: rate × (1 + rate)^n
-	numerator := rateInterest * growthPower
+	numerator := rateInterest.Mul(udecimal.MustFromFloat64(growthPower))
 
 	// Step 4: Calculate the denominator: (1 + rate)^n - 1
 	denominator := growthPower - 1
 
 	// Step 5: Calculate the annuity payment: PV × [numerator / denominator]
-	annuity := present * (numerator / denominator)
+	annuity := present.Mul(numerator.MustDiv(udecimal.MustFromFloat64(denominator)))
 
-	return annuity, nil
+	return money.Money{Decimal: annuity}, nil
 }
 
 // PaymentFromFutureValue calculates the periodic payment needed to accumulate a future value (savings payment).
@@ -142,28 +144,28 @@ func (a Annuity) PaymentFromPresentValue() (float64, error) {
 //	ann, _ := New(0, 0, 10000, period, rate) // Goal: accumulate $10,000
 //	payment, err := ann.PaymentFromFutureValue()
 //	// payment is the monthly amount needed to reach the goal
-func (a Annuity) PaymentFromFutureValue() (float64, error) {
+func (a Annuity) PaymentFromFutureValue() (money.Money, error) {
 	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return 0, err
+		return money.Money{}, err
 	}
 
 	future, err := a.compositeInterest.Future()
 	if err != nil {
-		return 0, err
+		return money.Money{}, err
 	}
 
 	// Step 1: Calculate the growth factor (1 + rate)
-	growthFactor := 1 + rateInterest
+	growthFactor := rateInterest.Add(udecimal.One)
 
 	// Step 2: Raise the growth factor to the power of periods
-	growthPower := math.Pow(growthFactor, periods)
+	growthPower := math.Pow(growthFactor.InexactFloat64(), periods.InexactFloat64())
 
 	// Step 3: Calculate the denominator: (1 + rate)^n - 1
 	denominator := growthPower - 1
 
 	// Step 4: Calculate the annuity payment: FV × [rate / denominator]
-	annuity := future * (rateInterest / denominator)
+	annuity := future.Mul(rateInterest.MustDiv(udecimal.MustFromFloat64(denominator)))
 
-	return annuity, nil
+	return money.Money{Decimal: annuity}, nil
 }

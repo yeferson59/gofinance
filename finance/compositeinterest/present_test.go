@@ -5,119 +5,148 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/money"
 )
 
 func TestPresentWithPeriodicRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(12, Monthly)
+	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
-	ci, err := New(0, 1126.825, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(112683, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present, 0.1)
+	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 0.1)
 }
 
 func TestPresentWithNominalRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.12, Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(12, Monthly)
+	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
-	ci, err := New(0, 1126.825, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(112683, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present, 0.1)
+	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 0.1)
 }
 
 func TestPresentWithAnnuallyRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.1268, Annually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Annually, RateEffectyAnnually)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(1, Annually)
+	period, err := NewPeriod(money.MustFromFloat64(1), Annually)
 	require.NoError(t, err)
 
-	ci, err := New(0, 1126.825, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(112683, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present, 0.1)
+	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 0.1)
 }
 
 func TestPresentWithDailyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.10, Daily, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.10), Daily, RateEffectyAnnually)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(365, Daily)
+	period, err := NewPeriod(money.MustFromFloat64(365), Daily)
 	require.NoError(t, err)
 
-	ci, err := New(0, 1105.0, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(110500, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present, 5.0)
+	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 5.0)
 }
 
 func TestPresentWithQuarterlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.12, QuarterlyOne, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), QuarterlyOne, RateEffectyNominal)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(4, QuarterlyOne)
+	period, err := NewPeriod(money.MustFromFloat64(4), QuarterlyOne)
 	require.NoError(t, err)
 
-	ci, err := New(0, 1000, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(100000, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.True(t, present < 1000, "present should be less than future")
-	assert.True(t, present > 0, "present should be greater than zero")
+	assert.True(t, present.Decimal.InexactFloat64() < 1000, "present should be less than future")
+	assert.True(t, present.Decimal.InexactFloat64() > 0, "present should be greater than zero")
 }
 
 func TestPresentWithSemiAnnuallyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.10, SemiAnnually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.10), SemiAnnually, RateEffectyAnnually)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(2, SemiAnnually)
+	period, err := NewPeriod(money.MustFromFloat64(2), SemiAnnually)
 	require.NoError(t, err)
 
-	ci, err := New(0, 5512.5, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(551250, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 5000.0, present, 50.0)
+	assert.InDelta(t, 5000.0, present.Decimal.InexactFloat64(), 50.0)
 }
 
 func TestPresentWithZeroFuture(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.05, Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(12, Monthly)
+	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
-	ci, err := New(0, 0, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.Error(t, err)
 
-	assert.Equal(t, 0.0, present)
+	assert.Equal(t, 0.0, present.Decimal.InexactFloat64())
 }
 
 func TestPresentWithMultipleDataSets(t *testing.T) {
@@ -161,52 +190,64 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rateInterest, err := NewRateInterest(tc.rate, tc.freq, tc.typeRate)
+			rateInterest, err := NewRateInterest(money.MustFromFloat64(tc.rate), tc.freq, tc.typeRate)
 			require.NoError(t, err)
 
-			period, err := NewPeriod(tc.periods, tc.freq)
+			period, err := NewPeriod(money.MustFromFloat64(tc.periods), tc.freq)
 			require.NoError(t, err)
 
-			ci, err := New(0, tc.future, rateInterest, period)
+			presentMoney, err := money.New(0, 2, money.USD)
+			require.NoError(t, err)
+			futureMoney, err := money.New(int64(tc.future*100), 2, money.USD)
+			require.NoError(t, err)
+			ci, err := New(presentMoney, futureMoney, rateInterest, period)
 			require.NoError(t, err)
 
 			present, err := ci.Present()
 			require.NoError(t, err)
 
-			assert.InDelta(t, tc.expected, present, 1.0)
+			assert.InDelta(t, tc.expected, present.Decimal.InexactFloat64(), 1.0)
 		})
 	}
 }
 
 func TestPresentErrorWithInvalidPeriod(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(12, Monthly)
+	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
-	ci, err := New(0, 1000, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(100000, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
-	assert.True(t, present < 1000)
+	assert.True(t, present.Decimal.InexactFloat64() < 1000)
 }
 
 func TestPresentWithBimonthlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.06, Bimonthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.06), Bimonthly, RateEffectyNominal)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(6, Bimonthly)
+	period, err := NewPeriod(money.MustFromFloat64(6), Bimonthly)
 	require.NoError(t, err)
 
-	ci, err := New(0, 1000, rateInterest, period)
+	presentMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(100000, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.True(t, present < 1000)
+	assert.True(t, present.Decimal.InexactFloat64() < 1000)
 }
 
 func TestPresentWithDifferentRateTypes(t *testing.T) {
@@ -222,43 +263,53 @@ func TestPresentWithDifferentRateTypes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rateInterest, err := NewRateInterest(tc.rate, Monthly, tc.typeRate)
+			rateInterest, err := NewRateInterest(money.MustFromFloat64(tc.rate), Monthly, tc.typeRate)
 			require.NoError(t, err)
 
-			period, err := NewPeriod(12, Monthly)
+			period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
 			require.NoError(t, err)
 
-			ci, err := New(0, 1000, rateInterest, period)
+			presentMoney, err := money.New(0, 2, money.USD)
+			require.NoError(t, err)
+			futureMoney, err := money.New(100000, 2, money.USD)
+			require.NoError(t, err)
+			ci, err := New(presentMoney, futureMoney, rateInterest, period)
 			require.NoError(t, err)
 
 			present, err := ci.Present()
 			require.NoError(t, err)
 
-			assert.True(t, present < 1000)
-			assert.True(t, present > 0)
+			assert.True(t, present.Decimal.InexactFloat64() < 1000)
+			assert.True(t, present.Decimal.InexactFloat64() > 0)
 		})
 	}
 }
 
 func TestPresentConsistencyWithFuture(t *testing.T) {
-	rateInterest, err := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(12, Monthly)
+	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
 	originalPresent := 1000.0
-	ci, err := New(originalPresent, 0, rateInterest, period)
+	presentMoney, err := money.New(100000, 2, money.USD)
+	require.NoError(t, err)
+	futureMoney, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	ci, err := New(presentMoney, futureMoney, rateInterest, period)
 	require.NoError(t, err)
 
 	future, err := ci.Future()
 	require.NoError(t, err)
 
-	ci2, err := New(0, future, rateInterest, period)
+	presentMoney2, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	ci2, err := New(presentMoney2, future, rateInterest, period)
 	require.NoError(t, err)
 
 	calculatedPresent, err := ci2.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, originalPresent, calculatedPresent, 0.1)
+	assert.InDelta(t, originalPresent, calculatedPresent.Decimal.InexactFloat64(), 0.1)
 }

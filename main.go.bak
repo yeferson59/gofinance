@@ -1,0 +1,102 @@
+package main
+
+import (
+	"encoding/csv"
+	"log"
+	"os"
+	"strconv"
+
+	"github.com/quagmt/udecimal"
+	"github.com/yeferson59/gofinance/finance/annuities"
+	"github.com/yeferson59/gofinance/finance/compositeinterest"
+)
+
+type Row struct {
+	Period      int
+	Balance     udecimal.Decimal
+	Payment     udecimal.Decimal
+	Interest    udecimal.Decimal
+	SumInterest udecimal.Decimal
+	Principal   udecimal.Decimal
+}
+
+func main() {
+	periodValue := 48.0
+	rateValue := 0.0202
+	present := 3_645_171.0
+	period, _ := compositeinterest.NewPeriod(periodValue, compositeinterest.Monthly)
+	rate, _ := compositeinterest.NewRateInterest(rateValue, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	annuity, _ := annuities.New(0, present, 0, period, rate)
+	data, _ := annuity.PaymentFromFutureValue()
+	p, _ := rate.RatePeriodic()
+
+	rows := buildSchedule(udecimal.MustFromFloat64(present), udecimal.MustFromFloat64(p), udecimal.MustFromFloat64(data), int(periodValue))
+
+	if err := writeCSV("amortizacion.csv", rows); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func buildSchedule(pv, rate, payment udecimal.Decimal, nper int) []Row {
+	balance := pv
+	rows := make([]Row, 0, nper)
+	sumInterest := udecimal.Zero
+
+	rows = append(rows, Row{
+		Period:      0,
+		Balance:     balance,
+		Payment:     udecimal.Zero,
+		Interest:    udecimal.Zero,
+		SumInterest: udecimal.Zero,
+		Principal:   udecimal.Zero,
+	})
+
+	for p := 1; p <= nper; p++ {
+		interest := balance.Mul(rate)
+		principal := payment.Sub(interest)
+		balance, sumInterest = balance.Sub(principal), sumInterest.Add(interest)
+
+		rows = append(rows, Row{
+			Period:      p,
+			Balance:     balance,
+			Payment:     payment,
+			Interest:    interest,
+			SumInterest: sumInterest,
+			Principal:   principal,
+		})
+	}
+
+	return rows
+}
+
+func writeCSV(filename string, rows []Row) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	defer w.Flush()
+
+	if err := w.Write([]string{"Periodo", "Saldo", "Pago", "Interes", "Suma de intereses", "Capital"}); err != nil {
+		return err
+	}
+
+	for _, r := range rows {
+		rec := []string{
+			strconv.Itoa(r.Period),
+			r.Balance.RoundBank(2).StringFixed(2),
+			r.Payment.RoundBank(2).StringFixed(2),
+			r.Interest.RoundBank(2).StringFixed(2),
+			r.SumInterest.RoundBank(2).StringFixed(2),
+			r.Principal.RoundBank(2).StringFixed(2),
+		}
+
+		if err := w.Write(rec); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

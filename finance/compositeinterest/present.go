@@ -2,6 +2,9 @@ package compositeinterest
 
 import (
 	"math"
+
+	"github.com/quagmt/udecimal"
+	"github.com/yeferson59/gofinance/money"
 )
 
 // Present calculates the present value (discount) using the formula: PV = FV / (1 + i)^n
@@ -22,28 +25,28 @@ import (
 //	ci, _ := New(0, 1126.83, rateInterest, period)
 //	present, err := ci.Present()
 //	// present will be approximately 1000
-func (c CompositeInterest) Present() (float64, error) {
-	if c.present != 0 {
+func (c CompositeInterest) Present() (money.Money, error) {
+	if !c.present.IsZero() {
 		return c.present, nil
 	}
 
 	numberOfPeriods, periodicRate, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return 0, err
+		return money.Money{}, err
 	}
 
-	if c.future == 0 || periodicRate == 0 || numberOfPeriods == 0 {
-		return 0, ErrInvalidOperation
+	if c.future.IsZero() || periodicRate.IsZero() || numberOfPeriods.IsZero() {
+		return money.Money{}, ErrInvalidOperation
 	}
 
 	// Step 1: Calculate the growth factor (1 + rate)
-	growthFactor := 1 + periodicRate
+	growthFactor := periodicRate.Add(udecimal.One)
 
 	// Step 2: Raise the growth factor to the power of the number of periods
-	discountFactor := math.Pow(growthFactor, numberOfPeriods)
+	discountFactor := math.Pow(growthFactor.InexactFloat64(), numberOfPeriods.InexactFloat64())
 
 	// Step 3: Divide the future value by the discount factor to get present value
-	present := c.future / discountFactor
+	present := c.future.MustDiv(udecimal.MustFromFloat64(discountFactor))
 
-	return present, nil
+	return money.Money{Decimal: present}, nil
 }

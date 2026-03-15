@@ -2,6 +2,9 @@ package compositeinterest
 
 import (
 	"math"
+
+	"github.com/quagmt/udecimal"
+	"github.com/yeferson59/gofinance/money"
 )
 
 // Periods calculates the number of periods needed using the formula: n = ln(FV/PV) / ln(1 + i)
@@ -22,32 +25,32 @@ import (
 //	ci, _ := New(1000, 1126.83, rateInterest, period)
 //	periods, err := ci.Periods()
 //	// periods will be approximately 12 (for the example with monthly rate)
-func (c CompositeInterest) Periods() (float64, error) {
-	if periodValue, _, err := c.periods.getPeriod(); err == nil && periodValue != 0 {
+func (c CompositeInterest) Periods() (money.Decimal, error) {
+	if periodValue, _, err := c.periods.getPeriod(); err == nil && !periodValue.IsZero() {
 		return periodValue, nil
 	}
 
 	_, periodicRate, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return 0, err
+		return money.Decimal{}, err
 	}
 
-	if c.present == 0 || c.future == 0 || periodicRate == 0 {
-		return 0, ErrInvalidOperation
+	if c.present.IsZero() || c.future.IsZero() || periodicRate.IsZero() {
+		return money.Decimal{}, ErrInvalidOperation
 	}
 
 	// Step 1: Calculate the ratio of Future to Present
-	futureToPresent := c.future / c.present
+	futureToPresent := c.future.MustDiv(c.present.Decimal)
 
 	// Step 2: Calculate the natural logarithm of the ratio (numerator)
-	logarithmRatio := math.Log(futureToPresent)
+	logarithmRatio := math.Log(futureToPresent.InexactFloat64())
 
 	// Step 3: Calculate the natural logarithm of the growth factor (denominator)
-	growthFactor := 1 + periodicRate
-	logarithmGrowth := math.Log(growthFactor)
+	growthFactor := periodicRate.Add(udecimal.One)
+	logarithmGrowth := math.Log(growthFactor.InexactFloat64())
 
 	// Step 4: Divide to get the number of periods
-	numberOfPeriods := logarithmRatio / logarithmGrowth
+	numberOfPeriods := money.MustFromFloat64(logarithmRatio).MustDiv(money.MustFromFloat64(logarithmGrowth).Decimal)
 
-	return numberOfPeriods, nil
+	return money.Decimal{Decimal: numberOfPeriods}, nil
 }

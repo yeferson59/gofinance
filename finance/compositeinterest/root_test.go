@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/yeferson59/gofinance/money"
 )
 
 func TestNewPeriodSuccess(t *testing.T) {
-	period, err := NewPeriod(2, QuarterlyTwo)
+	period, err := NewPeriod(money.MustFromFloat64(2), QuarterlyTwo)
 
 	tx := assert.New(t)
 
@@ -17,7 +18,7 @@ func TestNewPeriodSuccess(t *testing.T) {
 
 func TestGetValuePeriod(t *testing.T) {
 	numberPeriod := 2.0
-	period, err := NewPeriod(numberPeriod, QuarterlyTwo)
+	period, err := NewPeriod(money.MustFromFloat64(numberPeriod), QuarterlyTwo)
 
 	tx := assert.New(t)
 
@@ -26,13 +27,13 @@ func TestGetValuePeriod(t *testing.T) {
 
 	value, _, err := period.getPeriod()
 
-	tx.Equal(numberPeriod, value)
+	tx.Equal(numberPeriod, value.InexactFloat64())
 	tx.Nil(err)
 	tx.NoError(err)
 }
 
 func TestNewPeriodFailed(t *testing.T) {
-	period, err := NewPeriod(0, QuarterlyTwo)
+	period, err := NewPeriod(money.MustFromFloat64(0), QuarterlyTwo)
 
 	tx := assert.New(t)
 
@@ -76,7 +77,7 @@ func TestNewPeriodWithDifferentsValues(t *testing.T) {
 	}
 
 	for _, tt := range dataTest {
-		period, err := NewPeriod(tt.value, tt.compoundingFrequency)
+		period, err := NewPeriod(money.MustFromFloat64(tt.value), tt.compoundingFrequency)
 
 		tx := assert.New(t)
 
@@ -86,28 +87,35 @@ func TestNewPeriodWithDifferentsValues(t *testing.T) {
 }
 
 func TestNewCompositeInterestZeroValue(t *testing.T) {
-	cr, err := New(0, 0, RateInterest{}, Period{})
-
+	presentMoney, err := money.New(0, 2, money.USD)
 	tx := assert.New(t)
+	tx.NoError(err)
+	futureMoney, err := money.New(0, 2, money.USD)
+	tx.NoError(err)
+	cr, err := New(presentMoney, futureMoney, RateInterest{}, Period{})
 
 	tx.NotNil(cr)
 	tx.NoError(err)
 }
 
 func TestGetEqualsRateInterestPeriods_differentTime(t *testing.T) {
-	period, err := NewPeriod(2, Bimonthly)
+	period, err := NewPeriod(money.MustFromFloat64(2), Bimonthly)
 
 	tx := assert.New(t)
 
 	tx.NotNil(period)
 	tx.NoError(err)
 
-	rate, err := NewRateInterest(0.05, Monthly, RateEffectyNominal)
+	rate, err := NewRateInterest(money.MustFromFloat64(0.05), Monthly, RateEffectyNominal)
 
 	tx.NotNil(rate)
 	tx.NoError(err)
 
-	compositeInterest, err := New(5_000, 0, rate, period)
+	presentMoney, err := money.New(500000, 2, money.USD)
+	tx.NoError(err)
+	futureMoney, err := money.New(0, 2, money.USD)
+	tx.NoError(err)
+	compositeInterest, err := New(presentMoney, futureMoney, rate, period)
 
 	tx.NotNil(compositeInterest)
 	tx.NoError(err)
