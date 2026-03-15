@@ -74,7 +74,7 @@ func (rt RateInterest) RateNominal() (money.Decimal, error) {
 	if rt.typeRate == RateEffectyAnnually {
 		// Cache the power calculation to avoid redundant computation
 		pow := math.Pow((rt.value.Add(udecimal.One).InexactFloat64()), (udecimal.One.MustDiv(compoundingPeriodsPerYear.Decimal).InexactFloat64()))
-		nominalRate = compoundingPeriodsPerYear.Decimal.Mul(udecimal.MustFromFloat64(pow).Sub(udecimal.One))
+		nominalRate = compoundingPeriodsPerYear.Mul(udecimal.MustFromFloat64(pow).Sub(udecimal.One))
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {

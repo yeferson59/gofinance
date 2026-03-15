@@ -48,7 +48,7 @@ func (a Annuity) Present() (money.Money, error) {
 	if err != nil {
 		return money.Money{}, err
 	}
-	presentDecimal := a.value.Decimal.Mul(quotient)
+	presentDecimal := a.value.Mul(quotient)
 
 	return money.Money{Decimal: presentDecimal}, nil
 }

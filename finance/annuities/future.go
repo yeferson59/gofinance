@@ -45,7 +45,7 @@ func (a Annuity) Future() (money.Money, error) {
 	accumulationFactor := quotient
 
 	// Step 4: Multiply the periodic payment by the accumulation factor
-	futureDecimal := a.value.Decimal.Mul(accumulationFactor)
+	futureDecimal := a.value.Mul(accumulationFactor)
 
 	return money.Money{Decimal: futureDecimal}, nil
 }

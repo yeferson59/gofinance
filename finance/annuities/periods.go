@@ -37,8 +37,8 @@ func (a Annuity) PeriodsWithPresent() (money.Decimal, error) {
 		return money.Decimal{}, err
 	}
 
-	presentFloat := present.Decimal.InexactFloat64()
-	valueFloat := a.value.Decimal.InexactFloat64()
+	presentFloat := present.InexactFloat64()
+	valueFloat := a.value.InexactFloat64()
 	rateFloat := rateInterest.InexactFloat64()
 
 	// Step 1: Calculate the denominator base: Present × rate
@@ -94,8 +94,8 @@ func (a Annuity) PeriodsWithFuture() (money.Decimal, error) {
 		return money.Decimal{}, err
 	}
 
-	futureFloat := future.Decimal.InexactFloat64()
-	valueFloat := a.value.Decimal.InexactFloat64()
+	futureFloat := future.InexactFloat64()
+	valueFloat := a.value.InexactFloat64()
 	rateFloat := rateInterest.InexactFloat64()
 
 	// Step 1: Calculate the numerator base: Future × rate
