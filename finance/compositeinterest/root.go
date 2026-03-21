@@ -36,7 +36,6 @@ package compositeinterest
 import (
 	"errors"
 
-	"github.com/quagmt/udecimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -236,15 +235,15 @@ func (c CompositeInterest) GetEqualsRateInterestPeriods() (money.Decimal, money.
 			return money.Decimal{}, money.Decimal{}, err
 		}
 
-		if rateWeight.GreaterThan(periodWeight.Decimal) {
-			if periodsInMonths.LessThan(udecimal.One) {
-				return money.Decimal{Decimal: periodsInMonths.Mul(periodValue.Decimal)}, periodicRate, nil
+		if rateWeight.GreaterThan(periodWeight) {
+			if periodsInMonths.LessThan(money.One) {
+				return periodsInMonths.Mul(periodValue), periodicRate, nil
 			}
 
-			return money.Decimal{Decimal: periodValue.MustDiv(rateFrequencyInMonths.Decimal)}, periodicRate, nil
+			return periodValue.MustDiv(rateFrequencyInMonths), periodicRate, nil
 		}
 
-		return money.Decimal{Decimal: periodsInMonths.Mul(periodValue.Decimal)}, periodicRate, nil
+		return periodsInMonths.Mul(periodValue), periodicRate, nil
 	}
 
 	return periodValue, periodicRate, nil

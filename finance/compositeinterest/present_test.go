@@ -25,7 +25,7 @@ func TestPresentWithPeriodicRate(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 0.1)
+	assert.InDelta(t, 1000.0, present.ToDecimal().InexactFloat64(), 0.1)
 }
 
 func TestPresentWithNominalRate(t *testing.T) {
@@ -45,7 +45,7 @@ func TestPresentWithNominalRate(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 0.1)
+	assert.InDelta(t, 1000.0, present.ToDecimal().InexactFloat64(), 0.1)
 }
 
 func TestPresentWithAnnuallyRate(t *testing.T) {
@@ -65,7 +65,7 @@ func TestPresentWithAnnuallyRate(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 0.1)
+	assert.InDelta(t, 1000.0, present.ToDecimal().InexactFloat64(), 0.1)
 }
 
 func TestPresentWithDailyCompounding(t *testing.T) {
@@ -85,7 +85,7 @@ func TestPresentWithDailyCompounding(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present.Decimal.InexactFloat64(), 5.0)
+	assert.InDelta(t, 1000.0, present.ToDecimal().InexactFloat64(), 5.0)
 }
 
 func TestPresentWithQuarterlyCompounding(t *testing.T) {
@@ -105,8 +105,8 @@ func TestPresentWithQuarterlyCompounding(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.True(t, present.Decimal.InexactFloat64() < 1000, "present should be less than future")
-	assert.True(t, present.Decimal.InexactFloat64() > 0, "present should be greater than zero")
+	assert.True(t, present.ToDecimal().InexactFloat64() < 1000, "present should be less than future")
+	assert.True(t, present.ToDecimal().InexactFloat64() > 0, "present should be greater than zero")
 }
 
 func TestPresentWithSemiAnnuallyCompounding(t *testing.T) {
@@ -126,7 +126,7 @@ func TestPresentWithSemiAnnuallyCompounding(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 5000.0, present.Decimal.InexactFloat64(), 50.0)
+	assert.InDelta(t, 5000.0, present.ToDecimal().InexactFloat64(), 50.0)
 }
 
 func TestPresentWithZeroFuture(t *testing.T) {
@@ -146,7 +146,7 @@ func TestPresentWithZeroFuture(t *testing.T) {
 	present, err := ci.Present()
 	require.Error(t, err)
 
-	assert.Equal(t, 0.0, present.Decimal.InexactFloat64())
+	assert.Equal(t, 0.0, present.ToDecimal().InexactFloat64())
 }
 
 func TestPresentWithMultipleDataSets(t *testing.T) {
@@ -206,7 +206,7 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 			present, err := ci.Present()
 			require.NoError(t, err)
 
-			assert.InDelta(t, tc.expected, present.Decimal.InexactFloat64(), 1.0)
+			assert.InDelta(t, tc.expected, present.ToDecimal().InexactFloat64(), 1.0)
 		})
 	}
 }
@@ -227,7 +227,7 @@ func TestPresentErrorWithInvalidPeriod(t *testing.T) {
 
 	present, err := ci.Present()
 	require.NoError(t, err)
-	assert.True(t, present.Decimal.InexactFloat64() < 1000)
+	assert.True(t, present.ToDecimal().InexactFloat64() < 1000)
 }
 
 func TestPresentWithBimonthlyCompounding(t *testing.T) {
@@ -247,7 +247,7 @@ func TestPresentWithBimonthlyCompounding(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.True(t, present.Decimal.InexactFloat64() < 1000)
+	assert.True(t, present.ToDecimal().InexactFloat64() < 1000)
 }
 
 func TestPresentWithDifferentRateTypes(t *testing.T) {
@@ -279,8 +279,8 @@ func TestPresentWithDifferentRateTypes(t *testing.T) {
 			present, err := ci.Present()
 			require.NoError(t, err)
 
-			assert.True(t, present.Decimal.InexactFloat64() < 1000)
-			assert.True(t, present.Decimal.InexactFloat64() > 0)
+			assert.True(t, present.ToDecimal().InexactFloat64() < 1000)
+			assert.True(t, present.ToDecimal().InexactFloat64() > 0)
 		})
 	}
 }
@@ -311,5 +311,5 @@ func TestPresentConsistencyWithFuture(t *testing.T) {
 	calculatedPresent, err := ci2.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, originalPresent, calculatedPresent.Decimal.InexactFloat64(), 0.1)
+	assert.InDelta(t, originalPresent, calculatedPresent.ToDecimal().InexactFloat64(), 0.1)
 }

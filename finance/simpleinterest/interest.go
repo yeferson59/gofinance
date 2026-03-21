@@ -13,13 +13,13 @@ func (s SimpleInterest) Interest() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	interest := s.present.Mul(numberOfPeriods.Decimal).Mul(s.rateInterest.Decimal)
+	interest := s.present.Mul(numberOfPeriods.ToMoney()).Mul(s.rateInterest.ToMoney())
 
-	return money.Money{Decimal: interest}, nil
+	return interest, nil
 }
 
 func (s SimpleInterest) InterestWithPresentAndFuture() (money.Money, error) {
-	interest := s.future.Sub(s.present.Decimal)
+	interest := s.future.Sub(s.present)
 
-	return money.Money{Decimal: interest}, nil
+	return interest, nil
 }

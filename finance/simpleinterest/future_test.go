@@ -76,7 +76,7 @@ func TestSuccessComplexFutureWithRateInterest(t *testing.T) {
 			value, err := data.simpleInterest.FutureWithRateInterest()
 
 			maxValue, _ := money.New(6_000, 0, money.COP)
-			assert.True(t, value.Decimal.Cmp(maxValue.Decimal) <= 0, "value should be <= 6000")
+			assert.True(t, value.Cmp(maxValue) <= 0, "value should be <= 6000")
 
 			require.NoError(t, err)
 		}

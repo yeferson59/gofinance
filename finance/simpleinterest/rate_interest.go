@@ -3,53 +3,46 @@ package simpleinterest
 import (
 	"errors"
 
-	"github.com/quagmt/udecimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
-// RateInterest calculates the interest rate using interest, present value, and periods.
-// Formula: Rate = Interest / (Present × Periods)
-// Returns an error if present or periods is zero.
-func (s SimpleInterest) RateInterest() (money.Money, error) {
+func (s SimpleInterest) RateInterest() (money.Decimal, error) {
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
-		return money.Money{}, err
+		return money.Decimal{}, err
 	}
 
 	if s.present.IsZero() || numberOfPeriods.IsZero() {
-		return money.Money{}, errors.New("invalid present or periods for operation")
+		return money.Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	rateInterest, err := (s.interest.Div(s.present.Mul(numberOfPeriods.Decimal)))
+	rateInterest, err := s.interest.Div(s.present.Mul(numberOfPeriods.ToMoney()))
 	if err != nil {
-		return money.Money{}, err
+		return money.Decimal{}, err
 	}
 
-	return money.Money{Decimal: rateInterest}, nil
+	return rateInterest.ToDecimal(), nil
 }
 
-// RateInterestWithPresentAndFuture calculates the interest rate using future, present value, and periods.
-// Formula: Rate = ((Future / Present) - 1) / Periods
-// Returns an error if present or periods is zero.
-func (s SimpleInterest) RateInterestWithPresentAndFuture() (money.Money, error) {
+func (s SimpleInterest) RateInterestWithPresentAndFuture() (money.Decimal, error) {
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
-		return money.Money{}, err
+		return money.Decimal{}, err
 	}
 
 	if s.present.IsZero() || numberOfPeriods.IsZero() {
-		return money.Money{}, errors.New("invalid present or periods for operation")
+		return money.Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	num, err := s.future.Div(s.present.Decimal)
+	num, err := s.future.Div(s.present)
 	if err != nil {
-		return money.Money{}, err
+		return money.Decimal{}, err
 	}
 
-	rateInterest, err := num.Sub(udecimal.One).Div(numberOfPeriods.Decimal)
+	rateInterest, err := num.Sub(money.MoneyOne).Div(numberOfPeriods.ToMoney())
 	if err != nil {
-		return money.Money{}, err
+		return money.Decimal{}, err
 	}
 
-	return money.Money{Decimal: rateInterest}, nil
+	return rateInterest.ToDecimal(), nil
 }

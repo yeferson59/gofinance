@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"os"
 
-	"github.com/quagmt/udecimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -18,29 +17,31 @@ type Schedule struct {
 }
 
 func BuildSchedule(pv, rate, payment money.Money, nper int) []Schedule {
-	balance, rows, sumInterest := pv, make([]Schedule, 0, nper), udecimal.Zero
+	balance, rows := pv, make([]Schedule, 0, nper)
+	sumInterest := money.MoneyZero
 
 	rows = append(rows, Schedule{
-		Period:      money.Decimal{Decimal: udecimal.Zero},
+		Period:      money.Zero,
 		Balance:     pv,
-		Payment:     money.Money{Decimal: udecimal.Zero},
-		Interest:    money.Money{Decimal: udecimal.Zero},
-		SumInterest: money.Money{Decimal: udecimal.Zero},
-		Principal:   money.Money{Decimal: udecimal.Zero},
+		Payment:     money.MoneyZero,
+		Interest:    money.MoneyZero,
+		SumInterest: money.MoneyZero,
+		Principal:   money.MoneyZero,
 	})
 
 	for p := 1; p <= nper; p++ {
-		interest := balance.Mul(rate.Decimal)
+		interest := balance.Mul(rate.ToDecimal().ToMoney(balance.Currency()))
 		principal := payment.Sub(interest)
-		balance, sumInterest = money.Money{Decimal: balance.Sub(principal)}, sumInterest.Add(interest)
+		balance = balance.Sub(principal)
+		sumInterest = sumInterest.Add(interest)
 
 		rows = append(rows, Schedule{
 			Period:      money.MustFromInt64(int64(p), 0),
 			Balance:     balance,
 			Payment:     payment,
-			Interest:    money.Money{Decimal: interest},
-			SumInterest: money.Money{Decimal: sumInterest},
-			Principal:   money.Money{Decimal: principal},
+			Interest:    interest,
+			SumInterest: sumInterest,
+			Principal:   principal,
 		})
 	}
 

@@ -29,7 +29,7 @@ func TestAnnuityPresent(t *testing.T) {
 
 	presentValue, err := annuity.Present()
 	require.NoError(t, err)
-	assert.Greater(t, presentValue.Decimal.InexactFloat64(), 0.0)
+	assert.Greater(t, presentValue.ToDecimal().InexactFloat64(), 0.0)
 }
 
 func TestAnnuityPresentWithZeroInterestRate(t *testing.T) {
@@ -77,8 +77,8 @@ func TestAnnuityPresentWithSmallPeriods(t *testing.T) {
 
 	presentValue, err := annuity.Present()
 	require.NoError(t, err)
-	assert.Greater(t, presentValue.Decimal.InexactFloat64(), 0.0)
-	assert.Less(t, presentValue.Decimal.InexactFloat64(), 200.0) // Should be reasonable
+	assert.Greater(t, presentValue.ToDecimal().InexactFloat64(), 0.0)
+	assert.Less(t, presentValue.ToDecimal().InexactFloat64(), 200.0) // Should be reasonable
 }
 
 func TestAnnuityFuture(t *testing.T) {
@@ -100,7 +100,7 @@ func TestAnnuityFuture(t *testing.T) {
 
 	futureValue, err := annuity.Future()
 	require.NoError(t, err)
-	assert.Greater(t, futureValue.Decimal.InexactFloat64(), 0.0)
+	assert.Greater(t, futureValue.ToDecimal().InexactFloat64(), 0.0)
 }
 
 func TestAnnuityPaymentFromPresentValue(t *testing.T) {
@@ -122,7 +122,7 @@ func TestAnnuityPaymentFromPresentValue(t *testing.T) {
 
 	payment, err := annuity.PaymentFromPresentValue()
 	require.NoError(t, err)
-	assert.Greater(t, payment.Decimal.InexactFloat64(), 0.0)
+	assert.Greater(t, payment.ToDecimal().InexactFloat64(), 0.0)
 }
 
 func TestAnnuityPaymentFromFutureValue(t *testing.T) {
@@ -144,7 +144,7 @@ func TestAnnuityPaymentFromFutureValue(t *testing.T) {
 
 	payment, err := annuity.PaymentFromFutureValue()
 	require.NoError(t, err)
-	assert.Greater(t, payment.Decimal.InexactFloat64(), 0.0)
+	assert.Greater(t, payment.ToDecimal().InexactFloat64(), 0.0)
 }
 
 func TestAnnuityPeriodsWithPresent(t *testing.T) {
@@ -228,7 +228,7 @@ func TestAnnuityPresentMathematicalCorrectness(t *testing.T) {
 	expectedPresent := 1000 * (1 - 1/expectedPow) / 0.05
 
 	// Should match within floating point precision
-	assert.InDelta(t, expectedPresent, presentValue.Decimal.InexactFloat64(), 0.01)
+	assert.InDelta(t, expectedPresent, presentValue.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
@@ -261,11 +261,11 @@ func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
 
 			presentValue, err := annuity.Present()
 			require.NoError(t, err)
-			assert.Greater(t, presentValue.Decimal.InexactFloat64(), 0.0)
+			assert.Greater(t, presentValue.ToDecimal().InexactFloat64(), 0.0)
 
 			futureValue, err := annuity.Future()
 			require.NoError(t, err)
-			assert.Greater(t, futureValue.Decimal.InexactFloat64(), 0.0)
+			assert.Greater(t, futureValue.ToDecimal().InexactFloat64(), 0.0)
 		})
 	}
 }

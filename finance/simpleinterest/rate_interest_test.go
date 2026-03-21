@@ -3,7 +3,6 @@ package simpleinterest
 import (
 	"testing"
 
-	"github.com/quagmt/udecimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/yeferson59/gofinance/money"
@@ -51,10 +50,10 @@ func TestRateInterestWithPresentAndFuture(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the rate is approximately 0.05
-	zero, _ := udecimal.NewFromInt64(0, 0)
-	maxValue, _ := udecimal.NewFromFloat64(0.06)
-	assert.True(t, rate.Decimal.Cmp(zero) >= 0, "rate should be >= 0")
-	assert.True(t, rate.Decimal.Cmp(maxValue) <= 0, "rate should be <= 0.06")
+	zero, _ := money.NewFromInt64(0, 0)
+	maxValue, _ := money.NewFromFloat64(0.06)
+	assert.True(t, rate.Cmp(zero) >= 0, "rate should be >= 0")
+	assert.True(t, rate.Cmp(maxValue) <= 0, "rate should be <= 0.06")
 
 	// Test error case: present=0
 	zeroValue, _ := money.New(0, 0, money.COP)

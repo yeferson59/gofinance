@@ -3,7 +3,6 @@ package simpleinterest
 import (
 	"errors"
 
-	"github.com/quagmt/udecimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -16,12 +15,12 @@ func (s SimpleInterest) Periods() (money.Money, error) {
 		return money.Money{}, errors.New("invalid present or rate interest for operation")
 	}
 
-	numberOfPeriods, err := s.interest.Div(s.present.Mul(s.rateInterest.Decimal))
+	numberOfPeriods, err := s.interest.Div(s.present.Mul(s.rateInterest.ToMoney()))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.Money{Decimal: numberOfPeriods}, nil
+	return numberOfPeriods, nil
 }
 
 // PeriodsWithPresentAndFuture calculates the periods using future, present value, and rate.
@@ -34,19 +33,19 @@ func (s SimpleInterest) PeriodsWithPresentAndFuture() (money.Money, error) {
 	}
 
 	// Step 1: Calculate the ratio of Future to Present
-	futureToPresent, err := s.future.Div(s.present.Decimal)
+	futureToPresent, err := s.future.Div(s.present)
 	if err != nil {
 		return money.Money{}, err
 	}
 
 	// Step 2: Subtract 1 from the ratio (Future/Present - 1)
-	ratioMinusOne := futureToPresent.Sub(udecimal.One)
+	ratioMinusOne := futureToPresent.Sub(money.One.ToMoney())
 
 	// Step 3: Divide the result by the rate to get the number of periods
-	numberOfPeriods, err := ratioMinusOne.Div(s.rateInterest.Decimal)
+	numberOfPeriods, err := ratioMinusOne.Div(s.rateInterest.ToMoney())
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.Money{Decimal: numberOfPeriods}, nil
+	return numberOfPeriods, nil
 }

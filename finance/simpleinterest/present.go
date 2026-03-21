@@ -3,7 +3,6 @@ package simpleinterest
 import (
 	"errors"
 
-	"github.com/quagmt/udecimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -20,12 +19,12 @@ func (s SimpleInterest) Present() (money.Money, error) {
 		return money.Money{}, errors.New("invalid period or rate interest for operation")
 	}
 
-	present, err := s.interest.Div(numberOfPeriods.Mul(s.rateInterest.Decimal))
+	present, err := s.interest.Div(numberOfPeriods.Mul(s.rateInterest).ToMoney())
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.Money{Decimal: present}, nil
+	return present, nil
 }
 
 // PresentWithFuture calculates the present value using future value, rate, and periods.
@@ -41,10 +40,10 @@ func (s SimpleInterest) PresentWithFuture() (money.Money, error) {
 		return money.Money{}, errors.New("invalid period or rate interest for operation")
 	}
 
-	present, err := s.future.Div(udecimal.One.Add(numberOfPeriods.Mul(s.rateInterest.Decimal)))
+	present, err := s.future.Div(money.MoneyOne.Add(numberOfPeriods.Mul(s.rateInterest).ToMoney()))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.Money{Decimal: present}, nil
+	return present, nil
 }
