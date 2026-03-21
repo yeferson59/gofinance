@@ -2,58 +2,41 @@
 
 set -euo pipefail
 
-if [[ -z "${GITHUB_REF_NAME:-}" ]]; then
-    GITHUB_REF_NAME=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+TAG="${GITHUB_REF_NAME:-$(git describe --tags --abbrev=0)}"
+TAG="${TAG#v}"
+
+if [[ -z "$TAG" ]]; then
+    echo "Error: No tag found"
+    exit 1
 fi
 
-TAG="${GITHUB_REF_NAME#v}"
-PREV_TAG=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME"^ 2>/dev/null || echo "")
+PREV_TAG=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME:-v$TAG}"^ 2>/dev/null || echo "")
 
-generate_changelog() {
-    local output=""
-    local current_type=""
-    local types=("feat" "fix" "refactor" "perf" "chore" "docs" "test")
-    local has_changes=false
+current_date=$(date +"%Y-%m-%d")
 
-    for type in "${types[@]}"; do
-        local commits=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG:-$type~10}..${GITHUB_REF_NAME}" 2>/dev/null | grep -i "^${type#!}" | sed "s/^- /- /" || true)
-        if [[ -n "$commits" ]]; then
-            has_changes=true
-            local type_label="${type^}"
-            case "$type" in
-                feat) type_label="Features" ;;
-                fix) type_label="Bug Fixes" ;;
-                refactor) type_label="Refactoring" ;;
-                perf) type_label="Performance" ;;
-                docs) type_label="Documentation" ;;
-                test) type_label="Tests" ;;
-                chore) type_label="Maintenance" ;;
-            esac
-            output+="\n\n## ${type_label}\n${commits}"
-        fi
-    done
+echo "## Release v${TAG} (${current_date})"
+echo ""
+echo "### Checks Passed"
+echo "- ✅ Format validation"
+echo "- ✅ Linting"
+echo "- ✅ Tests"
+echo "- ✅ Build"
+echo ""
 
-    if ! $has_changes; then
-        output="\n\n## Changes\n$(git log --pretty=format:"- %s (%h)" "${PREV_TAG:-$GITHUB_REF_NAME~10}..${GITHUB_REF_NAME}" 2>/dev/null | sed 's/^-/-/')"
+types=("feat:Features" "fix:Bug Fixes" "refactor:Refactoring" "perf:Performance" "docs:Documentation" "test:Tests" "chore:Maintenance")
+
+for entry in "${types[@]}"; do
+    type="${entry%%:*}"
+    label="${entry#*:}"
+    commits=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${GITHUB_REF_NAME:-v$TAG}" 2>/dev/null | grep "^- ${type}:" || true)
+    if [[ -n "$commits" ]]; then
+        echo "## ${label}"
+        echo "$commits"
+        echo ""
     fi
+done
 
-    echo -e "$output"
-}
-
-generate_release_notes() {
-    local tag="${1:-}"
-    local body=""
-    local current_date=$(date +"%Y-%m-%d")
-
-    body="## Release ${tag} (${current_date})\n\n"
-    body+="### Checks Passed\n"
-    body+="- ✅ Format validation\n"
-    body+="- ✅ Linting\n"
-    body+="- ✅ Tests\n"
-    body+="- ✅ Build\n"
-    body+=$(generate_changelog)
-
-    echo -e "$body"
-}
-
-generate_release_notes "${TAG:-}"
+if [[ -z "$PREV_TAG" ]]; then
+    echo "## All Changes"
+    git log --pretty=format:"- %s (%h)" -20 2>/dev/null
+fi

@@ -42,20 +42,13 @@ jobs:
         run: go build -v ./...
 
       - name: Generate release notes
-        id: release-notes
         run: |
           chmod +x scripts/release_notes.sh
-          body=$(scripts/release_notes.sh)
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$body" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          scripts/release_notes.sh > release_notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          body: ${{ steps.release-notes.outputs.body }}
+          body_path: release_notes.md
           draft: false
           prerelease: false
