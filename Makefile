@@ -30,4 +30,5 @@ release:
 			exit 1; \
 	fi
 
-	git tag -a $(TAG) -m "$(DESCRIPTION)"
+	git tag -a v$(TAG) -m "$(DESCRIPTION)"
+	git push origin v$(TAG)
