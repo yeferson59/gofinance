@@ -252,7 +252,7 @@ func (c *CompositeConfig) Build() (CompositeInterest, error) {
 //	    Periods(12).
 //	    Monthly().
 //	    MustBuild()
-func (c *CompositeConfig) MustBuild() CompositeInterest {
+func (c CompositeConfig) MustBuild() CompositeInterest {
 	ci, err := c.Build()
 	if err != nil {
 		panic(err)

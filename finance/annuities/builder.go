@@ -328,7 +328,7 @@ func (a *AnnuityConfig) Payment() (money.Money, error) {
 //	    Periods(360).
 //	    Monthly().
 //	    MustPayment()
-func (a *AnnuityConfig) MustPayment() money.Money {
+func (a AnnuityConfig) MustPayment() money.Money {
 	m, err := a.Payment()
 	if err != nil {
 		panic(err)

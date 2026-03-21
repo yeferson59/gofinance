@@ -251,7 +251,7 @@ func (s *SimpleConfig) Build() SimpleInterest {
 //	    Periods(18).
 //	    Months().
 //	    FutureValue()
-func (s *SimpleConfig) FutureValue() (money.Money, error) {
+func (s SimpleConfig) FutureValue() (money.Money, error) {
 	si := s.Build()
 	return si.FutureWithRateInterest()
 }
