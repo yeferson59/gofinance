@@ -59,12 +59,12 @@ func MustFromString(s string) Decimal {
 	return Decimal{udecimal.MustParse(s)}
 }
 
-func (m Decimal) ToMoney(currency ...Currency) Money {
+func (d Decimal) ToMoney(currency ...Currency) Money {
 	if len(currency) != 0 {
-		return Money{value: m.value, currency: currency[0]}
+		return Money{value: d.value, currency: currency[0]}
 	}
 
-	return Money{value: m.value}
+	return Money{value: d.value}
 }
 
 func NewDecimalFromUDecimal(d udecimal.Decimal) Decimal {
@@ -92,14 +92,14 @@ func (d Decimal) MustDiv(other Decimal) Decimal {
 	return Decimal{value: d.value.MustDiv(other.value)}
 }
 
-func (d Decimal) Div64(v uint64) (Decimal, error) {
-	div, err := d.value.Div64(v)
-	return Decimal{value: div}, err
-}
-
 func (d Decimal) Mod(other Decimal) (Decimal, error) {
 	mod, err := d.value.Mod(other.value)
 	return Decimal{value: mod}, err
+}
+
+func (d Decimal) Div64(other uint64) (Decimal, error) {
+	div, err := d.value.Div64(other)
+	return Decimal{value: div}, err
 }
 
 func (d Decimal) InexactFloat64() float64 {
