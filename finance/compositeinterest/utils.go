@@ -29,6 +29,17 @@ func (cf CompoundingFrequency) getCompoundingFrequency() (money.Decimal, error) 
 	return periodsPerYear, nil
 }
 
+// getCompoundingFrequencytoMonths converts a compounding frequency to the equivalent
+// number of months per compounding period.
+//
+// Returns:
+//   - The number of months per compounding period as a Decimal
+//   - An error if the frequency is invalid
+//
+// Example:
+//
+//	months, _ := getCompoundingFrequencytoMonths(QuarterlyOne)
+//	// months is 3 (3 months per quarter)
 func (cf CompoundingFrequency) getCompoundingFrequencytoMonths() (money.Decimal, error) {
 	monthsPerPeriod, ok := countCompoundingFrequencyMonths[cf]
 	if !ok {
@@ -38,6 +49,12 @@ func (cf CompoundingFrequency) getCompoundingFrequencytoMonths() (money.Decimal,
 	return monthsPerPeriod, nil
 }
 
+// getOrderTime returns the temporal ordering weight for a compounding frequency.
+// This is used internally to compare and convert between different frequencies.
+//
+// Returns:
+//   - The order weight as a Decimal
+//   - An error if the frequency is invalid
 func (cf CompoundingFrequency) getOrderTime() (money.Decimal, error) {
 	orderWeight, ok := orderTime[cf]
 	if !ok {

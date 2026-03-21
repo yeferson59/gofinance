@@ -6,6 +6,18 @@ import (
 	"github.com/yeferson59/gofinance/money"
 )
 
+// RatePeriodic converts the current interest rate to a periodic (per-period) rate.
+// This is useful when you have a nominal or effective annual rate and need the actual
+// rate applied to each compounding period.
+//
+// Returns:
+//   - The periodic interest rate as a Decimal
+//   - An error if the conversion fails
+//
+// Example:
+//
+//	rate, _ := NewRateInterest(0.12, Monthly, RateEffectyNominal)
+//	periodicRate, _ := rate.RatePeriodic()  // Converts 12% nominal to ~1% monthly
 func (rt RateInterest) RatePeriodic() (money.Decimal, error) {
 	if rt.typeRate == RateEffectyPeriodic {
 		return rt.value, nil
@@ -31,6 +43,12 @@ func (rt RateInterest) RatePeriodic() (money.Decimal, error) {
 	return periodicRate, nil
 }
 
+// RateNominal converts the current interest rate to a nominal rate.
+// A nominal rate is the stated rate before considering compounding frequency.
+//
+// Returns:
+//   - The nominal interest rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) RateNominal() (money.Decimal, error) {
 	if rt.typeRate == RateEffectyNominal {
 		return rt.value, nil
@@ -55,6 +73,12 @@ func (rt RateInterest) RateNominal() (money.Decimal, error) {
 	return nominalRate, nil
 }
 
+// RateEffectyAnnually converts the current interest rate to an effective annual rate.
+// The effective annual rate accounts for compounding and represents the true yearly return.
+//
+// Returns:
+//   - The effective annual interest rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) RateEffectyAnnually() (money.Decimal, error) {
 	if rt.typeRate == RateEffectyAnnually {
 		return rt.value, nil
@@ -79,6 +103,20 @@ func (rt RateInterest) RateEffectyAnnually() (money.Decimal, error) {
 	return effectiveAnnualRate, nil
 }
 
+// RatePeriodicToPeriodic converts a periodic rate from one compounding frequency to another.
+// For example, converts a monthly rate to a quarterly rate.
+//
+// Parameters:
+//   - newCompoundingFrequency: The target compounding frequency
+//
+// Returns:
+//   - The converted periodic rate for the new frequency as a Decimal
+//   - An error if the conversion fails
+//
+// Example:
+//
+//	rate, _ := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
+//	quarterlyRate, _ := rate.RatePeriodicToPeriodic(QuarterlyOne)
 func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (money.Decimal, error) {
 	currentPeriodicRate, err := rt.RatePeriodic()
 	if err != nil {
@@ -102,6 +140,15 @@ func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundin
 	return money.MustFromFloat64(newPeriodicRate), nil
 }
 
+// RateNominalToNominal converts a nominal rate from one compounding frequency to another.
+// For example, converts a monthly nominal rate to a quarterly nominal rate.
+//
+// Parameters:
+//   - newCompoundingFrequency: The target compounding frequency
+//
+// Returns:
+//   - The converted nominal rate for the new frequency as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingFrequency) (money.Decimal, error) {
 	newPeriodicRate, err := rt.RatePeriodicToPeriodic(newCompoundingFrequency)
 	if err != nil {
@@ -116,6 +163,12 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
 	return newRateInterest.RateNominal()
 }
 
+// RateAnticipateEffectyAnnually converts an anticipated (discount) rate to an effective annual rate.
+// Anticipated rates are used in discount instruments where interest is deducted upfront.
+//
+// Returns:
+//   - The effective annual rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) RateAnticipateEffectyAnnually() (money.Decimal, error) {
 	if rt.typeRate == RateEffectyAnnually {
 		return rt.value, nil
@@ -140,6 +193,11 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (money.Decimal, error) {
 	return effectiveAnnualRate, nil
 }
 
+// RateAnticipateNominal converts the current rate to an anticipated (discount) nominal rate.
+//
+// Returns:
+//   - The anticipated nominal rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) RateAnticipateNominal() (money.Decimal, error) {
 	if rt.typeRate == RateAnticipateEffectyNominal {
 		return rt.value, nil
@@ -168,6 +226,11 @@ func (rt RateInterest) RateAnticipateNominal() (money.Decimal, error) {
 	return nominalRate, nil
 }
 
+// RateAnticipatePeriodic converts the current rate to an anticipated (discount) periodic rate.
+//
+// Returns:
+//   - The anticipated periodic rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) RateAnticipatePeriodic() (money.Decimal, error) {
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
 		return rt.value, nil
@@ -191,6 +254,12 @@ func (rt RateInterest) RateAnticipatePeriodic() (money.Decimal, error) {
 	return periodicRate, nil
 }
 
+// ToAnticipateNominal converts an effective or periodic rate to an anticipated nominal rate.
+// This is useful for discount instruments like Treasury bills.
+//
+// Returns:
+//   - The anticipated nominal rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) ToAnticipateNominal() (money.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateEffectyAnnually()
 	if err != nil {
@@ -205,6 +274,11 @@ func (rt RateInterest) ToAnticipateNominal() (money.Decimal, error) {
 	return newRateInterest.RateAnticipateNominal()
 }
 
+// ToAnticipatePeriodic converts an effective or periodic rate to an anticipated periodic rate.
+//
+// Returns:
+//   - The anticipated periodic rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) ToAnticipatePeriodic() (money.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateEffectyAnnually()
 	if err != nil {
@@ -219,6 +293,11 @@ func (rt RateInterest) ToAnticipatePeriodic() (money.Decimal, error) {
 	return newRateInterest.RateAnticipatePeriodic()
 }
 
+// ToNominal converts an anticipated rate to a nominal rate.
+//
+// Returns:
+//   - The nominal rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) ToNominal() (money.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 	if err != nil {
@@ -233,6 +312,11 @@ func (rt RateInterest) ToNominal() (money.Decimal, error) {
 	return newRateInterest.RateNominal()
 }
 
+// ToPeriodic converts an anticipated rate to a periodic rate.
+//
+// Returns:
+//   - The periodic rate as a Decimal
+//   - An error if the conversion fails
 func (rt RateInterest) ToPeriodic() (money.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 	if err != nil {
