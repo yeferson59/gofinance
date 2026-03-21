@@ -1,4 +1,4 @@
-Periodo,Saldo,Pago,Interes,Suma de intereses,Capital
+Period,Balance,Payment,Interest,SumInterest,Principal
 0,3645171.00,0.00,0.00,0.00,0.00
 1,3599480.03,119323.43,73632.45,73632.45,45690.97
 2,3552866.10,119323.43,72709.50,146341.95,46613.93
