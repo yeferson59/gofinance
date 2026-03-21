@@ -96,6 +96,10 @@ func (m Money) RoundBank(prec uint8) Money {
 	return Money{value: m.value.RoundBank(prec), currency: m.currency}
 }
 
+func (m Money) RoundBankString(prec uint8) string {
+	return m.value.RoundBank(prec).StringFixed(prec)
+}
+
 func (m Money) RoundAway(prec uint8) Money {
 	return Money{value: m.value.RoundAwayFromZero(prec), currency: m.currency}
 }

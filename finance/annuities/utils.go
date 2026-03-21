@@ -1,6 +1,7 @@
 package annuities
 
 import (
+	"bufio"
 	"encoding/csv"
 	"os"
 
@@ -55,22 +56,24 @@ func WriteCSV(filenamePath string, headers []string, rows []Schedule) error {
 	}
 	defer f.Close()
 
-	w := csv.NewWriter(f)
+	bw := bufio.NewWriterSize(f, 65536)
+	defer bw.Flush()
+
+	w := csv.NewWriter(bw)
 	defer w.Flush()
 
 	if err := w.Write(headers); err != nil {
 		return err
 	}
 
+	rec := make([]string, 6)
 	for _, r := range rows {
-		rec := []string{
-			r.Period.String(),
-			r.Balance.RoundBank(2).StringFixed(2),
-			r.Payment.RoundBank(2).StringFixed(2),
-			r.Interest.RoundBank(2).StringFixed(2),
-			r.SumInterest.RoundBank(2).StringFixed(2),
-			r.Principal.RoundBank(2).StringFixed(2),
-		}
+		rec[0] = r.Period.String()
+		rec[1] = r.Balance.RoundBankString(2)
+		rec[2] = r.Payment.RoundBankString(2)
+		rec[3] = r.Interest.RoundBankString(2)
+		rec[4] = r.SumInterest.RoundBankString(2)
+		rec[5] = r.Principal.RoundBankString(2)
 
 		if err := w.Write(rec); err != nil {
 			return err

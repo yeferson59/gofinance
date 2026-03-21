@@ -1,4 +1,7 @@
-.PHONY: lint tidy test fmt bench
+.PHONY: lint tidy test fmt bench release
+
+TAG ?=
+DESCRIPTION ?=
 
 lint:
 	@golangci-lint --config=.golangci.yaml run ./... -v
@@ -17,3 +20,14 @@ fmt:
 
 bench:
 	@go test -bench=. -benchmem ./...
+
+release:
+	@make fmt
+	@make lint
+	@make test
+	@if [ -z "$(TAG)" ] || [ -z "$(DESCRIPTION)" ]; then \
+			echo 'Usage: make release TAG=<tag_name> [DESCRIPTION="description of changes"]'; \
+			exit 1; \
+	fi
+
+	git tag -a $(TAG) -m "$(DESCRIPTION)"
