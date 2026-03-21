@@ -7,6 +7,15 @@ import (
 )
 
 func (a Annuity) Future() (money.Money, error) {
+	future, err := a.compositeInterest.Future()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	if !future.IsZero() {
+		return future, nil
+	}
+
 	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
