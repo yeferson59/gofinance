@@ -100,17 +100,17 @@ func BenchmarkAnnuityPaymentFromFutureValue(b *testing.B) {
 
 func BenchmarkBuildSchedule(b *testing.B) {
 	pv := money.MustMoneyFromFloat64(200000, money.USD)
-	rate := money.MustMoneyFromFloat64(0.005, money.USD)
+	rate := money.MustFromFloat64(0.005)
 	payment := money.MustMoneyFromFloat64(1074, money.USD)
 
 	testcases := []struct {
 		name string
-		nper int
+		nper money.Decimal
 	}{
-		{"12_months", 12},
-		{"120_months", 120},
-		{"360_months", 360},
-		{"600_months", 600},
+		{"12_months", mustDecimal(12)},
+		{"120_months", mustDecimal(120)},
+		{"360_months", mustDecimal(360)},
+		{"600_months", mustDecimal(600)},
 	}
 
 	for _, tc := range testcases {
@@ -127,9 +127,9 @@ func BenchmarkBuildSchedule(b *testing.B) {
 func BenchmarkWriteCSV(b *testing.B) {
 	schedule := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(200000, money.USD),
-		money.MustMoneyFromFloat64(0.005, money.USD),
+		money.MustFromFloat64(0.005),
 		money.MustMoneyFromFloat64(1074, money.USD),
-		360,
+		mustDecimal(360),
 	)
 
 	headers := []string{"Period", "Balance", "Payment", "Interest", "SumInterest", "Principal"}
@@ -184,9 +184,9 @@ func BenchmarkAnnuityAllMethods(b *testing.B) {
 		_, _ = annuity.PaymentFromFutureValue()
 		_ = annuities.BuildSchedule(
 			money.MustMoneyFromFloat64(1000, money.USD),
-			money.MustMoneyFromFloat64(0.05/12, money.USD),
+			money.MustFromFloat64(0.05/12),
 			money.MustMoneyFromFloat64(100, money.USD),
-			120,
+			mustDecimal(120),
 		)
 	}
 }

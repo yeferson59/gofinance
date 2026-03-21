@@ -48,9 +48,9 @@ func annuityExample() {
 
 	schedule := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(300000, money.USD),
-		money.MustMoneyFromFloat64(0.005, money.USD),
+		money.MustFromFloat64(0.005),
 		payment,
-		360,
+		money.MustFromFloat64(360),
 	)
 	fmt.Println("Schedule rows:", len(schedule))
 }
