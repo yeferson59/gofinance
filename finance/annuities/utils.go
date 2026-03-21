@@ -17,8 +17,13 @@ type Schedule struct {
 	Principal   money.Money
 }
 
-func BuildSchedule(pv, rate, payment money.Money, nper int) []Schedule {
-	balance, rows := pv, make([]Schedule, 0, nper)
+func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper money.Decimal) []Schedule {
+	until, err := nper.Int64()
+	if err != nil {
+		return nil
+	}
+
+	balance, rows := pv, make([]Schedule, 0, until)
 	sumInterest := money.MoneyZero
 
 	rows = append(rows, Schedule{
@@ -30,8 +35,8 @@ func BuildSchedule(pv, rate, payment money.Money, nper int) []Schedule {
 		Principal:   money.MoneyZero,
 	})
 
-	for p := 1; p <= nper; p++ {
-		interest := balance.Mul(rate.ToDecimal().ToMoney(balance.Currency()))
+	for p := 1; p <= int(until); p++ {
+		interest := balance.Mul(rate.ToMoney(balance.Currency()))
 		principal := payment.Sub(interest)
 		balance = balance.Sub(principal)
 		sumInterest = sumInterest.Add(interest)
