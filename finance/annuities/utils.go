@@ -17,7 +17,7 @@ type Schedule struct {
 	Principal   money.Money
 }
 
-func (a Annuity) BuildSchedule(pv, rate, payment money.Money, nper int) []Schedule {
+func BuildSchedule(pv, rate, payment money.Money, nper int) []Schedule {
 	balance, rows, sumInterest := pv, make([]Schedule, 0, nper), udecimal.Zero
 
 	rows = append(rows, Schedule{
@@ -47,7 +47,7 @@ func (a Annuity) BuildSchedule(pv, rate, payment money.Money, nper int) []Schedu
 	return rows
 }
 
-func (a Annuity) WriteCSV(filenamePath string, headers []string, rows []Schedule) error {
+func WriteCSV(filenamePath string, headers []string, rows []Schedule) error {
 	f, err := os.Create(filenamePath)
 	if err != nil {
 		return err
