@@ -180,7 +180,32 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 	case compositeinterest.Annually:
 		divisor = 1.0
 	}
+
 	a.rate = r / divisor
+	a.rateType = compositeinterest.RateEffectyNominal
+
+	return a
+}
+
+// EffectiveAnnualRate sets the effective annual interest rate and automatically converts
+// it to the periodic rate based on the configured compounding frequency.
+//
+// Use this when you have an effective annual rate (the true yearly cost/return) and need
+// to convert it to the periodic rate for calculations.
+//
+// The conversion formula is: periodic_rate = (1 + annual_rate)^(1/periods) - 1
+// For monthly: periodic_rate = (1 + annual_rate)^(1/12) - 1
+//
+// Parameters:
+//   - r: The effective annual interest rate as a decimal (e.g., 0.2668 for 26.68% effective annual)
+//
+// Example:
+//
+//	.NewAnnuity().EffectiveAnnualRate(0.2668)  // 26.68% effective annual, converts to ~2% monthly
+func (a AnnuityConfig) EffectiveAnnualRate(r float64) AnnuityConfig {
+	a.rate = r
+	a.rateType = compositeinterest.RateEffectyAnnually
+
 	return a
 }
 
@@ -233,7 +258,7 @@ func (a AnnuityConfig) Quarterly() AnnuityConfig {
 //	    Periods(360).
 //	    Monthly().
 //	    Build()
-func (a *AnnuityConfig) Build() (Annuity, error) {
+func (a AnnuityConfig) Build() (Annuity, error) {
 	rate, err := compositeinterest.NewRateInterest(
 		money.MustFromFloat64(a.rate),
 		a.frequency,
@@ -273,7 +298,7 @@ func (a *AnnuityConfig) Build() (Annuity, error) {
 //	    Periods(360).
 //	    Monthly().
 //	    MustBuild()
-func (a *AnnuityConfig) MustBuild() Annuity {
+func (a AnnuityConfig) MustBuild() Annuity {
 	annuity, err := a.Build()
 	if err != nil {
 		panic(err)
@@ -300,7 +325,7 @@ func (a *AnnuityConfig) MustBuild() Annuity {
 //	    Periods(360).
 //	    Monthly().
 //	    Payment()
-func (a *AnnuityConfig) Payment() (money.Money, error) {
+func (a AnnuityConfig) Payment() (money.Money, error) {
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
