@@ -18,9 +18,7 @@ type Schedule struct {
 }
 
 func (a Annuity) BuildSchedule(pv, rate, payment money.Money, nper int) []Schedule {
-	balance := pv
-	rows := make([]Schedule, 0, nper)
-	sumInterest := udecimal.Zero
+	balance, rows, sumInterest := pv, make([]Schedule, 0, nper), udecimal.Zero
 
 	rows = append(rows, Schedule{
 		Period:      money.Decimal{Decimal: udecimal.Zero},
@@ -49,8 +47,8 @@ func (a Annuity) BuildSchedule(pv, rate, payment money.Money, nper int) []Schedu
 	return rows
 }
 
-func WriteCSV(filename string, rows []Schedule) error {
-	f, err := os.Create(filename)
+func WriteCSV(filenamePath string, headers []string, rows []Schedule) error {
+	f, err := os.Create(filenamePath)
 	if err != nil {
 		return err
 	}
@@ -59,7 +57,7 @@ func WriteCSV(filename string, rows []Schedule) error {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
-	if err := w.Write([]string{"Periodo", "Saldo", "Pago", "Interes", "Suma de intereses", "Capital"}); err != nil {
+	if err := w.Write(headers); err != nil {
 		return err
 	}
 
