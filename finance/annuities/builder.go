@@ -49,8 +49,8 @@ type AnnuityConfig struct {
 //	    AnnualRate(0.05).
 //	    Periods(240).
 //	    Monthly().
-func NewAnnuity() *AnnuityConfig {
-	return &AnnuityConfig{
+func NewAnnuity() AnnuityConfig {
+	return AnnuityConfig{
 		frequency: compositeinterest.Monthly,
 		rateType:  compositeinterest.RateEffectyPeriodic,
 	}
@@ -68,7 +68,7 @@ func NewAnnuity() *AnnuityConfig {
 // Example:
 //
 //	.NewAnnuity().Value(500, money.USD)
-func (a *AnnuityConfig) Value(amount float64, currency money.Currency) *AnnuityConfig {
+func (a AnnuityConfig) Value(amount float64, currency money.Currency) AnnuityConfig {
 	a.value = money.MustMoneyFromFloat64(amount, currency)
 	return a
 }
@@ -84,7 +84,7 @@ func (a *AnnuityConfig) Value(amount float64, currency money.Currency) *AnnuityC
 // Example:
 //
 //	.NewAnnuity().Present(300000, money.USD)  // $300,000 mortgage
-func (a *AnnuityConfig) Present(amount float64, currency money.Currency) *AnnuityConfig {
+func (a AnnuityConfig) Present(amount float64, currency money.Currency) AnnuityConfig {
 	a.present = money.MustMoneyFromFloat64(amount, currency)
 	return a
 }
@@ -99,7 +99,7 @@ func (a *AnnuityConfig) Present(amount float64, currency money.Currency) *Annuit
 // Example:
 //
 //	.NewAnnuity().Future(1000000, money.USD)  // Save $1,000,000
-func (a *AnnuityConfig) Future(amount float64, currency money.Currency) *AnnuityConfig {
+func (a AnnuityConfig) Future(amount float64, currency money.Currency) AnnuityConfig {
 	a.future = money.MustMoneyFromFloat64(amount, currency)
 	return a
 }
@@ -112,7 +112,7 @@ func (a *AnnuityConfig) Future(amount float64, currency money.Currency) *Annuity
 // Example:
 //
 //	.NewAnnuity().Periods(360)  // 360 monthly payments (30 years)
-func (a *AnnuityConfig) Periods(n int) *AnnuityConfig {
+func (a AnnuityConfig) Periods(n int) AnnuityConfig {
 	a.periods = n
 	return a
 }
@@ -126,7 +126,7 @@ func (a *AnnuityConfig) Periods(n int) *AnnuityConfig {
 // Example:
 //
 //	.NewAnnuity().Years(30)  // Automatically calculates 360 periods for monthly payments
-func (a *AnnuityConfig) Years(n int) *AnnuityConfig {
+func (a AnnuityConfig) Years(n int) AnnuityConfig {
 	a.periods = n * 12
 	return a
 }
@@ -143,7 +143,7 @@ func (a *AnnuityConfig) Years(n int) *AnnuityConfig {
 // Example:
 //
 //	.NewAnnuity().Rate(0.005)  // 0.5% monthly rate
-func (a *AnnuityConfig) Rate(r float64) *AnnuityConfig {
+func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
 	a.rate = r
 	return a
 }
@@ -166,7 +166,7 @@ func (a *AnnuityConfig) Rate(r float64) *AnnuityConfig {
 // Example:
 //
 //	.NewAnnuity().AnnualRate(0.06)  // 6% annual rate, converts to ~0.5% monthly
-func (a *AnnuityConfig) AnnualRate(r float64) *AnnuityConfig {
+func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 	divisor := 12.0
 	switch a.frequency {
 	case compositeinterest.Daily:
@@ -190,8 +190,9 @@ func (a *AnnuityConfig) AnnualRate(r float64) *AnnuityConfig {
 // Example:
 //
 //	.NewAnnuity().Monthly()
-func (a *AnnuityConfig) Monthly() *AnnuityConfig {
+func (a AnnuityConfig) Monthly() AnnuityConfig {
 	a.frequency = compositeinterest.Monthly
+
 	return a
 }
 
@@ -200,8 +201,9 @@ func (a *AnnuityConfig) Monthly() *AnnuityConfig {
 // Example:
 //
 //	.NewAnnuity().Annually()
-func (a *AnnuityConfig) Annually() *AnnuityConfig {
+func (a AnnuityConfig) Annually() AnnuityConfig {
 	a.frequency = compositeinterest.Annually
+
 	return a
 }
 
@@ -210,8 +212,9 @@ func (a *AnnuityConfig) Annually() *AnnuityConfig {
 // Example:
 //
 //	.NewAnnuity().Quarterly()
-func (a *AnnuityConfig) Quarterly() *AnnuityConfig {
+func (a AnnuityConfig) Quarterly() AnnuityConfig {
 	a.frequency = compositeinterest.QuarterlyOne
+
 	return a
 }
 
@@ -275,6 +278,7 @@ func (a *AnnuityConfig) MustBuild() Annuity {
 	if err != nil {
 		panic(err)
 	}
+
 	return annuity
 }
 
@@ -301,6 +305,7 @@ func (a *AnnuityConfig) Payment() (money.Money, error) {
 	if err != nil {
 		return money.Money{}, err
 	}
+
 	return annuity.PaymentFromPresentValue()
 }
 
@@ -328,5 +333,6 @@ func (a *AnnuityConfig) MustPayment() money.Money {
 	if err != nil {
 		panic(err)
 	}
+
 	return m
 }

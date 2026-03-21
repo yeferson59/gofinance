@@ -45,8 +45,8 @@ type SimpleConfig struct {
 //	    AnnualRate(0.12).
 //	    Periods(18).
 //	    Months()
-func NewSimple() *SimpleConfig {
-	return &SimpleConfig{
+func NewSimple() SimpleConfig {
+	return SimpleConfig{
 		periodType: Months,
 	}
 }
@@ -61,7 +61,7 @@ func NewSimple() *SimpleConfig {
 // Example:
 //
 //	.NewSimple().Present(5000, money.USD)  // $5,000 principal
-func (s *SimpleConfig) Present(amount float64, currency money.Currency) *SimpleConfig {
+func (s SimpleConfig) Present(amount float64, currency money.Currency) SimpleConfig {
 	s.present = money.MustMoneyFromFloat64(amount, currency)
 	return s
 }
@@ -76,7 +76,7 @@ func (s *SimpleConfig) Present(amount float64, currency money.Currency) *SimpleC
 // Example:
 //
 //	.NewSimple().Future(6000, money.USD)  // $6,000 target amount
-func (s *SimpleConfig) Future(amount float64, currency money.Currency) *SimpleConfig {
+func (s SimpleConfig) Future(amount float64, currency money.Currency) SimpleConfig {
 	s.future = money.MustMoneyFromFloat64(amount, currency)
 	return s
 }
@@ -91,7 +91,7 @@ func (s *SimpleConfig) Future(amount float64, currency money.Currency) *SimpleCo
 // Example:
 //
 //	.NewSimple().Interest(900, money.USD)  // $900 interest
-func (s *SimpleConfig) Interest(amount float64, currency money.Currency) *SimpleConfig {
+func (s SimpleConfig) Interest(amount float64, currency money.Currency) SimpleConfig {
 	s.interest = money.MustMoneyFromFloat64(amount, currency)
 	return s
 }
@@ -108,7 +108,7 @@ func (s *SimpleConfig) Interest(amount float64, currency money.Currency) *Simple
 // Example:
 //
 //	.NewSimple().Rate(0.01)  // 1% monthly rate
-func (s *SimpleConfig) Rate(r float64) *SimpleConfig {
+func (s SimpleConfig) Rate(r float64) SimpleConfig {
 	s.rate = money.MustFromFloat64(r)
 	return s
 }
@@ -130,7 +130,7 @@ func (s *SimpleConfig) Rate(r float64) *SimpleConfig {
 // Example:
 //
 //	.NewSimple().AnnualRate(0.12)  // 12% annual rate, converts to 1% monthly
-func (s *SimpleConfig) AnnualRate(r float64) *SimpleConfig {
+func (s SimpleConfig) AnnualRate(r float64) SimpleConfig {
 	divisor := 12.0
 	switch s.periodType {
 	case Days:
@@ -152,7 +152,7 @@ func (s *SimpleConfig) AnnualRate(r float64) *SimpleConfig {
 // Example:
 //
 //	.NewSimple().Periods(18)  // 18 periods (months, days, etc. based on period type)
-func (s *SimpleConfig) Periods(n int) *SimpleConfig {
+func (s SimpleConfig) Periods(n int) SimpleConfig {
 	s.periods = n
 	return s
 }
@@ -165,7 +165,7 @@ func (s *SimpleConfig) Periods(n int) *SimpleConfig {
 // Example:
 //
 //	.NewSimple().PeriodType(Months)
-func (s *SimpleConfig) PeriodType(p Periods) *SimpleConfig {
+func (s SimpleConfig) PeriodType(p Periods) SimpleConfig {
 	s.periodType = p
 	return s
 }
@@ -176,7 +176,7 @@ func (s *SimpleConfig) PeriodType(p Periods) *SimpleConfig {
 // Example:
 //
 //	.NewSimple().Months()
-func (s *SimpleConfig) Months() *SimpleConfig {
+func (s SimpleConfig) Months() SimpleConfig {
 	s.periodType = Months
 	return s
 }
@@ -187,7 +187,7 @@ func (s *SimpleConfig) Months() *SimpleConfig {
 // Example:
 //
 //	.NewSimple().Years()
-func (s *SimpleConfig) Years() *SimpleConfig {
+func (s SimpleConfig) Years() SimpleConfig {
 	s.periodType = Years
 	return s
 }
@@ -198,7 +198,7 @@ func (s *SimpleConfig) Years() *SimpleConfig {
 // Example:
 //
 //	.NewSimple().Days()
-func (s *SimpleConfig) Days() *SimpleConfig {
+func (s SimpleConfig) Days() SimpleConfig {
 	s.periodType = Days
 	return s
 }
@@ -209,7 +209,7 @@ func (s *SimpleConfig) Days() *SimpleConfig {
 // Example:
 //
 //	.NewSimple().Weeks()
-func (s *SimpleConfig) Weeks() *SimpleConfig {
+func (s SimpleConfig) Weeks() SimpleConfig {
 	s.periodType = Weeks
 	return s
 }
