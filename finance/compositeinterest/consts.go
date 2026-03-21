@@ -23,7 +23,6 @@ const (
 // Anticipated/discount rates (charged at the beginning of the period):
 //   - RateAnticipateEffectyPeriodic: Anticipated periodic rate
 //   - RateAnticipateEffectyNominal: Anticipated nominal rate
-//   - RateAnticipateEffectyAnnually: Anticipated effective annual rate
 const (
 	RateEffectyPeriodic           TypeRate = "periodic"
 	RateEffectyAnnually           TypeRate = "annual"
