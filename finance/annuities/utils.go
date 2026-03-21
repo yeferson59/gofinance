@@ -18,11 +18,11 @@ type Schedule struct {
 }
 
 func (a Annuity) BuildSchedule(pv, rate, payment money.Money, nper int) []Schedule {
-	balance, rows, sumInterest := pv, make([]Schedule, 0, nper), udecimal.Zero
+	rows, sumInterest := make([]Schedule, 0, nper), udecimal.Zero
 
 	rows = append(rows, Schedule{
 		Period:      money.Decimal{Decimal: udecimal.Zero},
-		Balance:     balance,
+		Balance:     pv,
 		Payment:     money.Money{Decimal: udecimal.Zero},
 		Interest:    money.Money{Decimal: udecimal.Zero},
 		SumInterest: money.Money{Decimal: udecimal.Zero},
@@ -30,9 +30,9 @@ func (a Annuity) BuildSchedule(pv, rate, payment money.Money, nper int) []Schedu
 	})
 
 	for p := 1; p <= nper; p++ {
-		interest := balance.Mul(rate.Decimal)
+		interest := pv.Mul(rate.Decimal)
 		principal := payment.Sub(interest)
-		balance, sumInterest = money.Money{Decimal: balance.Sub(principal)}, sumInterest.Add(interest)
+		balance, sumInterest := money.Money{Decimal: pv.Sub(principal)}, sumInterest.Add(interest)
 
 		rows = append(rows, Schedule{
 			Period:      money.MustFromInt64(int64(p), 0),
