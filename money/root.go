@@ -10,8 +10,8 @@ import (
 
 var ErrCurrencyMismatch = errors.New("money: currency mismatch")
 
-var MoneyZero = Money{value: udecimal.Zero}
-var MoneyOne = Money{value: udecimal.One}
+var MoneyZero = Money{value: udecimal.Zero, currency: 143}
+var MoneyOne = Money{value: udecimal.One, currency: 143}
 
 type Money struct {
 	value    udecimal.Decimal
@@ -179,30 +179,50 @@ func (m Money) Equal(other Money) bool {
 
 func (m Money) MarshalJSON() ([]byte, error) {
 	type moneyJSON struct {
-		Value    string   `json:"value"`
-		Currency Currency `json:"currency"`
+		Value    string `json:"value"`
+		Currency string `json:"currency"`
 	}
+
+	isoCode, err := m.currency.GetCurrencyISOCode()
+	if err != nil {
+		return nil, err
+	}
+
 	return json.Marshal(moneyJSON{
 		Value:    m.value.String(),
-		Currency: m.currency,
+		Currency: isoCode,
 	})
 }
 
 func (m *Money) UnmarshalJSON(data []byte) error {
 	type moneyJSON struct {
-		Value    string   `json:"value"`
-		Currency Currency `json:"currency"`
+		Value    string `json:"value"`
+		Currency string `json:"currency"`
 	}
+
+	var num json.Number
+	if err := json.Unmarshal(data, &num); err == nil {
+		dec, err := udecimal.Parse(num.String())
+		if err != nil {
+			return err
+		}
+		m.value = dec
+		m.currency = 143
+		return nil
+	}
+
 	var mj moneyJSON
 	if err := json.Unmarshal(data, &mj); err != nil {
 		return err
 	}
+
 	dec, err := udecimal.Parse(mj.Value)
 	if err != nil {
 		return err
 	}
+
 	m.value = dec
-	m.currency = mj.Currency
+	m.currency = 143
 	return nil
 }
 
