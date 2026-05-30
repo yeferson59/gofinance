@@ -2,6 +2,7 @@ package money
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/quagmt/udecimal"
 )
@@ -203,14 +204,24 @@ func (d Decimal) MarshalJSON() ([]byte, error) {
 }
 
 func (d *Decimal) UnmarshalJSON(data []byte) error {
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-	dec, err := udecimal.Parse(s)
+	dec, err := parseDecimalJSON(data)
 	if err != nil {
 		return err
 	}
 	d.value = dec
 	return nil
+}
+
+func parseDecimalJSON(data []byte) (udecimal.Decimal, error) {
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		return udecimal.Parse(s)
+	}
+
+	var num json.Number
+	if err := json.Unmarshal(data, &num); err == nil {
+		return udecimal.Parse(num.String())
+	}
+
+	return udecimal.Decimal{}, errors.New("invalid decimal JSON")
 }

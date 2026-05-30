@@ -153,7 +153,7 @@ func TestMoneyNeg(t *testing.T) {
 }
 
 func TestMoneyJSON(t *testing.T) {
-	m, _ := NewMoneyFromString("123.45", USD)
+	m, _ := NewMoneyFromString("123.45", EUR)
 
 	data, err := m.MarshalJSON()
 	if err != nil {
@@ -167,5 +167,33 @@ func TestMoneyJSON(t *testing.T) {
 
 	if !m.Equal(m2) {
 		t.Errorf("expected %v, got %v", m, m2)
+	}
+}
+
+func TestDecimalJSON(t *testing.T) {
+	d := MustFromString("123.45")
+	data, err := d.MarshalJSON()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var d2 Decimal
+	if err := d2.UnmarshalJSON(data); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !d.Equal(d2) {
+		t.Errorf("expected %v, got %v", d, d2)
+	}
+}
+
+func TestDecimalJSONNumber(t *testing.T) {
+	var d Decimal
+	if err := d.UnmarshalJSON([]byte("123.45")); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if d.String() != "123.45" {
+		t.Errorf("expected 123.45, got %s", d.String())
 	}
 }

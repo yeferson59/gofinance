@@ -1,6 +1,9 @@
 package money
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type Currency uint
 
@@ -317,7 +320,7 @@ var currencyCode = map[Currency]string{
 	VUV: "VUV",
 	WST: "WST",
 	XAF: "XAF",
-	XCD: "XOF",
+	XCD: "XCD",
 	XOF: "XOF",
 	XPF: "XPF",
 	YER: "YER",
@@ -325,6 +328,14 @@ var currencyCode = map[Currency]string{
 	ZMW: "ZMW",
 	ZWL: "ZWL",
 }
+
+var currencyByISOCode = func() map[string]Currency {
+	mapped := make(map[string]Currency, len(currencyCode))
+	for currency, code := range currencyCode {
+		mapped[code] = currency
+	}
+	return mapped
+}()
 
 var currencyPrec = map[Currency]uint8{
 	COP: 2,
@@ -347,4 +358,18 @@ func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
 	}
 
 	return prec, nil
+}
+
+func CurrencyFromISOCode(code string) (Currency, error) {
+	normalized := strings.ToUpper(strings.TrimSpace(code))
+	if normalized == "" {
+		return 0, errors.New("invalid currency ISO code")
+	}
+
+	currency, ok := currencyByISOCode[normalized]
+	if !ok {
+		return 0, errors.New("invalid currency ISO code")
+	}
+
+	return currency, nil
 }

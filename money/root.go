@@ -196,18 +196,18 @@ func (m Money) MarshalJSON() ([]byte, error) {
 
 func (m *Money) UnmarshalJSON(data []byte) error {
 	type moneyJSON struct {
-		Value    string `json:"value"`
-		Currency string `json:"currency"`
+		Value    json.RawMessage `json:"value"`
+		Currency string          `json:"currency"`
 	}
 
 	var num json.Number
 	if err := json.Unmarshal(data, &num); err == nil {
-		dec, err := udecimal.Parse(num.String())
+		dec, err := parseDecimalJSON(data)
 		if err != nil {
 			return err
 		}
 		m.value = dec
-		m.currency = 143
+		m.currency = USD
 		return nil
 	}
 
@@ -216,13 +216,21 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	dec, err := udecimal.Parse(mj.Value)
+	dec, err := parseDecimalJSON(mj.Value)
 	if err != nil {
 		return err
 	}
 
 	m.value = dec
-	m.currency = 143
+	if mj.Currency != "" {
+		currency, err := CurrencyFromISOCode(mj.Currency)
+		if err != nil {
+			return err
+		}
+		m.currency = currency
+	} else {
+		m.currency = USD
+	}
 	return nil
 }
 
