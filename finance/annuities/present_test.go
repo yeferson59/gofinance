@@ -11,7 +11,8 @@ import (
 )
 
 func TestAnnuityPresent(t *testing.T) {
-	// Test present value calculation with standard parameters
+	// PMT = 1000, 12% nominal monthly => i = 0.01, n = 12
+	// PV = PMT × [1 - (1+i)^-n] / i = 1000 × [1 - 1.01^-12] / 0.01 = 11255.0775
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
@@ -29,13 +30,12 @@ func TestAnnuityPresent(t *testing.T) {
 
 	presentValue, err := annuity.Present()
 	require.NoError(t, err)
-	assert.Greater(t, presentValue.ToDecimal().InexactFloat64(), 0.0)
+	assert.InDelta(t, 11255.0775, presentValue.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPresentWithZeroInterestRate(t *testing.T) {
-	// Test edge case: zero interest rate
-	// With zero interest, the formula has division by zero
-	// This test verifies the implementation handles this edge case
+	// With a zero interest rate the annuity formula divides by zero,
+	// so Present must return an error instead of a value.
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
@@ -51,15 +51,13 @@ func TestAnnuityPresentWithZeroInterestRate(t *testing.T) {
 	annuity, err := New(value, present, future, period, rateInterest)
 	require.NoError(t, err)
 
-	_, err = annuity.Present()
-	// With zero interest rate, we expect issues due to division by zero
-	// The implementation doesn't handle this edge case specially
-	// We just verify it returns some result (may be inf/nan)
-	_ = err
+	presentValue, err := annuity.Present()
+	require.Error(t, err)
+	assert.Equal(t, 0.0, presentValue.ToDecimal().InexactFloat64())
 }
 
 func TestAnnuityPresentWithSmallPeriods(t *testing.T) {
-	// Test with small number of periods
+	// PMT = 100, 5% annual, n = 1 => PV = 100 / 1.05 = 95.2381
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(1), compositeinterest.Annually)
 	require.NoError(t, err)
 
@@ -77,12 +75,12 @@ func TestAnnuityPresentWithSmallPeriods(t *testing.T) {
 
 	presentValue, err := annuity.Present()
 	require.NoError(t, err)
-	assert.Greater(t, presentValue.ToDecimal().InexactFloat64(), 0.0)
-	assert.Less(t, presentValue.ToDecimal().InexactFloat64(), 200.0) // Should be reasonable
+	assert.InDelta(t, 95.2381, presentValue.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityFuture(t *testing.T) {
-	// Test future value calculation
+	// Future value is derived from the underlying compound interest data:
+	// FV = PV × (1+i)^n = 10000 × 1.01^12 = 11268.2503
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
@@ -100,11 +98,12 @@ func TestAnnuityFuture(t *testing.T) {
 
 	futureValue, err := annuity.Future()
 	require.NoError(t, err)
-	assert.Greater(t, futureValue.ToDecimal().InexactFloat64(), 0.0)
+	assert.InDelta(t, 11268.2503, futureValue.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPaymentFromPresentValue(t *testing.T) {
-	// Test payment calculation from present value
+	// PV = 10000, i = 0.01, n = 12
+	// PMT = PV × i(1+i)^n / [(1+i)^n - 1] = 888.4879
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
@@ -122,11 +121,12 @@ func TestAnnuityPaymentFromPresentValue(t *testing.T) {
 
 	payment, err := annuity.PaymentFromPresentValue()
 	require.NoError(t, err)
-	assert.Greater(t, payment.ToDecimal().InexactFloat64(), 0.0)
+	assert.InDelta(t, 888.4879, payment.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPaymentFromFutureValue(t *testing.T) {
-	// Test payment calculation from future value
+	// FV = 15000, i = 0.01, n = 12
+	// PMT = FV × i / [(1+i)^n - 1] = 1182.7318
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
@@ -144,11 +144,12 @@ func TestAnnuityPaymentFromFutureValue(t *testing.T) {
 
 	payment, err := annuity.PaymentFromFutureValue()
 	require.NoError(t, err)
-	assert.Greater(t, payment.ToDecimal().InexactFloat64(), 0.0)
+	assert.InDelta(t, 1182.7318, payment.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPeriodsWithPresent(t *testing.T) {
-	// Test periods calculation with present value
+	// PMT = 1000, PV = 10000, i = 0.01
+	// n = ln(PMT / (PMT - PV×i)) / ln(1+i) = ln(1000/900) / ln(1.01) = 10.5886
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
@@ -166,11 +167,12 @@ func TestAnnuityPeriodsWithPresent(t *testing.T) {
 
 	periods, err := annuity.PeriodsWithPresent()
 	require.NoError(t, err)
-	assert.Greater(t, periods.InexactFloat64(), 0.0)
+	assert.InDelta(t, 10.5886, periods.InexactFloat64(), 0.0001)
 }
 
 func TestAnnuityPeriodsWithFuture(t *testing.T) {
-	// Test periods calculation with future value
+	// PMT = 1000, FV = 15000, i = 0.01
+	// n = ln((FV×i + PMT) / PMT) / ln(1+i) = ln(1.15) / ln(1.01) = 14.0460
 	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
@@ -188,7 +190,7 @@ func TestAnnuityPeriodsWithFuture(t *testing.T) {
 
 	periods, err := annuity.PeriodsWithFuture()
 	require.NoError(t, err)
-	assert.Greater(t, periods.InexactFloat64(), 0.0)
+	assert.InDelta(t, 14.0460, periods.InexactFloat64(), 0.0001)
 }
 
 func TestNewAnnuityWithInvalidPeriod(t *testing.T) {
@@ -232,14 +234,20 @@ func TestAnnuityPresentMathematicalCorrectness(t *testing.T) {
 }
 
 func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
+	// PMT = 1000, PV = 10000, 12% nominal at each frequency, n = 12 periods
+	// of that frequency => i = 0.12/m with m periods per year.
+	// Annuity PV = PMT × [1 - (1+i)^-12] / i
+	// Compound FV = PV × (1+i)^12
 	testCases := []struct {
-		name      string
-		frequency compositeinterest.CompoundingFrequency
+		name            string
+		frequency       compositeinterest.CompoundingFrequency
+		expectedPresent float64
+		expectedFuture  float64
 	}{
-		{"daily", compositeinterest.Daily},
-		{"monthly", compositeinterest.Monthly},
-		{"quarterly", compositeinterest.QuarterlyOne},
-		{"annually", compositeinterest.Annually},
+		{"daily", compositeinterest.Daily, 11974.3955, 10039.5235},
+		{"monthly", compositeinterest.Monthly, 11255.0775, 11268.2503},
+		{"quarterly", compositeinterest.QuarterlyOne, 9954.0040, 14257.6089},
+		{"annually", compositeinterest.Annually, 6194.3742, 38959.7599},
 	}
 
 	for _, tc := range testCases {
@@ -254,18 +262,18 @@ func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
 			require.NoError(t, err)
 			present, err := money.New(1000000, 2, money.USD)
 			require.NoError(t, err)
-			future, err := money.New(1500000, 2, money.USD)
+			future, err := money.New(0, 2, money.USD)
 			require.NoError(t, err)
 			annuity, err := New(value, present, future, period, rateInterest)
 			require.NoError(t, err)
 
 			presentValue, err := annuity.Present()
 			require.NoError(t, err)
-			assert.Greater(t, presentValue.ToDecimal().InexactFloat64(), 0.0)
+			assert.InDelta(t, tc.expectedPresent, presentValue.ToDecimal().InexactFloat64(), 0.01)
 
 			futureValue, err := annuity.Future()
 			require.NoError(t, err)
-			assert.Greater(t, futureValue.ToDecimal().InexactFloat64(), 0.0)
+			assert.InDelta(t, tc.expectedFuture, futureValue.ToDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }

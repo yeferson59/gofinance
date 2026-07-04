@@ -32,13 +32,17 @@ func TestGetValuePeriod(t *testing.T) {
 	tx.NoError(err)
 }
 
-func TestNewPeriodFailed(t *testing.T) {
+func TestNewPeriodZeroValueIsValid(t *testing.T) {
+	// A zero period is allowed: it signals that the period should be derived.
 	period, err := NewPeriod(money.MustFromFloat64(0), QuarterlyTwo)
 
 	tx := assert.New(t)
 
-	tx.NotNil(period, "period must be not nil")
-	tx.Nil(err)
+	tx.NoError(err)
+
+	value, _, err := period.getPeriod()
+	tx.NoError(err)
+	tx.Equal(0.0, value.InexactFloat64())
 }
 
 func TestNewPeriodWithDifferentsValues(t *testing.T) {
@@ -122,6 +126,8 @@ func TestGetEqualsRateInterestPeriods_differentTime(t *testing.T) {
 
 	future, err := compositeInterest.Future()
 
-	tx.NotNil(future)
 	tx.NoError(err)
+	// 2 bimonthly periods = 4 months; 5% nominal monthly => i = 0.05/12
+	// FV = 5000 × (1 + 0.05/12)^4 = 5083.8556
+	tx.InDelta(5083.8556, future.ToDecimal().InexactFloat64(), 0.01)
 }
