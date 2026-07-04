@@ -92,8 +92,9 @@ func TestFutureWithDailyCompounding(t *testing.T) {
 	future, err := ci.Future()
 	require.NoError(t, err)
 
-	assert.True(t, future.ToDecimal().InexactFloat64() > 1000, "future should be greater than present")
-	assert.True(t, future.ToDecimal().InexactFloat64() < 1105, "future should be less than 1105 for 10% annual rate")
+	// 10% effective annual compounded daily over 365 days is exactly one year:
+	// FV = 1000 × 1.10 = 1100
+	assert.InDelta(t, 1100.0, future.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithQuarterlyCompounding(t *testing.T) {
@@ -113,7 +114,8 @@ func TestFutureWithQuarterlyCompounding(t *testing.T) {
 	future, err := ci.Future()
 	require.NoError(t, err)
 
-	assert.True(t, future.ToDecimal().InexactFloat64() > 1000, "future should be greater than present")
+	// 12% nominal quarterly => i = 0.03, FV = 1000 × 1.03^4 = 1125.5088
+	assert.InDelta(t, 1125.5088, future.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
@@ -133,8 +135,10 @@ func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
 	future, err := ci.Future()
 	require.NoError(t, err)
 
-	assert.True(t, future.ToDecimal().InexactFloat64() > 5000, "future should be greater than present")
-	assert.InDelta(t, 5512.5, future.ToDecimal().InexactFloat64(), 100.0)
+	// 10% effective annual compounded semi-annually over 2 periods is exactly
+	// one year: FV = 5000 × 1.10 = 5500 (not 5512.50, which would be a 10%
+	// nominal rate instead of the effective annual rate used here).
+	assert.InDelta(t, 5500.0, future.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithZeroPresent(t *testing.T) {
@@ -192,7 +196,8 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 			freq:     QuarterlyOne,
 			typeRate: RateEffectyPeriodic,
 			periods:  8,
-			expected: 2342.7,
+			// FV = 2000 × 1.02^8 = 2343.3188
+			expected: 2343.3188,
 		},
 	}
 
@@ -214,7 +219,7 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 			future, err := ci.Future()
 			require.NoError(t, err)
 
-			assert.InDelta(t, tc.expected, future.ToDecimal().InexactFloat64(), 1.0)
+			assert.InDelta(t, tc.expected, future.ToDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }
@@ -236,7 +241,8 @@ func TestFutureWithBimonthlyCompounding(t *testing.T) {
 	future, err := ci.Future()
 	require.NoError(t, err)
 
-	assert.True(t, future.ToDecimal().InexactFloat64() > 1000)
+	// 6% nominal bimonthly => i = 0.01, FV = 1000 × 1.01^6 = 1061.5202
+	assert.InDelta(t, 1061.5202, future.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithDifferentRateTypes(t *testing.T) {
@@ -244,10 +250,15 @@ func TestFutureWithDifferentRateTypes(t *testing.T) {
 		name     string
 		rate     float64
 		typeRate TypeRate
+		expected float64
 	}{
-		{"periodic", 0.01, RateEffectyPeriodic},
-		{"nominal", 0.12, RateEffectyNominal},
-		{"annual", 0.1268, RateEffectyAnnually},
+		// periodic 1% monthly: FV = 1000 × 1.01^12 = 1126.8250
+		{"periodic", 0.01, RateEffectyPeriodic, 1126.8250},
+		// 12% nominal monthly => i = 0.01: same as above
+		{"nominal", 0.12, RateEffectyNominal, 1126.8250},
+		// 12.68% effective annual over 12 months = exactly one year:
+		// FV = 1000 × 1.1268 = 1126.80
+		{"annual", 0.1268, RateEffectyAnnually, 1126.80},
 	}
 
 	for _, tc := range testCases {
@@ -268,7 +279,7 @@ func TestFutureWithDifferentRateTypes(t *testing.T) {
 			future, err := ci.Future()
 			require.NoError(t, err)
 
-			assert.True(t, future.ToDecimal().InexactFloat64() > 1000)
+			assert.InDelta(t, tc.expected, future.ToDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }

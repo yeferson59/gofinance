@@ -49,11 +49,8 @@ func TestRateInterestWithPresentAndFuture(t *testing.T) {
 	rate, err := simpleInterest.RateInterestWithPresentAndFuture()
 	require.NoError(t, err)
 
-	// Check that the rate is approximately 0.05
-	zero, _ := money.NewFromInt64(0, 0)
-	maxValue, _ := money.NewFromFloat64(0.06)
-	assert.True(t, rate.Cmp(zero) >= 0, "rate should be >= 0")
-	assert.True(t, rate.Cmp(maxValue) <= 0, "rate should be <= 0.06")
+	// r = (FV/PV - 1) / n = (5500/5000 - 1) / 2 = 0.05
+	assert.Equal(t, 0.05, rate.InexactFloat64())
 
 	// Test error case: present=0
 	zeroValue, _ := money.New(0, 0, money.COP)
