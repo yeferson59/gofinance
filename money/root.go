@@ -71,15 +71,21 @@ func MustMoneyFromString(s string, currency Currency) Money {
 }
 
 func (m Money) ToDecimal() Decimal {
-	return Decimal{value: m.value}
+	return Decimal{m.value}
 }
 
 func NewMoneyFromUDecimal(d udecimal.Decimal, currency Currency) Money {
-	return Money{value: d, currency: currency}
+	return Money{
+		value:    d,
+		currency: currency,
+	}
 }
 
 func (m Money) Add(other Money) Money {
-	return Money{value: m.value.Add(other.value), currency: m.currency}
+	return Money{
+		value:    m.value.Add(other.value),
+		currency: m.currency,
+	}
 }
 
 // SafeAdd returns the sum of m and other.
@@ -93,11 +99,17 @@ func (m Money) SafeAdd(other Money) (Money, error) {
 }
 
 func (m Money) Mul(other Money) Money {
-	return Money{value: m.value.Mul(other.value), currency: m.currency}
+	return Money{
+		value:    m.value.Mul(other.value),
+		currency: m.currency,
+	}
 }
 
 func (m Money) Sub(other Money) Money {
-	return Money{value: m.value.Sub(other.value), currency: m.currency}
+	return Money{
+		value:    m.value.Sub(other.value),
+		currency: m.currency,
+	}
 }
 
 // SafeSub returns the difference of m and other.
@@ -115,7 +127,10 @@ func (m Money) Currency() Currency {
 }
 
 func (m Money) RoundBank(prec uint8) Money {
-	return Money{value: m.value.RoundBank(prec), currency: m.currency}
+	return Money{
+		value:    m.value.RoundBank(prec),
+		currency: m.currency,
+	}
 }
 
 func (m Money) RoundBankString(prec uint8) string {
@@ -123,19 +138,31 @@ func (m Money) RoundBankString(prec uint8) string {
 }
 
 func (m Money) RoundAway(prec uint8) Money {
-	return Money{value: m.value.RoundAwayFromZero(prec), currency: m.currency}
+	return Money{
+		value:    m.value.RoundAwayFromZero(prec),
+		currency: m.currency,
+	}
 }
 
 func (m Money) Trunc(prec uint8) Money {
-	return Money{value: m.value.Trunc(prec), currency: m.currency}
+	return Money{
+		value:    m.value.Trunc(prec),
+		currency: m.currency,
+	}
 }
 
 func (m Money) Abs() Money {
-	return Money{value: m.value.Abs(), currency: m.currency}
+	return Money{
+		value:    m.value.Abs(),
+		currency: m.currency,
+	}
 }
 
 func (m Money) Neg() Money {
-	return Money{value: m.value.Neg(), currency: m.currency}
+	return Money{
+		value:    m.value.Neg(),
+		currency: m.currency,
+	}
 }
 
 func (m Money) IsZero() bool {
@@ -148,11 +175,17 @@ func (m Money) Div(other Money) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{value: div, currency: m.currency}, nil
+	return Money{
+		value:    div,
+		currency: m.currency,
+	}, nil
 }
 
 func (m Money) MustDiv(other Money) Money {
-	return Money{value: m.value.MustDiv(other.value), currency: m.currency}
+	return Money{
+		value:    m.value.MustDiv(other.value),
+		currency: m.currency,
+	}
 }
 
 func (m Money) InexactFloat64() float64 {
@@ -164,11 +197,17 @@ func (m Money) Cmp(other Money) int {
 }
 
 func (m Money) Floor() Money {
-	return Money{value: m.value.Floor(), currency: m.currency}
+	return Money{
+		value:    m.value.Floor(),
+		currency: m.currency,
+	}
 }
 
 func (m Money) Ceil() Money {
-	return Money{value: m.value.Ceil(), currency: m.currency}
+	return Money{
+		value:    m.value.Ceil(),
+		currency: m.currency,
+	}
 }
 
 func (m Money) String() string {
@@ -199,12 +238,17 @@ func (m Money) Equal(other Money) bool {
 	return m.value.Equal(other.value) && m.currency == other.currency
 }
 
-func (m Money) MarshalJSON() ([]byte, error) {
-	type moneyJSON struct {
-		Value    string `json:"value"`
-		Currency string `json:"currency"`
-	}
+type moneyJSON struct {
+	Value    string `json:"value"`
+	Currency string `json:"currency"`
+}
 
+type moneyJSONRaw struct {
+	Value    json.RawMessage `json:"value"`
+	Currency string          `json:"currency"`
+}
+
+func (m Money) MarshalJSON() ([]byte, error) {
 	isoCode, err := m.currency.GetCurrencyISOCode()
 	if err != nil {
 		return nil, err
@@ -217,10 +261,6 @@ func (m Money) MarshalJSON() ([]byte, error) {
 }
 
 func (m *Money) UnmarshalJSON(data []byte) error {
-	type moneyJSON struct {
-		Value    json.RawMessage `json:"value"`
-		Currency string          `json:"currency"`
-	}
 
 	var num json.Number
 	if err := json.Unmarshal(data, &num); err == nil {
@@ -228,12 +268,14 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 		if err != nil {
 			return err
 		}
+
 		m.value = dec
 		m.currency = USD
+
 		return nil
 	}
 
-	var mj moneyJSON
+	var mj moneyJSONRaw
 	if err := json.Unmarshal(data, &mj); err != nil {
 		return err
 	}
@@ -244,15 +286,20 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 	}
 
 	m.value = dec
-	if mj.Currency != "" {
-		currency, err := CurrencyFromISOCode(mj.Currency)
-		if err != nil {
-			return err
-		}
-		m.currency = currency
-	} else {
+
+	if mj.Currency == "" {
 		m.currency = USD
+
+		return nil
 	}
+
+	currency, err := CurrencyFromISOCode(mj.Currency)
+	if err != nil {
+		return err
+	}
+
+	m.currency = currency
+
 	return nil
 }
 

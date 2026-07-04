@@ -3,6 +3,7 @@ package money
 import (
 	"encoding/json"
 	"errors"
+	"log"
 
 	"github.com/quagmt/udecimal"
 )
@@ -16,21 +17,25 @@ type Decimal struct {
 
 func NewFromFloat64(f float64) (Decimal, error) {
 	decimal, err := udecimal.NewFromFloat64(f)
+
 	return Decimal{decimal}, err
 }
 
 func NewFromInt64(coef int64, prec uint8) (Decimal, error) {
 	decimal, err := udecimal.NewFromInt64(coef, prec)
+
 	return Decimal{decimal}, err
 }
 
 func NewFromUint64(coef uint64, prec uint8) (Decimal, error) {
 	decimal, err := udecimal.NewFromUint64(coef, prec)
+
 	return Decimal{decimal}, err
 }
 
 func NewFromHiLo(neg bool, hi, lo uint64, prec uint8) (Decimal, error) {
 	decimal, err := udecimal.NewFromHiLo(neg, hi, lo, prec)
+
 	return Decimal{decimal}, err
 }
 
@@ -47,12 +52,17 @@ func MustFromUint64(coef uint64, prec uint8) Decimal {
 }
 
 func MustFromHiLo(neg bool, hi, lo uint64, prec uint8) Decimal {
-	d, _ := udecimal.NewFromHiLo(neg, hi, lo, prec)
+	d, err := udecimal.NewFromHiLo(neg, hi, lo, prec)
+	if err != nil {
+		log.Fatal("invalid value from hilo")
+	}
+
 	return Decimal{d}
 }
 
 func NewFromString(s string) (Decimal, error) {
 	decimal, err := udecimal.Parse(s)
+
 	return Decimal{decimal}, err
 }
 
@@ -69,38 +79,41 @@ func (d Decimal) ToMoney(currency ...Currency) Money {
 }
 
 func NewDecimalFromUDecimal(d udecimal.Decimal) Decimal {
-	return Decimal{value: d}
+	return Decimal{d}
 }
 
 func (d Decimal) Add(other Decimal) Decimal {
-	return Decimal{value: d.value.Add(other.value)}
+	return Decimal{d.value.Add(other.value)}
 }
 
 func (d Decimal) Sub(other Decimal) Decimal {
-	return Decimal{value: d.value.Sub(other.value)}
+	return Decimal{d.value.Sub(other.value)}
 }
 
 func (d Decimal) Mul(other Decimal) Decimal {
-	return Decimal{value: d.value.Mul(other.value)}
+	return Decimal{d.value.Mul(other.value)}
 }
 
 func (d Decimal) Div(other Decimal) (Decimal, error) {
 	div, err := d.value.Div(other.value)
-	return Decimal{value: div}, err
+
+	return Decimal{div}, err
 }
 
 func (d Decimal) MustDiv(other Decimal) Decimal {
-	return Decimal{value: d.value.MustDiv(other.value)}
+	return Decimal{d.value.MustDiv(other.value)}
 }
 
 func (d Decimal) Mod(other Decimal) (Decimal, error) {
 	mod, err := d.value.Mod(other.value)
-	return Decimal{value: mod}, err
+
+	return Decimal{mod}, err
 }
 
 func (d Decimal) Div64(other uint64) (Decimal, error) {
 	div, err := d.value.Div64(other)
-	return Decimal{value: div}, err
+
+	return Decimal{div}, err
 }
 
 func (d Decimal) InexactFloat64() float64 {
@@ -208,7 +221,9 @@ func (d *Decimal) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+
 	d.value = dec
+
 	return nil
 }
 
