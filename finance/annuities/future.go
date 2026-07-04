@@ -7,12 +7,10 @@ import (
 )
 
 func (a Annuity) Future() (money.Money, error) {
-	future, err := a.compositeInterest.Future()
-	if err != nil {
-		return money.Money{}, err
-	}
-
-	if !future.IsZero() {
+	// If the underlying compound interest data can already resolve a future
+	// value (explicit or derivable), use it. Otherwise fall back to the
+	// annuity formula based on the periodic payment.
+	if future, err := a.compositeInterest.Future(); err == nil && !future.IsZero() {
 		return future, nil
 	}
 

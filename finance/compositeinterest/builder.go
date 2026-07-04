@@ -28,11 +28,13 @@ type CompositeConfig struct {
 }
 
 // NewComposite creates a new CompositeConfig builder instance.
-// The builder starts with zero values for all parameters.
+// The default rate type is RateEffectyPeriodic; use RateType() to change it.
 // You must set at least the present or future value, rate, periods, and frequency
 // before calling Build() or MustBuild().
 func NewComposite() CompositeConfig {
-	return CompositeConfig{}
+	return CompositeConfig{
+		rateType: RateEffectyPeriodic,
+	}
 }
 
 // Present sets the present value (initial capital/principal) for the compound interest calculation.
@@ -219,7 +221,7 @@ func (c CompositeConfig) Daily() CompositeConfig {
 //	    Periods(12).
 //	    Monthly().
 //	    Build()
-func (c *CompositeConfig) Build() (CompositeInterest, error) {
+func (c CompositeConfig) Build() (CompositeInterest, error) {
 	period, err := NewPeriod(money.MustFromFloat64(float64(c.periods)), c.frequency)
 	if err != nil {
 		return CompositeInterest{}, err

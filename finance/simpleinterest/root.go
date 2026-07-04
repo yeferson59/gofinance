@@ -66,7 +66,7 @@ func (p *Period) getPeriod() (money.Decimal, error) {
 	case Years:
 		return p.years, nil
 	default:
-		return money.Decimal{}, errors.New("failed get valid periods")
+		return money.Decimal{}, errors.New("failed to get valid periods")
 	}
 }
 
@@ -82,7 +82,7 @@ type SimpleInterest struct {
 
 // New creates a new SimpleInterest instance with the provided values.
 // Parameters can be 0 if they will be calculated later.
-// periods can be nil for some calculations.
+// periods can be an empty Period for calculations that do not need it.
 func New(future, present, interest money.Money, rateInterest money.Decimal, periods Period) SimpleInterest {
 	return SimpleInterest{
 		future:       future,

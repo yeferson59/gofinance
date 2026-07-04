@@ -229,7 +229,7 @@ func (s SimpleConfig) Weeks() SimpleConfig {
 //	    Build()
 //
 //	future, _ := si.Future()
-func (s *SimpleConfig) Build() SimpleInterest {
+func (s SimpleConfig) Build() SimpleInterest {
 	period := NewPeriod(money.MustFromFloat64(float64(s.periods)), s.periodType)
 	return New(s.future, s.present, s.interest, s.rate, period)
 }
@@ -254,4 +254,26 @@ func (s *SimpleConfig) Build() SimpleInterest {
 func (s SimpleConfig) FutureValue() (money.Money, error) {
 	si := s.Build()
 	return si.FutureWithRateInterest()
+}
+
+// PresentValue calculates the present value based on the future value, rate, and periods.
+// This is the amount needed today to reach the configured future value.
+//
+// Formula: Present = Future / (1 + Rate × Periods)
+//
+// Returns:
+//   - The present value as a Money instance
+//   - An error if the calculation fails
+//
+// Example:
+//
+//	present, err := NewSimple().
+//	    Future(5900, money.USD).
+//	    AnnualRate(0.12).
+//	    Periods(18).
+//	    Months().
+//	    PresentValue()
+func (s SimpleConfig) PresentValue() (money.Money, error) {
+	si := s.Build()
+	return si.PresentWithFuture()
 }

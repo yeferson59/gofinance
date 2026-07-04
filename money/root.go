@@ -8,10 +8,12 @@ import (
 	"github.com/quagmt/udecimal"
 )
 
+// ErrCurrencyMismatch is returned by operations that require both operands
+// to share the same currency, such as SafeAdd and SafeSub.
 var ErrCurrencyMismatch = errors.New("money: currency mismatch")
 
-var MoneyZero = Money{value: udecimal.Zero, currency: 143}
-var MoneyOne = Money{value: udecimal.One, currency: 143}
+var MoneyZero = Money{value: udecimal.Zero, currency: USD}
+var MoneyOne = Money{value: udecimal.One, currency: USD}
 
 type Money struct {
 	value    udecimal.Decimal
@@ -80,12 +82,32 @@ func (m Money) Add(other Money) Money {
 	return Money{value: m.value.Add(other.value), currency: m.currency}
 }
 
+// SafeAdd returns the sum of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+func (m Money) SafeAdd(other Money) (Money, error) {
+	if m.currency != other.currency {
+		return Money{}, ErrCurrencyMismatch
+	}
+
+	return m.Add(other), nil
+}
+
 func (m Money) Mul(other Money) Money {
 	return Money{value: m.value.Mul(other.value), currency: m.currency}
 }
 
 func (m Money) Sub(other Money) Money {
 	return Money{value: m.value.Sub(other.value), currency: m.currency}
+}
+
+// SafeSub returns the difference of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+func (m Money) SafeSub(other Money) (Money, error) {
+	if m.currency != other.currency {
+		return Money{}, ErrCurrencyMismatch
+	}
+
+	return m.Sub(other), nil
 }
 
 func (m Money) Currency() Currency {

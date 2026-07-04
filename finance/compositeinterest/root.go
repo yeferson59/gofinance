@@ -47,7 +47,7 @@ type CompoundingFrequency string
 // TypeRate defines the type of interest rate to use in calculations.
 // Valid values include discount rates (anticipated) and ordinary rates.
 // Examples: RateEffectyPeriodic, RateEffectyNominal, RateEffectyAnnually,
-// RateAnticipateEffectyPeriodic, RateAnticipateEffectyNominal, RateAnticipateEffectyAnnually.
+// RateAnticipateEffectyPeriodic, RateAnticipateEffectyNominal.
 type TypeRate string
 
 // Period represents the number of compounding periods for a compound interest calculation.
@@ -135,7 +135,7 @@ type RateInterest struct {
 //	}
 func NewRateInterest(value money.Decimal, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (RateInterest, error) {
 	if value.IsNeg() {
-		return RateInterest{}, errors.New("invalid value for rate interest must be greater o equal to zero")
+		return RateInterest{}, errors.New("invalid value for rate interest must be greater or equal to zero")
 	}
 
 	return RateInterest{
@@ -202,7 +202,7 @@ func New(present, future money.Money, rateInterest RateInterest, periods Period)
 func (c CompositeInterest) GetEqualsRateInterestPeriods() (money.Decimal, money.Decimal, error) {
 	periodValue, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
-		return money.Decimal{}, money.Decimal{}, nil
+		return money.Decimal{}, money.Decimal{}, err
 	}
 
 	periodicRate := c.rateInterest.value
@@ -210,7 +210,7 @@ func (c CompositeInterest) GetEqualsRateInterestPeriods() (money.Decimal, money.
 	if c.rateInterest.typeRate != RateEffectyPeriodic {
 		periodicRate, err = c.rateInterest.RatePeriodic()
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, nil
+			return money.Decimal{}, money.Decimal{}, err
 		}
 	}
 

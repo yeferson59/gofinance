@@ -118,16 +118,35 @@ func (a AnnuityConfig) Periods(n int) AnnuityConfig {
 }
 
 // Years sets the total duration in years and converts it to periods based on the frequency.
-// This is a convenience method that calculates Periods = years × frequency.
+// This is a convenience method that calculates Periods = years × periods per year.
+//
+// Note: Call this after setting the frequency (Monthly(), Quarterly(), etc.),
+// since the conversion uses the frequency configured at the time of the call.
 //
 // Parameters:
 //   - n: The number of years (e.g., 30 for a 30-year loan)
 //
 // Example:
 //
-//	.NewAnnuity().Years(30)  // Automatically calculates 360 periods for monthly payments
+//	.NewAnnuity().Monthly().Years(30)  // Automatically calculates 360 periods for monthly payments
 func (a AnnuityConfig) Years(n int) AnnuityConfig {
-	a.periods = n * 12
+	periodsPerYear := 12
+	switch a.frequency {
+	case compositeinterest.Daily:
+		periodsPerYear = 365
+	case compositeinterest.Bimonthly:
+		periodsPerYear = 6
+	case compositeinterest.QuarterlyOne:
+		periodsPerYear = 4
+	case compositeinterest.QuarterlyTwo:
+		periodsPerYear = 3
+	case compositeinterest.SemiAnnually:
+		periodsPerYear = 2
+	case compositeinterest.Annually:
+		periodsPerYear = 1
+	}
+
+	a.periods = n * periodsPerYear
 	return a
 }
 
@@ -173,8 +192,10 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 		divisor = 365.0
 	case compositeinterest.Bimonthly:
 		divisor = 6.0
-	case compositeinterest.QuarterlyOne, compositeinterest.QuarterlyTwo:
+	case compositeinterest.QuarterlyOne:
 		divisor = 4.0
+	case compositeinterest.QuarterlyTwo:
+		divisor = 3.0
 	case compositeinterest.SemiAnnually:
 		divisor = 2.0
 	case compositeinterest.Annually:
