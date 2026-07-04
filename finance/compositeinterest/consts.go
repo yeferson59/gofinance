@@ -7,7 +7,7 @@ import "errors"
 const (
 	Daily        CompoundingFrequency = "daily"        // 365 times per year
 	Monthly      CompoundingFrequency = "monthly"      // 12 times per year
-	Bimonthly    CompoundingFrequency = "Bimontly"     // 6 times per year
+	Bimonthly    CompoundingFrequency = "bimonthly"    // 6 times per year
 	QuarterlyOne CompoundingFrequency = "quarterlyOne" // 4 times per year
 	QuarterlyTwo CompoundingFrequency = "quarterlyTwo" // 3 times per year
 	SemiAnnually CompoundingFrequency = "semiAnnually" // 2 times per year

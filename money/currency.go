@@ -258,8 +258,8 @@ var currencyCode = map[Currency]string{
 	MDL: "MDL",
 	MGA: "MGA",
 	MKD: "MKD",
-	MMK: "MNK",
-	MNT: "MINT",
+	MMK: "MMK",
+	MNT: "MNT",
 	MOP: "MOP",
 	MRU: "MRU",
 	MUR: "MUR",
@@ -337,9 +337,38 @@ var currencyByISOCode = func() map[string]Currency {
 	return mapped
 }()
 
+// defaultCurrencyPrec is the ISO 4217 minor unit (decimal places) used for
+// currencies without an explicit entry in currencyPrec.
+const defaultCurrencyPrec uint8 = 2
+
+// currencyPrec overrides the default precision (2 decimal places) for
+// currencies whose ISO 4217 minor unit differs.
 var currencyPrec = map[Currency]uint8{
-	COP: 2,
-	USD: 2,
+	// Zero decimal places
+	BIF: 0,
+	CLP: 0,
+	DJF: 0,
+	GNF: 0,
+	ISK: 0,
+	JPY: 0,
+	KMF: 0,
+	KRW: 0,
+	PYG: 0,
+	RWF: 0,
+	UGX: 0,
+	VND: 0,
+	VUV: 0,
+	XAF: 0,
+	XOF: 0,
+	XPF: 0,
+	// Three decimal places
+	BHD: 3,
+	IQD: 3,
+	JOD: 3,
+	KWD: 3,
+	LYD: 3,
+	OMR: 3,
+	TND: 3,
 }
 
 func (c Currency) GetCurrencyISOCode() (string, error) {
@@ -352,12 +381,15 @@ func (c Currency) GetCurrencyISOCode() (string, error) {
 }
 
 func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
-	prec, ok := currencyPrec[c]
-	if !ok {
-		return 0, errors.New("invalid currency ISO code")
+	if _, ok := currencyCode[c]; !ok {
+		return 0, errors.New("invalid currency")
 	}
 
-	return prec, nil
+	if prec, ok := currencyPrec[c]; ok {
+		return prec, nil
+	}
+
+	return defaultCurrencyPrec, nil
 }
 
 func CurrencyFromISOCode(code string) (Currency, error) {
