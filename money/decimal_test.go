@@ -14,6 +14,58 @@ func TestNewFromFloat64(t *testing.T) {
 	}
 }
 
+func TestDecimalPow(t *testing.T) {
+	tests := []struct {
+		base     float64
+		exponent float64
+		expected string
+	}{
+		{2, 10, "1024"},
+		{1.005, 12, "1.0616778118644976"},
+		{4, 0.5, "2"},
+		{5, 0, "1"},
+	}
+
+	for _, tt := range tests {
+		base := MustFromFloat64(tt.base)
+		exponent := MustFromFloat64(tt.exponent)
+
+		result, err := base.Pow(exponent)
+		if err != nil {
+			t.Fatalf("unexpected error for %v^%v: %v", tt.base, tt.exponent, err)
+		}
+		if result.String() != tt.expected {
+			t.Errorf("expected %v^%v = %s, got %s", tt.base, tt.exponent, tt.expected, result.String())
+		}
+	}
+}
+
+func TestDecimalPowInvalidResult(t *testing.T) {
+	base := MustFromFloat64(-2)
+	exponent := MustFromFloat64(0.5)
+
+	if _, err := base.Pow(exponent); err == nil {
+		t.Error("expected error for negative base with fractional exponent")
+	}
+}
+
+func TestDecimalMustPow(t *testing.T) {
+	result := MustFromFloat64(2).MustPow(MustFromFloat64(8))
+	if result.String() != "256" {
+		t.Errorf("expected 256, got %s", result.String())
+	}
+}
+
+func TestDecimalMustPowPanicsOnInvalidResult(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic for negative base with fractional exponent")
+		}
+	}()
+
+	MustFromFloat64(-2).MustPow(MustFromFloat64(0.5))
+}
+
 func TestNewFromString(t *testing.T) {
 	tests := []struct {
 		input    string

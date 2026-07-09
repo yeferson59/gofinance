@@ -2,6 +2,7 @@ package money
 
 import (
 	"encoding/json"
+	"math"
 )
 
 var Zero = Decimal{value: decZero}
@@ -138,6 +139,27 @@ func (d Decimal) MustDiv(other Decimal) Decimal {
 	}
 
 	return div
+}
+
+// Pow returns d raised to the power of exponent. decimal128 has no native
+// exponentiation, so the computation is done in float64 via math.Pow and
+// the result converted back to a Decimal. It returns an error if the
+// result isn't a finite number (e.g. a negative base with a fractional
+// exponent, which is undefined).
+func (d Decimal) Pow(exponent Decimal) (Decimal, error) {
+	result := math.Pow(d.InexactFloat64(), exponent.InexactFloat64())
+
+	return NewFromFloat64(result)
+}
+
+// MustPow is like Pow but panics on error.
+func (d Decimal) MustPow(exponent Decimal) Decimal {
+	result, err := d.Pow(exponent)
+	if err != nil {
+		panic(err)
+	}
+
+	return result
 }
 
 func (d Decimal) Mod(other Decimal) (Decimal, error) {
