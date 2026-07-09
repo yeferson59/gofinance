@@ -371,6 +371,66 @@ var currencyPrec = map[Currency]uint8{
 	TND: 3,
 }
 
+// currencySymbol maps a currency to its common display symbol (e.g. "$"
+// for USD). Currencies without a distinct, unambiguous symbol are omitted;
+// Symbol falls back to the ISO 4217 code for those.
+var currencySymbol = map[Currency]string{
+	AED: "د.إ",
+	ARS: "$",
+	AUD: "A$",
+	BDT: "৳",
+	BRL: "R$",
+	CAD: "C$",
+	CHF: "CHF",
+	CLP: "$",
+	CNY: "¥",
+	COP: "$",
+	EGP: "E£",
+	EUR: "€",
+	GBP: "£",
+	HKD: "HK$",
+	IDR: "Rp",
+	ILS: "₪",
+	INR: "₹",
+	JPY: "¥",
+	KRW: "₩",
+	MXN: "$",
+	MYR: "RM",
+	NGN: "₦",
+	NOK: "kr",
+	NZD: "NZ$",
+	PEN: "S/",
+	PHP: "₱",
+	PKR: "₨",
+	PLN: "zł",
+	RUB: "₽",
+	SAR: "﷼",
+	SEK: "kr",
+	SGD: "S$",
+	THB: "฿",
+	TRY: "₺",
+	UAH: "₴",
+	USD: "$",
+	VND: "₫",
+	ZAR: "R",
+}
+
+// Symbol returns the common display symbol for c (e.g. "$" for USD, "€"
+// for EUR). If c has no distinct symbol on record, Symbol falls back to
+// its ISO 4217 code.
+func (c Currency) Symbol() (string, error) {
+	isoCode, err := c.GetCurrencyISOCode()
+	if err != nil {
+		return "", err
+	}
+
+	if symbol, ok := currencySymbol[c]; ok {
+		return symbol, nil
+	}
+
+	return isoCode, nil
+}
+
 func (c Currency) GetCurrencyISOCode() (string, error) {
 	isoCode, ok := currencyCode[c]
 	if !ok {
