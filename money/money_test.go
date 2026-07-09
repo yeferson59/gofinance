@@ -222,6 +222,71 @@ func TestMoneyFormat(t *testing.T) {
 	}
 }
 
+func TestMoneyStringMoney(t *testing.T) {
+	m := MustMoneyFromFloat64(1234.5, USD)
+
+	got, err := m.StringMoney()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "USD 1234.50" {
+		t.Errorf("expected \"USD 1234.50\", got %s", got)
+	}
+}
+
+func TestMoneyStringMoneyInvalidCurrency(t *testing.T) {
+	m := Money{value: decOne, currency: Currency(9999)}
+
+	if _, err := m.StringMoney(); err == nil {
+		t.Error("expected error for unknown currency")
+	}
+}
+
+func TestMoneyFormatInvalidCurrency(t *testing.T) {
+	m := Money{value: decOne, currency: Currency(9999)}
+
+	if _, err := m.Format(); err == nil {
+		t.Error("expected error for unknown currency")
+	}
+}
+
+func TestCurrencyFromISOCodeNormalization(t *testing.T) {
+	tests := []struct {
+		input string
+		want  Currency
+	}{
+		{"usd", USD},
+		{"  USD  ", USD},
+		{"Eur", EUR},
+	}
+
+	for _, tt := range tests {
+		got, err := CurrencyFromISOCode(tt.input)
+		if err != nil {
+			t.Errorf("unexpected error for %q: %v", tt.input, err)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("expected %v for %q, got %v", tt.want, tt.input, got)
+		}
+	}
+}
+
+func TestCurrencyFromISOCodeEmpty(t *testing.T) {
+	if _, err := CurrencyFromISOCode(""); err == nil {
+		t.Error("expected error for empty ISO code")
+	}
+	if _, err := CurrencyFromISOCode("   "); err == nil {
+		t.Error("expected error for whitespace-only ISO code")
+	}
+}
+
+func TestCurrencyFromISOCodeUnknown(t *testing.T) {
+	if _, err := CurrencyFromISOCode("ZZZ"); err == nil {
+		t.Error("expected error for unknown ISO code")
+	}
+}
+
 func TestCurrencyISOCodeRoundTrip(t *testing.T) {
 	for currency, code := range currencyCode {
 		parsed, err := CurrencyFromISOCode(code)
