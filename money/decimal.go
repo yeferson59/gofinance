@@ -2,72 +2,92 @@ package money
 
 import (
 	"encoding/json"
-	"errors"
-	"log"
-
-	"github.com/quagmt/udecimal"
 )
 
-var Zero = Decimal{value: udecimal.Zero}
-var One = Decimal{value: udecimal.One}
+var Zero = Decimal{value: decZero}
+var One = Decimal{value: decOne}
 
+// Decimal is a fixed-point decimal number with up to 19 digits of
+// precision after the decimal point, backed by a 128-bit coefficient.
+// It performs arithmetic without heap allocations or external
+// dependencies.
 type Decimal struct {
-	value udecimal.Decimal
+	value decimal128
 }
 
 func NewFromFloat64(f float64) (Decimal, error) {
-	decimal, err := udecimal.NewFromFloat64(f)
+	decimal, err := decFromFloat64(f)
 
 	return Decimal{decimal}, err
 }
 
 func NewFromInt64(coef int64, prec uint8) (Decimal, error) {
-	decimal, err := udecimal.NewFromInt64(coef, prec)
+	decimal, err := decFromInt64(coef, prec)
 
 	return Decimal{decimal}, err
 }
 
 func NewFromUint64(coef uint64, prec uint8) (Decimal, error) {
-	decimal, err := udecimal.NewFromUint64(coef, prec)
+	decimal, err := decFromUint64(coef, prec)
 
 	return Decimal{decimal}, err
 }
 
 func NewFromHiLo(neg bool, hi, lo uint64, prec uint8) (Decimal, error) {
-	decimal, err := udecimal.NewFromHiLo(neg, hi, lo, prec)
+	decimal, err := decFromHiLo(neg, hi, lo, prec)
 
 	return Decimal{decimal}, err
 }
 
 func MustFromFloat64(f float64) Decimal {
-	return Decimal{udecimal.MustFromFloat64(f)}
+	d, err := NewFromFloat64(f)
+	if err != nil {
+		panic(err)
+	}
+
+	return d
 }
 
 func MustFromInt64(coef int64, prec uint8) Decimal {
-	return Decimal{udecimal.MustFromInt64(coef, prec)}
+	d, err := NewFromInt64(coef, prec)
+	if err != nil {
+		panic(err)
+	}
+
+	return d
 }
 
 func MustFromUint64(coef uint64, prec uint8) Decimal {
-	return Decimal{udecimal.MustFromUint64(coef, prec)}
+	d, err := NewFromUint64(coef, prec)
+	if err != nil {
+		panic(err)
+	}
+
+	return d
 }
 
 func MustFromHiLo(neg bool, hi, lo uint64, prec uint8) Decimal {
-	d, err := udecimal.NewFromHiLo(neg, hi, lo, prec)
+	d, err := NewFromHiLo(neg, hi, lo, prec)
 	if err != nil {
-		log.Fatal("invalid value from hilo")
+		panic(err)
 	}
 
-	return Decimal{d}
+	return d
 }
 
 func NewFromString(s string) (Decimal, error) {
-	decimal, err := udecimal.Parse(s)
+	decimal, err := parseDecimal(s)
 
 	return Decimal{decimal}, err
 }
 
 func MustFromString(s string) Decimal {
-	return Decimal{udecimal.MustParse(s)}
+	d, err := NewFromString(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return d
 }
 
 func (d Decimal) ToMoney(currency ...Currency) Money {
@@ -78,20 +98,31 @@ func (d Decimal) ToMoney(currency ...Currency) Money {
 	return Money{value: d.value}
 }
 
-func NewDecimalFromUDecimal(d udecimal.Decimal) Decimal {
-	return Decimal{d}
-}
-
 func (d Decimal) Add(other Decimal) Decimal {
-	return Decimal{d.value.Add(other.value)}
+	v, err := d.value.Add(other.value)
+	if err != nil {
+		panic(err)
+	}
+
+	return Decimal{v}
 }
 
 func (d Decimal) Sub(other Decimal) Decimal {
-	return Decimal{d.value.Sub(other.value)}
+	v, err := d.value.Sub(other.value)
+	if err != nil {
+		panic(err)
+	}
+
+	return Decimal{v}
 }
 
 func (d Decimal) Mul(other Decimal) Decimal {
-	return Decimal{d.value.Mul(other.value)}
+	v, err := d.value.Mul(other.value)
+	if err != nil {
+		panic(err)
+	}
+
+	return Decimal{v}
 }
 
 func (d Decimal) Div(other Decimal) (Decimal, error) {
@@ -101,7 +132,12 @@ func (d Decimal) Div(other Decimal) (Decimal, error) {
 }
 
 func (d Decimal) MustDiv(other Decimal) Decimal {
-	return Decimal{d.value.MustDiv(other.value)}
+	div, err := d.Div(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return div
 }
 
 func (d Decimal) Mod(other Decimal) (Decimal, error) {
@@ -125,7 +161,7 @@ func (d Decimal) RoundBank(prec uint8) Decimal {
 }
 
 func (d Decimal) RoundAway(prec uint8) Decimal {
-	return Decimal{d.value.RoundAwayFromZero(prec)}
+	return Decimal{d.value.RoundAway(prec)}
 }
 
 func (d Decimal) RoundHAZ(prec uint8) Decimal {
@@ -227,16 +263,16 @@ func (d *Decimal) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func parseDecimalJSON(data []byte) (udecimal.Decimal, error) {
+func parseDecimalJSON(data []byte) (decimal128, error) {
 	var s string
 	if err := json.Unmarshal(data, &s); err == nil {
-		return udecimal.Parse(s)
+		return parseDecimal(s)
 	}
 
 	var num json.Number
 	if err := json.Unmarshal(data, &num); err == nil {
-		return udecimal.Parse(num.String())
+		return parseDecimal(num.String())
 	}
 
-	return udecimal.Decimal{}, errors.New("invalid decimal JSON")
+	return decimal128{}, ErrInvalidFormat
 }

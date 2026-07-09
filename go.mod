@@ -2,10 +2,7 @@ module github.com/yeferson59/gofinance
 
 go 1.26.4
 
-require (
-	github.com/go-echarts/go-echarts/v2 v2.7.2
-	github.com/quagmt/udecimal v1.10.1
-)
+require github.com/go-echarts/go-echarts/v2 v2.7.2
 
 require github.com/kr/text v0.1.0 // indirect
 
