@@ -189,7 +189,7 @@ func TestU128BitLenSmallDividend(t *testing.T) {
 }
 
 func TestBinaryDivU128ZeroDivisor(t *testing.T) {
-	bitAt := func(i int) uint64 { return 0 }
+	bitAt := func(_ int) uint64 { return 0 }
 	if _, _, ok := binaryDivU128(bitAt, 0, u128Zero); ok {
 		t.Fatal("expected division by zero to fail")
 	}
