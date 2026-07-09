@@ -142,20 +142,20 @@ func TestMinMax(t *testing.T) {
 	a := MustMoneyFromFloat64(10, USD)
 	b := MustMoneyFromFloat64(20, USD)
 
-	min, err := a.Min(b)
+	gotMin, err := a.Min(b)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if !min.Equal(a) {
-		t.Errorf("expected min to be %s, got %s", a.String(), min.String())
+	if !gotMin.Equal(a) {
+		t.Errorf("expected min to be %s, got %s", a.String(), gotMin.String())
 	}
 
-	max, err := a.Max(b)
+	gotMax, err := a.Max(b)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if !max.Equal(b) {
-		t.Errorf("expected max to be %s, got %s", b.String(), max.String())
+	if !gotMax.Equal(b) {
+		t.Errorf("expected max to be %s, got %s", b.String(), gotMax.String())
 	}
 
 	c := MustMoneyFromFloat64(10, EUR)
