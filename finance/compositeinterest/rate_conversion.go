@@ -133,9 +133,9 @@ func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundin
 
 	exponent := money.One.MustDiv(newPeriodsPerYear).Mul(currentPeriodsPerYear)
 
-	newPeriodicRate := currentPeriodicRate.Add(money.One).MustPow(exponent).InexactFloat64() - 1
+	newPeriodicRate := currentPeriodicRate.Add(money.One).MustPow(exponent).Sub(money.One)
 
-	return money.MustFromFloat64(newPeriodicRate), nil
+	return newPeriodicRate, nil
 }
 
 // RateNominalToNominal converts a nominal rate from one compounding frequency to another.
@@ -214,8 +214,8 @@ func (rt RateInterest) RateAnticipateNominal() (money.Decimal, error) {
 			return money.Decimal{}, err
 		}
 
-		pow := effectiveAnnualRate.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear)).InexactFloat64()
-		nominalRate = compoundingPeriodsPerYear.Mul(money.MustFromFloat64(1 - pow))
+		pow := effectiveAnnualRate.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear))
+		nominalRate = compoundingPeriodsPerYear.Mul(money.One.Sub(pow))
 	}
 
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
@@ -247,8 +247,8 @@ func (rt RateInterest) RateAnticipatePeriodic() (money.Decimal, error) {
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		pow := rt.value.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear)).InexactFloat64()
-		periodicRate = money.MustFromFloat64(1 - pow)
+		pow := rt.value.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear))
+		periodicRate = money.One.Sub(pow)
 	}
 
 	return periodicRate, nil

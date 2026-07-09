@@ -40,7 +40,7 @@ func (a Annuity) PaymentFromPresentValue() (money.Money, error) {
 
 	numerator := rateInterest.Mul(growthPower)
 
-	denominator := money.MustFromFloat64(growthPower.InexactFloat64() - 1)
+	denominator := growthPower.Sub(money.One)
 
 	annuity := present.Mul(numerator.MustDiv(denominator).ToMoney(present.Currency()))
 
@@ -62,7 +62,7 @@ func (a Annuity) PaymentFromFutureValue() (money.Money, error) {
 
 	growthPower := growthFactor.MustPow(periods)
 
-	denominator := money.MustFromFloat64(growthPower.InexactFloat64() - 1)
+	denominator := growthPower.Sub(money.One)
 
 	annuity := future.Mul(rateInterest.MustDiv(denominator).ToMoney(future.Currency()))
 
