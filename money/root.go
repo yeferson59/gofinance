@@ -4,24 +4,23 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-
-	"github.com/quagmt/udecimal"
+	"fmt"
 )
 
 // ErrCurrencyMismatch is returned by operations that require both operands
 // to share the same currency, such as SafeAdd and SafeSub.
 var ErrCurrencyMismatch = errors.New("money: currency mismatch")
 
-var MoneyZero = Money{value: udecimal.Zero, currency: USD}
-var MoneyOne = Money{value: udecimal.One, currency: USD}
+var MoneyZero = Money{value: decZero, currency: USD}
+var MoneyOne = Money{value: decOne, currency: USD}
 
 type Money struct {
-	value    udecimal.Decimal
+	value    decimal128
 	currency Currency
 }
 
 func New(value int64, precision uint8, currency Currency) (Money, error) {
-	parsedValue, err := udecimal.NewFromInt64(value, precision)
+	parsedValue, err := decFromInt64(value, precision)
 	if err != nil {
 		return Money{}, err
 	}
@@ -33,7 +32,7 @@ func New(value int64, precision uint8, currency Currency) (Money, error) {
 }
 
 func NewMoneyFromFloat64(f float64, currency Currency) (Money, error) {
-	parsedValue, err := udecimal.NewFromFloat64(f)
+	parsedValue, err := decFromFloat64(f)
 	if err != nil {
 		return Money{}, err
 	}
@@ -45,14 +44,16 @@ func NewMoneyFromFloat64(f float64, currency Currency) (Money, error) {
 }
 
 func MustMoneyFromFloat64(f float64, currency Currency) Money {
-	return Money{
-		value:    udecimal.MustFromFloat64(f),
-		currency: currency,
+	m, err := NewMoneyFromFloat64(f, currency)
+	if err != nil {
+		panic(err)
 	}
+
+	return m
 }
 
 func NewMoneyFromString(s string, currency Currency) (Money, error) {
-	parsedValue, err := udecimal.Parse(s)
+	parsedValue, err := parseDecimal(s)
 	if err != nil {
 		return Money{}, err
 	}
@@ -64,26 +65,26 @@ func NewMoneyFromString(s string, currency Currency) (Money, error) {
 }
 
 func MustMoneyFromString(s string, currency Currency) Money {
-	return Money{
-		value:    udecimal.MustParse(s),
-		currency: currency,
+	m, err := NewMoneyFromString(s, currency)
+	if err != nil {
+		panic(err)
 	}
+
+	return m
 }
 
 func (m Money) ToDecimal() Decimal {
 	return Decimal{m.value}
 }
 
-func NewMoneyFromUDecimal(d udecimal.Decimal, currency Currency) Money {
-	return Money{
-		value:    d,
-		currency: currency,
-	}
-}
-
 func (m Money) Add(other Money) Money {
+	v, err := m.value.Add(other.value)
+	if err != nil {
+		panic(err)
+	}
+
 	return Money{
-		value:    m.value.Add(other.value),
+		value:    v,
 		currency: m.currency,
 	}
 }
@@ -99,15 +100,25 @@ func (m Money) SafeAdd(other Money) (Money, error) {
 }
 
 func (m Money) Mul(other Money) Money {
+	v, err := m.value.Mul(other.value)
+	if err != nil {
+		panic(err)
+	}
+
 	return Money{
-		value:    m.value.Mul(other.value),
+		value:    v,
 		currency: m.currency,
 	}
 }
 
 func (m Money) Sub(other Money) Money {
+	v, err := m.value.Sub(other.value)
+	if err != nil {
+		panic(err)
+	}
+
 	return Money{
-		value:    m.value.Sub(other.value),
+		value:    v,
 		currency: m.currency,
 	}
 }
@@ -139,7 +150,7 @@ func (m Money) RoundBankString(prec uint8) string {
 
 func (m Money) RoundAway(prec uint8) Money {
 	return Money{
-		value:    m.value.RoundAwayFromZero(prec),
+		value:    m.value.RoundAway(prec),
 		currency: m.currency,
 	}
 }
@@ -182,10 +193,12 @@ func (m Money) Div(other Money) (Money, error) {
 }
 
 func (m Money) MustDiv(other Money) Money {
-	return Money{
-		value:    m.value.MustDiv(other.value),
-		currency: m.currency,
+	div, err := m.Div(other)
+	if err != nil {
+		panic(err)
 	}
+
+	return div
 }
 
 func (m Money) InexactFloat64() float64 {
@@ -304,9 +317,41 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 }
 
 func (m Money) Value() (driver.Value, error) {
-	return m.value.Value()
+	return m.value.String(), nil
 }
 
 func (m *Money) Scan(src any) error {
-	return m.value.Scan(src)
+	var (
+		dec decimal128
+		err error
+	)
+
+	switch v := src.(type) {
+	case []byte:
+		dec, err = parseDecimal(string(v))
+	case string:
+		dec, err = parseDecimal(v)
+	case uint64:
+		dec, err = decFromUint64(v, 0)
+	case int64:
+		dec, err = decFromInt64(v, 0)
+	case int:
+		dec, err = decFromInt64(int64(v), 0)
+	case int32:
+		dec, err = decFromInt64(int64(v), 0)
+	case float64:
+		dec, err = decFromFloat64(v)
+	case nil:
+		err = fmt.Errorf("money: can't scan nil to Money")
+	default:
+		err = fmt.Errorf("money: can't scan %T to Money", src)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	m.value = dec
+
+	return nil
 }
