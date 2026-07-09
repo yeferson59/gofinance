@@ -2,6 +2,7 @@ package money
 
 import (
 	"errors"
+	"math"
 	"testing"
 )
 
@@ -287,5 +288,241 @@ func TestDecimal128OverflowOnParse(t *testing.T) {
 	big39 := "999999999999999999999999999999999999999"
 	if _, err := parseDecimal(big39); !errors.Is(err, ErrOverflow) {
 		t.Errorf("expected ErrOverflow for %d-digit number, got %v", len(big39), err)
+	}
+}
+
+func TestParseDecimalOverflowAtExactBoundary(t *testing.T) {
+	// 2^128-1 is the largest representable u128 coefficient: it must parse.
+	maxU128 := "340282366920938463463374607431768211455"
+	if _, err := parseDecimal(maxU128); err != nil {
+		t.Fatalf("expected max u128 to parse cleanly, got %v", err)
+	}
+
+	// One more (2^128) overflows exactly on the final digit's Add64, after
+	// the preceding Mul64(10) itself stayed just within range.
+	overBoundary := "340282366920938463463374607431768211456"
+	if _, err := parseDecimal(overBoundary); !errors.Is(err, ErrOverflow) {
+		t.Errorf("expected ErrOverflow at 2^128, got %v", err)
+	}
+}
+
+func TestDecFromInt64MinInt64(t *testing.T) {
+	// math.MinInt64 has no positive counterpart representable in int64, so
+	// decFromInt64 special-cases it to avoid overflowing during negation.
+	d, err := decFromInt64(math.MinInt64, 0)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := d.String(); got != "-9223372036854775808" {
+		t.Errorf("expected -9223372036854775808, got %s", got)
+	}
+}
+
+func TestDecimal128NegZeroUnchanged(t *testing.T) {
+	if got := decZero.Neg(); got != decZero {
+		t.Errorf("expected Neg(0) to stay canonical zero, got %+v", got)
+	}
+}
+
+func TestDecimal128CmpSignBranches(t *testing.T) {
+	pos := mustParseDec(t, "5")
+	neg := mustParseDec(t, "-3")
+
+	if got := pos.Cmp(neg); got != 1 {
+		t.Errorf("expected positive > negative to return 1, got %d", got)
+	}
+	if got := neg.Cmp(pos); got != -1 {
+		t.Errorf("expected negative < positive to return -1, got %d", got)
+	}
+}
+
+func TestDecimal128CmpMagnitudeScaleAlignmentOverflow(t *testing.T) {
+	huge := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
+	tiny := decimal128{coef: u128FromU64(1), scale: 1}
+
+	// huge, once scaled up to tiny's scale, doesn't fit in 128 bits, but
+	// it's obviously still larger than any 128-bit-coefficient value.
+	if got := huge.cmpMagnitude(tiny); got != 1 {
+		t.Errorf("expected 1 when scaling the larger operand overflows, got %d", got)
+	}
+
+	hugeLowScale := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
+	tinyHighScale := decimal128{coef: u128FromU64(1), scale: 1}
+
+	// mirror case: now a has the larger scale, so cmpMagnitude tries to
+	// scale up b (the huge operand) instead, and that overflows too.
+	if got := tinyHighScale.cmpMagnitude(hugeLowScale); got != -1 {
+		t.Errorf("expected -1 when scaling the other operand overflows, got %d", got)
+	}
+}
+
+func TestDecimal128AddScaleAlignmentOverflow(t *testing.T) {
+	huge := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
+	tiny := decimal128{coef: u128FromU64(1), scale: 1}
+
+	if _, err := huge.Add(tiny); !errors.Is(err, ErrOverflow) {
+		t.Errorf("expected ErrOverflow scaling a huge low-scale operand up, got %v", err)
+	}
+	if _, err := tiny.Add(huge); !errors.Is(err, ErrOverflow) {
+		t.Errorf("expected ErrOverflow scaling a huge high-scale operand up, got %v", err)
+	}
+}
+
+func TestDecimal128MulZeroOperand(t *testing.T) {
+	five := mustParseDec(t, "5")
+
+	prod, err := five.Mul(decZero)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !prod.IsZero() {
+		t.Errorf("expected 5*0 to be zero, got %s", prod.String())
+	}
+
+	prod2, err := decZero.Mul(five)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !prod2.IsZero() {
+		t.Errorf("expected 0*5 to be zero, got %s", prod2.String())
+	}
+}
+
+func TestDecimal128MulOverflowSurvivesScaleReduction(t *testing.T) {
+	// Both operands near the 128-bit ceiling, each at scale 19: the raw
+	// 256-bit product, even after dividing out the excess scale (19), is
+	// still far too large to fit in 128 bits.
+	maxCoef := u128{hi: ^uint64(0), lo: ^uint64(0)}
+	a := decimal128{coef: maxCoef, scale: maxScale}
+	b := decimal128{coef: maxCoef, scale: maxScale}
+
+	if _, err := a.Mul(b); !errors.Is(err, ErrOverflow) {
+		t.Errorf("expected ErrOverflow, got %v", err)
+	}
+}
+
+func TestDecimal128DivZeroDividend(t *testing.T) {
+	q, err := decZero.Div(mustParseDec(t, "5"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !q.IsZero() {
+		t.Errorf("expected 0/5 to be zero, got %s", q.String())
+	}
+}
+
+func TestDecimal128Div64ZeroDividend(t *testing.T) {
+	q, err := decZero.Div64(5)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !q.IsZero() {
+		t.Errorf("expected 0/5 to be zero, got %s", q.String())
+	}
+}
+
+func TestDecimal128Div64Overflow(t *testing.T) {
+	huge := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
+	if _, err := huge.Div64(1); !errors.Is(err, ErrOverflow) {
+		t.Errorf("expected ErrOverflow, got %v", err)
+	}
+}
+
+func TestDecimal128QuoRemZeroDividend(t *testing.T) {
+	q, r, err := decZero.QuoRem(mustParseDec(t, "5"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !q.IsZero() || !r.IsZero() {
+		t.Errorf("expected q=0 r=0, got q=%s r=%s", q.String(), r.String())
+	}
+}
+
+func TestDecimal128QuoRemUsesLargerScale(t *testing.T) {
+	// b's scale (1) exceeds a's scale (0), so QuoRem must align to it.
+	a := mustParseDec(t, "10")
+	b := mustParseDec(t, "3.5")
+
+	q, r, err := a.QuoRem(b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if q.String() != "2" || r.String() != "3" {
+		t.Errorf("QuoRem(10, 3.5) = q=%s r=%s, want q=2 r=3", q.String(), r.String())
+	}
+}
+
+func TestDecimal128QuoRemScaleAlignmentOverflow(t *testing.T) {
+	huge := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
+	scaled := decimal128{coef: u128FromU64(1), scale: 1}
+
+	if _, _, err := huge.QuoRem(scaled); !errors.Is(err, ErrOverflow) {
+		t.Errorf("expected ErrOverflow scaling up a's huge coefficient, got %v", err)
+	}
+	if _, _, err := scaled.QuoRem(huge); !errors.Is(err, ErrOverflow) {
+		t.Errorf("expected ErrOverflow scaling up b's huge coefficient, got %v", err)
+	}
+}
+
+func TestDecimal128RoundingNoOpWhenPrecGreaterOrEqualScale(t *testing.T) {
+	d := mustParseDec(t, "1.23")
+
+	for _, tt := range []struct {
+		name string
+		fn   func(decimal128, uint8) decimal128
+	}{
+		{"RoundAway", decimal128.RoundAway},
+		{"RoundHAZ", decimal128.RoundHAZ},
+		{"RoundHTZ", decimal128.RoundHTZ},
+		{"Trunc", decimal128.Trunc},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.fn(d, 5).String(); got != "1.23" {
+				t.Errorf("%s(1.23, 5) = %s, want unchanged 1.23", tt.name, got)
+			}
+			if got := tt.fn(d, 2).String(); got != "1.23" {
+				t.Errorf("%s(1.23, 2) = %s, want unchanged 1.23", tt.name, got)
+			}
+		})
+	}
+}
+
+func TestDecimal128RoundHTZAwayFromZeroPastHalf(t *testing.T) {
+	// remainder (0.99) is strictly greater than half (0.5): even
+	// half-toward-zero rounds away from zero here.
+	d := mustParseDec(t, "1.99")
+	if got := d.RoundHTZ(0).String(); got != "2" {
+		t.Errorf("RoundHTZ(1.99, 0) = %s, want 2", got)
+	}
+}
+
+func TestDecimal128Int64Overflow(t *testing.T) {
+	huge := decimal128{coef: u128{hi: 1, lo: 0}, scale: 0} // >= 2^64, doesn't fit int64
+	if _, err := huge.Int64(); !errors.Is(err, ErrIntPartOverflow) {
+		t.Errorf("expected ErrIntPartOverflow, got %v", err)
+	}
+
+	tooBig := decimal128{coef: u128FromU64(uint64(math.MaxInt64) + 1), scale: 0}
+	if _, err := tooBig.Int64(); !errors.Is(err, ErrIntPartOverflow) {
+		t.Errorf("expected ErrIntPartOverflow, got %v", err)
+	}
+}
+
+func TestDecimal128StringFixedClampsExcessivePrecision(t *testing.T) {
+	d := mustParseDec(t, "1.5")
+	if got := d.StringFixed(200); got != d.StringFixed(maxScale) {
+		t.Errorf("StringFixed(200) = %s, want same as StringFixed(maxScale) = %s", got, d.StringFixed(maxScale))
+	}
+}
+
+func TestDecimal128RescaleOverflowKeepsOriginal(t *testing.T) {
+	// A coefficient already near the 128-bit ceiling can't be scaled up
+	// any further: rescale must fall back to the untouched (trimmed)
+	// value rather than panicking or silently corrupting it.
+	huge := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
+
+	got := huge.StringFixed(maxScale)
+	if got != huge.String() {
+		t.Errorf("StringFixed on an unscalable huge value = %s, want unchanged %s", got, huge.String())
 	}
 }

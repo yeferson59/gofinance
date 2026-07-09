@@ -106,6 +106,109 @@ func TestQuoRem128by128(t *testing.T) {
 	}
 }
 
+func TestU128Cmp64(t *testing.T) {
+	tests := []struct {
+		name string
+		u    u128
+		v    uint64
+		want int
+	}{
+		{"hi nonzero always greater", u128{hi: 1, lo: 0}, ^uint64(0), 1},
+		{"lo less", u128FromU64(5), 10, -1},
+		{"lo greater", u128FromU64(10), 5, 1},
+		{"equal", u128FromU64(42), 42, 0},
+		{"zero vs zero", u128{}, 0, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.u.Cmp64(tt.v); got != tt.want {
+				t.Errorf("Cmp64(%+v, %d) = %d, want %d", tt.u, tt.v, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestU128Add64Overflow(t *testing.T) {
+	maxU128 := u128{hi: ^uint64(0), lo: ^uint64(0)}
+	if _, ok := maxU128.Add64(1); ok {
+		t.Fatal("expected overflow")
+	}
+
+	// carry into hi that itself doesn't overflow hi.
+	u := u128{hi: 1, lo: ^uint64(0)}
+	sum, ok := u.Add64(1)
+	if !ok || sum != (u128{hi: 2, lo: 0}) {
+		t.Fatalf("expected {hi:2,lo:0}, got %+v (ok=%v)", sum, ok)
+	}
+}
+
+func TestU128Mul(t *testing.T) {
+	// both operands >= 2^64: guaranteed overflow.
+	a := u128{hi: 1, lo: 0}
+	b := u128{hi: 1, lo: 0}
+	if _, ok := a.Mul(b); ok {
+		t.Fatal("expected overflow when both operands have hi != 0")
+	}
+
+	// v.hi == 0: delegates to u.Mul64(v.lo).
+	u := u128FromU64(1000)
+	v := u128FromU64(2000)
+	prod, ok := u.Mul(v)
+	if !ok || prod != u128FromU64(2_000_000) {
+		t.Fatalf("expected 2000000, got %+v (ok=%v)", prod, ok)
+	}
+
+	// u.hi == 0, v.hi != 0: delegates to v.Mul64(u.lo).
+	u2 := u128FromU64(5)
+	v2 := u128{hi: 1, lo: 0} // 2^64
+	prod2, ok2 := u2.Mul(v2)
+	want2, _ := v2.Mul64(5)
+	if !ok2 || prod2 != want2 {
+		t.Fatalf("expected %+v, got %+v (ok=%v)", want2, prod2, ok2)
+	}
+
+	// overflow surfaces even through the v.hi==0 delegation path.
+	maxU128 := u128{hi: ^uint64(0), lo: ^uint64(0)}
+	if _, ok := maxU128.Mul(u128FromU64(2)); ok {
+		t.Fatal("expected overflow")
+	}
+}
+
+func TestU128BitLenSmallDividend(t *testing.T) {
+	// Exercises u128.bitLen()'s u.hi==0 branch: only reachable through
+	// quoRem128by128's general (v.hi!=0) path when the dividend itself
+	// fits in 64 bits.
+	u := u128FromU64(1000)
+	v := u128{hi: 1, lo: 0} // 2^64, dividend is smaller: quotient 0, remainder u
+
+	q, r, ok := quoRem128by128(u, v)
+	if !ok || !q.IsZero() || r != u {
+		t.Fatalf("expected q=0 r=%+v, got q=%+v r=%+v ok=%v", u, q, r, ok)
+	}
+}
+
+func TestBinaryDivU128ZeroDivisor(t *testing.T) {
+	bitAt := func(_ int) uint64 { return 0 }
+	if _, _, ok := binaryDivU128(bitAt, 0, u128Zero); ok {
+		t.Fatal("expected division by zero to fail")
+	}
+}
+
+func TestBinaryDivU128QuotientOverflow(t *testing.T) {
+	// A dividend of exactly 2^200 divided by 1: the true quotient (2^200)
+	// can't possibly fit in 128 bits.
+	bitAt := func(i int) uint64 {
+		if i == 200 {
+			return 1
+		}
+		return 0
+	}
+	if _, _, ok := binaryDivU128(bitAt, 201, u128One); ok {
+		t.Fatal("expected overflow: quotient doesn't fit in 128 bits")
+	}
+}
+
 func TestU256QuoRem128(t *testing.T) {
 	// (10^38) / (10^19) == 10^19, remainder 0
 	prod := pow10[19].MulFull(pow10[19]) // 10^19 * 10^19 = 10^38
