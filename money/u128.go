@@ -103,13 +103,6 @@ func (u u128) Sub(v u128) (r u128, ok bool) {
 	return u128{hi: hi, lo: lo}, true
 }
 
-// subUnsafe returns u-v assuming u >= v, without checking for borrow.
-func subUnsafe(u, v u128) u128 {
-	lo, borrow := bits.Sub64(u.lo, v.lo, 0)
-	hi, _ := bits.Sub64(u.hi, v.hi, borrow)
-	return u128{hi: hi, lo: lo}
-}
-
 // Mul64 returns u*v where v is a 64-bit value. ok is false on overflow.
 func (u u128) Mul64(v uint64) (r u128, ok bool) {
 	hi, lo := bits.Mul64(u.lo, v)

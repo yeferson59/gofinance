@@ -3,8 +3,8 @@ package money
 import "testing"
 
 func TestU128AddOverflow(t *testing.T) {
-	max := u128{hi: ^uint64(0), lo: ^uint64(0)}
-	if _, ok := max.Add(u128One); ok {
+	maxU128 := u128{hi: ^uint64(0), lo: ^uint64(0)}
+	if _, ok := maxU128.Add(u128One); ok {
 		t.Fatal("expected overflow")
 	}
 
@@ -26,8 +26,8 @@ func TestU128SubBorrow(t *testing.T) {
 }
 
 func TestU128Mul64Overflow(t *testing.T) {
-	max := u128{hi: ^uint64(0), lo: ^uint64(0)}
-	if _, ok := max.Mul64(2); ok {
+	maxU128 := u128{hi: ^uint64(0), lo: ^uint64(0)}
+	if _, ok := maxU128.Mul64(2); ok {
 		t.Fatal("expected overflow")
 	}
 

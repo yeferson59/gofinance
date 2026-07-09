@@ -171,7 +171,6 @@ func parseDecimal(s string) (decimal128, error) {
 		return decimal128{}, ErrInvalidFormat
 	}
 
-	//nolint:gosec // fracDigits <= maxScale (19), checked above
 	return newDec(neg, coef, uint8(fracDigits)), nil
 }
 
