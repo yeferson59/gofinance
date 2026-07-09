@@ -2,8 +2,6 @@
 package annuities
 
 import (
-	"math"
-
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -38,11 +36,11 @@ func (a Annuity) PaymentFromPresentValue() (money.Money, error) {
 
 	growthFactor := rateInterest.Add(money.One)
 
-	growthPower := math.Pow(growthFactor.InexactFloat64(), periods.InexactFloat64())
+	growthPower := growthFactor.MustPow(periods)
 
-	numerator := rateInterest.Mul(money.MustFromFloat64(growthPower))
+	numerator := rateInterest.Mul(growthPower)
 
-	denominator := money.MustFromFloat64(growthPower - 1)
+	denominator := money.MustFromFloat64(growthPower.InexactFloat64() - 1)
 
 	annuity := present.Mul(numerator.MustDiv(denominator).ToMoney(present.Currency()))
 
@@ -62,9 +60,9 @@ func (a Annuity) PaymentFromFutureValue() (money.Money, error) {
 
 	growthFactor := rateInterest.Add(money.One)
 
-	growthPower := math.Pow(growthFactor.InexactFloat64(), periods.InexactFloat64())
+	growthPower := growthFactor.MustPow(periods)
 
-	denominator := money.MustFromFloat64(growthPower - 1)
+	denominator := money.MustFromFloat64(growthPower.InexactFloat64() - 1)
 
 	annuity := future.Mul(rateInterest.MustDiv(denominator).ToMoney(future.Currency()))
 

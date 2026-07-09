@@ -3,10 +3,15 @@ package annuities
 import (
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"os"
 
 	"github.com/yeferson59/gofinance/money"
 )
+
+// ErrInvalidPeriods is returned by BuildSchedule when nper doesn't
+// represent a positive whole number of periods.
+var ErrInvalidPeriods = errors.New("annuities: number of periods must be positive")
 
 type Schedule struct {
 	Period      money.Decimal
@@ -17,26 +22,43 @@ type Schedule struct {
 	Principal   money.Money
 }
 
-func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper money.Decimal) []Schedule {
-	until, err := nper.Int64()
-	if err != nil {
-		return nil
+// BuildSchedule generates a period-by-period amortization table for a loan
+// with present value pv, periodic rate rate, fixed periodic payment
+// payment, and nper total periods.
+//
+// It returns ErrCurrencyMismatch if pv and payment aren't in the same
+// currency, ErrInvalidPeriods if nper isn't a positive whole number, and
+// wraps any error from parsing nper as an integer.
+func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper money.Decimal) ([]Schedule, error) {
+	if pv.Currency() != payment.Currency() {
+		return nil, money.ErrCurrencyMismatch
 	}
 
-	balance, rows := pv, make([]Schedule, 0, until)
-	sumInterest := money.MoneyZero
+	until, err := nper.Int64()
+	if err != nil {
+		return nil, err
+	}
+	if until <= 0 {
+		return nil, ErrInvalidPeriods
+	}
+
+	currency := pv.Currency()
+	zero := money.MustMoneyFromFloat64(0, currency)
+
+	balance, rows := pv, make([]Schedule, 0, until+1)
+	sumInterest := zero
 
 	rows = append(rows, Schedule{
 		Period:      money.Zero,
 		Balance:     pv,
-		Payment:     money.MoneyZero,
-		Interest:    money.MoneyZero,
-		SumInterest: money.MoneyZero,
-		Principal:   money.MoneyZero,
+		Payment:     zero,
+		Interest:    zero,
+		SumInterest: zero,
+		Principal:   zero,
 	})
 
 	for p := 1; p <= int(until); p++ {
-		interest := balance.Mul(rate.ToMoney(balance.Currency()))
+		interest := balance.Mul(rate.ToMoney(currency))
 		principal := payment.Sub(interest)
 		balance = balance.Sub(principal)
 		sumInterest = sumInterest.Add(interest)
@@ -51,39 +73,60 @@ func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper
 		})
 	}
 
-	return rows
+	return rows, nil
 }
 
-func WriteCSV(filenamePath string, headers []string, rows []Schedule) error {
+// WriteCSV writes rows to filenamePath as CSV, rounding each monetary
+// column to its own currency's standard precision (e.g. 0 decimals for
+// JPY, 3 for BHD) rather than assuming two decimal places.
+func WriteCSV(filenamePath string, headers []string, rows []Schedule) (err error) {
 	f, err := os.Create(filenamePath)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if cerr := f.Close(); err == nil {
+			err = cerr
+		}
+	}()
 
 	bw := bufio.NewWriterSize(f, 65536)
-	defer bw.Flush()
+	defer func() {
+		if ferr := bw.Flush(); err == nil {
+			err = ferr
+		}
+	}()
 
 	w := csv.NewWriter(bw)
-	defer w.Flush()
+	defer func() {
+		w.Flush()
+		if werr := w.Error(); err == nil {
+			err = werr
+		}
+	}()
 
-	if err := w.Write(headers); err != nil {
+	if err = w.Write(headers); err != nil {
 		return err
 	}
 
 	rec := make([]string, 6)
 	for _, r := range rows {
-		rec[0] = r.Period.String()
-		rec[1] = r.Balance.RoundBankString(2)
-		rec[2] = r.Payment.RoundBankString(2)
-		rec[3] = r.Interest.RoundBankString(2)
-		rec[4] = r.SumInterest.RoundBankString(2)
-		rec[5] = r.Principal.RoundBankString(2)
+		prec, perr := r.Balance.Currency().GetCurrencyPrecisionCode()
+		if perr != nil {
+			return perr
+		}
 
-		if err := w.Write(rec); err != nil {
+		rec[0] = r.Period.String()
+		rec[1] = r.Balance.RoundBankString(prec)
+		rec[2] = r.Payment.RoundBankString(prec)
+		rec[3] = r.Interest.RoundBankString(prec)
+		rec[4] = r.SumInterest.RoundBankString(prec)
+		rec[5] = r.Principal.RoundBankString(prec)
+
+		if err = w.Write(rec); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return err
 }

@@ -180,6 +180,91 @@ func (m Money) IsZero() bool {
 	return m.value.IsZero()
 }
 
+// IsPositive reports whether m is strictly greater than zero.
+func (m Money) IsPositive() bool {
+	return m.value.IsPos()
+}
+
+// IsNegative reports whether m is strictly less than zero.
+func (m Money) IsNegative() bool {
+	return m.value.IsNeg()
+}
+
+// MulInt64 multiplies m by a plain integer factor, such as a quantity
+// (e.g. unit price * quantity).
+func (m Money) MulInt64(n int64) Money {
+	factor, err := decFromInt64(n, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	v, err := m.value.Mul(factor)
+	if err != nil {
+		panic(err)
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}
+}
+
+// DivInt64 divides m by a plain integer divisor.
+func (m Money) DivInt64(n int64) (Money, error) {
+	divisor, err := decFromInt64(n, 0)
+	if err != nil {
+		return Money{}, err
+	}
+
+	v, err := m.value.Div(divisor)
+	if err != nil {
+		return Money{}, err
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}, nil
+}
+
+// MustDivInt64 is like DivInt64 but panics on error.
+func (m Money) MustDivInt64(n int64) Money {
+	v, err := m.DivInt64(n)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// Min returns the smaller of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+func (m Money) Min(other Money) (Money, error) {
+	if m.currency != other.currency {
+		return Money{}, ErrCurrencyMismatch
+	}
+
+	if m.value.Cmp(other.value) <= 0 {
+		return m, nil
+	}
+
+	return other, nil
+}
+
+// Max returns the larger of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+func (m Money) Max(other Money) (Money, error) {
+	if m.currency != other.currency {
+		return Money{}, ErrCurrencyMismatch
+	}
+
+	if m.value.Cmp(other.value) >= 0 {
+		return m, nil
+	}
+
+	return other, nil
+}
+
 func (m Money) Div(other Money) (Money, error) {
 	div, err := m.value.Div(other.value)
 	if err != nil {

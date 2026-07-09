@@ -2,6 +2,7 @@ package money
 
 import (
 	"encoding/json"
+	"math"
 )
 
 var Zero = Decimal{value: decZero}
@@ -138,6 +139,105 @@ func (d Decimal) MustDiv(other Decimal) Decimal {
 	}
 
 	return div
+}
+
+// Pow returns d raised to the power of exponent. decimal128 has no native
+// exponentiation, so the computation is done in float64 via math.Pow and
+// the result converted back to a Decimal. It returns an error if the
+// result isn't a finite number (e.g. a negative base with a fractional
+// exponent, which is undefined).
+func (d Decimal) Pow(exponent Decimal) (Decimal, error) {
+	result := math.Pow(d.InexactFloat64(), exponent.InexactFloat64())
+
+	return NewFromFloat64(result)
+}
+
+// MustPow is like Pow but panics on error.
+func (d Decimal) MustPow(exponent Decimal) Decimal {
+	result, err := d.Pow(exponent)
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
+// Ln returns the natural logarithm (base e) of d. decimal128 has no
+// native logarithm, so the computation is done in float64 via math.Log
+// and the result converted back to a Decimal. It returns an error if d
+// is zero or negative, since the natural logarithm is undefined there.
+func (d Decimal) Ln() (Decimal, error) {
+	result := math.Log(d.InexactFloat64())
+
+	return NewFromFloat64(result)
+}
+
+// MustLn is like Ln but panics on error.
+func (d Decimal) MustLn() Decimal {
+	result, err := d.Ln()
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
+// Log10 returns the base-10 logarithm of d.
+func (d Decimal) Log10() (Decimal, error) {
+	result := math.Log10(d.InexactFloat64())
+
+	return NewFromFloat64(result)
+}
+
+// MustLog10 is like Log10 but panics on error.
+func (d Decimal) MustLog10() Decimal {
+	result, err := d.Log10()
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
+// Log2 returns the base-2 logarithm of d.
+func (d Decimal) Log2() (Decimal, error) {
+	result := math.Log2(d.InexactFloat64())
+
+	return NewFromFloat64(result)
+}
+
+// MustLog2 is like Log2 but panics on error.
+func (d Decimal) MustLog2() Decimal {
+	result, err := d.Log2()
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
+// Log returns the logarithm of d in the given base, computed as
+// Ln(d) / Ln(base). It returns an error if d or base aren't strictly
+// positive, or if base equals 1 (which makes the logarithm undefined).
+func (d Decimal) Log(base Decimal) (Decimal, error) {
+	num := math.Log(d.InexactFloat64())
+	den := math.Log(base.InexactFloat64())
+
+	if den == 0 {
+		return Decimal{}, ErrDivideByZero
+	}
+
+	return NewFromFloat64(num / den)
+}
+
+// MustLog is like Log but panics on error.
+func (d Decimal) MustLog(base Decimal) Decimal {
+	result, err := d.Log(base)
+	if err != nil {
+		panic(err)
+	}
+
+	return result
 }
 
 func (d Decimal) Mod(other Decimal) (Decimal, error) {

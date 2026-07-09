@@ -118,19 +118,22 @@ func BenchmarkBuildSchedule(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 			for b.Loop() {
-				_ = annuities.BuildSchedule(pv, rate, payment, tc.nper)
+				_, _ = annuities.BuildSchedule(pv, rate, payment, tc.nper)
 			}
 		})
 	}
 }
 
 func BenchmarkWriteCSV(b *testing.B) {
-	schedule := annuities.BuildSchedule(
+	schedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(200000, money.USD),
 		money.MustFromFloat64(0.005),
 		money.MustMoneyFromFloat64(1074, money.USD),
 		mustDecimal(360),
 	)
+	if err != nil {
+		b.Fatalf("BuildSchedule: %v", err)
+	}
 
 	headers := []string{"Period", "Balance", "Payment", "Interest", "SumInterest", "Principal"}
 
@@ -182,7 +185,7 @@ func BenchmarkAnnuityAllMethods(b *testing.B) {
 		_, _ = annuity.Future()
 		_, _ = annuity.PaymentFromPresentValue()
 		_, _ = annuity.PaymentFromFutureValue()
-		_ = annuities.BuildSchedule(
+		_, _ = annuities.BuildSchedule(
 			money.MustMoneyFromFloat64(1000, money.USD),
 			money.MustFromFloat64(0.05/12),
 			money.MustMoneyFromFloat64(100, money.USD),

@@ -113,6 +113,115 @@ func TestGetCurrencyPrecisionCode(t *testing.T) {
 	}
 }
 
+func TestMulInt64(t *testing.T) {
+	price := MustMoneyFromFloat64(19.99, USD)
+
+	total := price.MulInt64(3)
+	if total.StringFixed(2) != "59.97" {
+		t.Errorf("expected 59.97, got %s", total.StringFixed(2))
+	}
+}
+
+func TestDivInt64(t *testing.T) {
+	total := MustMoneyFromFloat64(30, USD)
+
+	share, err := total.DivInt64(3)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if share.StringFixed(2) != "10.00" {
+		t.Errorf("expected 10.00, got %s", share.StringFixed(2))
+	}
+
+	if _, err := total.DivInt64(0); !errors.Is(err, ErrDivideByZero) {
+		t.Errorf("expected ErrDivideByZero, got %v", err)
+	}
+}
+
+func TestMinMax(t *testing.T) {
+	a := MustMoneyFromFloat64(10, USD)
+	b := MustMoneyFromFloat64(20, USD)
+
+	gotMin, err := a.Min(b)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !gotMin.Equal(a) {
+		t.Errorf("expected min to be %s, got %s", a.String(), gotMin.String())
+	}
+
+	gotMax, err := a.Max(b)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !gotMax.Equal(b) {
+		t.Errorf("expected max to be %s, got %s", b.String(), gotMax.String())
+	}
+
+	c := MustMoneyFromFloat64(10, EUR)
+	if _, err := a.Min(c); !errors.Is(err, ErrCurrencyMismatch) {
+		t.Errorf("expected ErrCurrencyMismatch, got %v", err)
+	}
+	if _, err := a.Max(c); !errors.Is(err, ErrCurrencyMismatch) {
+		t.Errorf("expected ErrCurrencyMismatch, got %v", err)
+	}
+}
+
+func TestIsPositiveIsNegative(t *testing.T) {
+	pos := MustMoneyFromFloat64(1, USD)
+	neg := MustMoneyFromFloat64(-1, USD)
+	zero := MustMoneyFromFloat64(0, USD)
+
+	if !pos.IsPositive() || pos.IsNegative() {
+		t.Errorf("expected %s to be positive", pos.String())
+	}
+	if !neg.IsNegative() || neg.IsPositive() {
+		t.Errorf("expected %s to be negative", neg.String())
+	}
+	if zero.IsPositive() || zero.IsNegative() {
+		t.Errorf("expected %s to be neither positive nor negative", zero.String())
+	}
+}
+
+func TestCurrencySymbol(t *testing.T) {
+	tests := []struct {
+		currency Currency
+		expected string
+	}{
+		{USD, "$"},
+		{EUR, "€"},
+		{JPY, "¥"},
+		{XTS, "XTS"}, // no distinct symbol, falls back to ISO code
+	}
+
+	for _, tt := range tests {
+		symbol, err := tt.currency.Symbol()
+		if err != nil {
+			t.Errorf("unexpected error for %v: %v", tt.currency, err)
+			continue
+		}
+		if symbol != tt.expected {
+			t.Errorf("expected %s, got %s", tt.expected, symbol)
+		}
+	}
+
+	if _, err := Currency(9999).Symbol(); err == nil {
+		t.Error("expected error for unknown currency")
+	}
+}
+
+func TestMoneyFormat(t *testing.T) {
+	m := MustMoneyFromFloat64(1234.5, USD)
+
+	got, err := m.Format()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if got != "$1234.50" {
+		t.Errorf("expected $1234.50, got %s", got)
+	}
+}
+
 func TestCurrencyISOCodeRoundTrip(t *testing.T) {
 	for currency, code := range currencyCode {
 		parsed, err := CurrencyFromISOCode(code)

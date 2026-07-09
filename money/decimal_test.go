@@ -1,6 +1,8 @@
 package money
 
 import (
+	"errors"
+	"math"
 	"testing"
 )
 
@@ -12,6 +14,145 @@ func TestNewFromFloat64(t *testing.T) {
 	if d.String() != "123.456" {
 		t.Errorf("expected 123.456, got %s", d.String())
 	}
+}
+
+func TestDecimalPow(t *testing.T) {
+	tests := []struct {
+		base     float64
+		exponent float64
+		expected string
+	}{
+		{2, 10, "1024"},
+		{1.005, 12, "1.0616778118644976"},
+		{4, 0.5, "2"},
+		{5, 0, "1"},
+	}
+
+	for _, tt := range tests {
+		base := MustFromFloat64(tt.base)
+		exponent := MustFromFloat64(tt.exponent)
+
+		result, err := base.Pow(exponent)
+		if err != nil {
+			t.Fatalf("unexpected error for %v^%v: %v", tt.base, tt.exponent, err)
+		}
+		if result.String() != tt.expected {
+			t.Errorf("expected %v^%v = %s, got %s", tt.base, tt.exponent, tt.expected, result.String())
+		}
+	}
+}
+
+func TestDecimalPowInvalidResult(t *testing.T) {
+	base := MustFromFloat64(-2)
+	exponent := MustFromFloat64(0.5)
+
+	if _, err := base.Pow(exponent); err == nil {
+		t.Error("expected error for negative base with fractional exponent")
+	}
+}
+
+func TestDecimalMustPow(t *testing.T) {
+	result := MustFromFloat64(2).MustPow(MustFromFloat64(8))
+	if result.String() != "256" {
+		t.Errorf("expected 256, got %s", result.String())
+	}
+}
+
+func TestDecimalMustPowPanicsOnInvalidResult(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic for negative base with fractional exponent")
+		}
+	}()
+
+	MustFromFloat64(-2).MustPow(MustFromFloat64(0.5))
+}
+
+func TestDecimalLn(t *testing.T) {
+	tests := []struct {
+		input    float64
+		expected string
+	}{
+		{1, "0"},
+		{math.E, "1"},
+		{2, "0.6931471805599453"},
+	}
+
+	for _, tt := range tests {
+		result, err := MustFromFloat64(tt.input).Ln()
+		if err != nil {
+			t.Fatalf("unexpected error for Ln(%v): %v", tt.input, err)
+		}
+		if result.String() != tt.expected {
+			t.Errorf("expected Ln(%v) = %s, got %s", tt.input, tt.expected, result.String())
+		}
+	}
+}
+
+func TestDecimalLnInvalidResult(t *testing.T) {
+	if _, err := MustFromFloat64(0).Ln(); err == nil {
+		t.Error("expected error for Ln(0)")
+	}
+	if _, err := MustFromFloat64(-1).Ln(); err == nil {
+		t.Error("expected error for Ln(-1)")
+	}
+}
+
+func TestDecimalLog10(t *testing.T) {
+	result, err := MustFromFloat64(1000).Log10()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.String() != "3" {
+		t.Errorf("expected 3, got %s", result.String())
+	}
+}
+
+func TestDecimalLog2(t *testing.T) {
+	result, err := MustFromFloat64(8).Log2()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.String() != "3" {
+		t.Errorf("expected 3, got %s", result.String())
+	}
+}
+
+func TestDecimalLog(t *testing.T) {
+	tests := []struct {
+		x        float64
+		base     float64
+		expected string
+	}{
+		{8, 2, "3"},
+		{100, 10, "2"},
+	}
+
+	for _, tt := range tests {
+		result, err := MustFromFloat64(tt.x).Log(MustFromFloat64(tt.base))
+		if err != nil {
+			t.Fatalf("unexpected error for Log(%v, base %v): %v", tt.x, tt.base, err)
+		}
+		if result.String() != tt.expected {
+			t.Errorf("expected Log(%v, base %v) = %s, got %s", tt.x, tt.base, tt.expected, result.String())
+		}
+	}
+}
+
+func TestDecimalLogInvalidBase(t *testing.T) {
+	if _, err := MustFromFloat64(10).Log(MustFromFloat64(1)); !errors.Is(err, ErrDivideByZero) {
+		t.Errorf("expected ErrDivideByZero for base 1, got %v", err)
+	}
+}
+
+func TestDecimalMustLnPanicsOnInvalidResult(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic for Ln(0)")
+		}
+	}()
+
+	MustFromFloat64(0).MustLn()
 }
 
 func TestNewFromString(t *testing.T) {

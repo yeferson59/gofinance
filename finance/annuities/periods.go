@@ -1,8 +1,6 @@
 package annuities
 
 import (
-	"math"
-
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -51,11 +49,11 @@ func (a Annuity) PeriodsWithPresent() (money.Decimal, error) {
 	ratio := valueFloat / denominatorValue
 
 	// Step 4: Calculate the natural logarithm of the ratio (numerator)
-	logarithmRatio := math.Log(ratio)
+	logarithmRatio := money.MustFromFloat64(ratio).MustLn().InexactFloat64()
 
 	// Step 5: Calculate the natural logarithm of the growth factor (denominator)
 	growthFactor := 1 + rateFloat
-	logarithmGrowth := math.Log(growthFactor)
+	logarithmGrowth := money.MustFromFloat64(growthFactor).MustLn().InexactFloat64()
 
 	// Step 6: Divide to get the number of periods
 	periods := logarithmRatio / logarithmGrowth
@@ -105,17 +103,17 @@ func (a Annuity) PeriodsWithFuture() (money.Decimal, error) {
 	numeratorValue := futureTimesRate + valueFloat
 
 	// Step 3: Calculate the natural logarithm of the numerator
-	logarithmNumerator := math.Log(numeratorValue)
+	logarithmNumerator := money.MustFromFloat64(numeratorValue).MustLn().InexactFloat64()
 
 	// Step 4: Calculate the natural logarithm of the denominator (PMT)
-	logarithmDenominator := math.Log(valueFloat)
+	logarithmDenominator := money.MustFromFloat64(valueFloat).MustLn().InexactFloat64()
 
 	// Step 5: Calculate the numerator of the periods formula
 	logarithmRatio := logarithmNumerator - logarithmDenominator
 
 	// Step 6: Calculate the natural logarithm of the growth factor
 	growthFactor := 1 + rateFloat
-	logarithmGrowth := math.Log(growthFactor)
+	logarithmGrowth := money.MustFromFloat64(growthFactor).MustLn().InexactFloat64()
 
 	// Step 7: Divide to get the number of periods
 	periods := logarithmRatio / logarithmGrowth

@@ -46,12 +46,16 @@ func annuityExample() {
 	fmt.Println("Loan: $300,000, Rate: 6%, 360 months")
 	fmt.Println("Monthly payment:", payment.StringFixed(2))
 
-	schedule := annuities.BuildSchedule(
+	schedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(300000, money.USD),
 		money.MustFromFloat64(0.005),
 		payment,
 		money.MustFromFloat64(360),
 	)
+	if err != nil {
+		fmt.Println("schedule error:", err)
+		return
+	}
 	fmt.Println("Schedule rows:", len(schedule))
 }
 
