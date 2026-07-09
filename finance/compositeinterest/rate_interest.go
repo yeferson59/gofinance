@@ -1,8 +1,6 @@
 package compositeinterest
 
 import (
-	"math"
-
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -48,7 +46,7 @@ func (c CompositeInterest) Interest() (money.Decimal, error) {
 
 	reciprocalPeriods := money.One.MustDiv(numberOfPeriods)
 
-	growthFactor := math.Pow(futureToPresent.InexactFloat64(), reciprocalPeriods.InexactFloat64())
+	growthFactor := futureToPresent.ToDecimal().MustPow(reciprocalPeriods).InexactFloat64()
 
 	periodicRate := growthFactor - 1
 

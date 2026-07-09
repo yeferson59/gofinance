@@ -1,8 +1,6 @@
 package annuities
 
 import (
-	"math"
-
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -14,7 +12,7 @@ func (a Annuity) Present() (money.Money, error) {
 
 	growthFactor := rateInterest.Add(money.One)
 
-	growthPower := money.MustFromFloat64(math.Pow(growthFactor.InexactFloat64(), periods.InexactFloat64()))
+	growthPower := growthFactor.MustPow(periods)
 
 	numerator := money.One.Sub(money.One.MustDiv(growthPower))
 

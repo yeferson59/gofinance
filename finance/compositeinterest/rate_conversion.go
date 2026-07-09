@@ -1,8 +1,6 @@
 package compositeinterest
 
 import (
-	"math"
-
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -35,8 +33,8 @@ func (rt RateInterest) RatePeriodic() (money.Decimal, error) {
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		pow := math.Pow((rt.value.Add(money.One).InexactFloat64()), (money.One.MustDiv(compoundingPeriodsPerYear).InexactFloat64()))
-		nominalRate := compoundingPeriodsPerYear.Mul(money.MustFromFloat64(pow).Sub(money.One))
+		pow := rt.value.Add(money.One).MustPow(money.One.MustDiv(compoundingPeriodsPerYear))
+		nominalRate := compoundingPeriodsPerYear.Mul(pow.Sub(money.One))
 		periodicRate = nominalRate.MustDiv(compoundingPeriodsPerYear)
 	}
 
@@ -62,8 +60,8 @@ func (rt RateInterest) RateNominal() (money.Decimal, error) {
 	var nominalRate money.Decimal
 
 	if rt.typeRate == RateEffectyAnnually {
-		pow := math.Pow((rt.value.Add(money.One).InexactFloat64()), (money.One.MustDiv(compoundingPeriodsPerYear).InexactFloat64()))
-		nominalRate = compoundingPeriodsPerYear.Mul(money.MustFromFloat64(pow).Sub(money.One))
+		pow := rt.value.Add(money.One).MustPow(money.One.MustDiv(compoundingPeriodsPerYear))
+		nominalRate = compoundingPeriodsPerYear.Mul(pow.Sub(money.One))
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {
@@ -93,11 +91,11 @@ func (rt RateInterest) RateEffectyAnnually() (money.Decimal, error) {
 
 	if rt.typeRate == RateEffectyNominal {
 		periodicRate := rt.value.MustDiv(compoundingPeriodsPerYear)
-		effectiveAnnualRate = money.MustFromFloat64(math.Pow(periodicRate.Add(money.One).InexactFloat64(), compoundingPeriodsPerYear.InexactFloat64())).Sub(money.One)
+		effectiveAnnualRate = periodicRate.Add(money.One).MustPow(compoundingPeriodsPerYear).Sub(money.One)
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {
-		effectiveAnnualRate = money.MustFromFloat64(math.Pow(rt.value.Add(money.One).InexactFloat64(), compoundingPeriodsPerYear.InexactFloat64())).Sub(money.One)
+		effectiveAnnualRate = rt.value.Add(money.One).MustPow(compoundingPeriodsPerYear).Sub(money.One)
 	}
 
 	return effectiveAnnualRate, nil
@@ -135,7 +133,7 @@ func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundin
 
 	exponent := money.One.MustDiv(newPeriodsPerYear).Mul(currentPeriodsPerYear)
 
-	newPeriodicRate := math.Pow(currentPeriodicRate.Add(money.One).InexactFloat64(), exponent.InexactFloat64()) - 1
+	newPeriodicRate := currentPeriodicRate.Add(money.One).MustPow(exponent).InexactFloat64() - 1
 
 	return money.MustFromFloat64(newPeriodicRate), nil
 }
@@ -183,11 +181,11 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (money.Decimal, error) {
 
 	if rt.typeRate == RateAnticipateEffectyNominal {
 		periodicRate := rt.value.MustDiv(compoundingPeriodsPerYear)
-		effectiveAnnualRate = money.MustFromFloat64(math.Pow(money.One.Sub(periodicRate).InexactFloat64(), money.One.Neg().Mul(compoundingPeriodsPerYear).InexactFloat64())).Sub(money.One)
+		effectiveAnnualRate = money.One.Sub(periodicRate).MustPow(money.One.Neg().Mul(compoundingPeriodsPerYear)).Sub(money.One)
 	}
 
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
-		effectiveAnnualRate = money.MustFromFloat64(math.Pow(money.One.Sub(rt.value).InexactFloat64(), money.One.Neg().Mul(compoundingPeriodsPerYear).InexactFloat64())).Sub(money.One)
+		effectiveAnnualRate = money.One.Sub(rt.value).MustPow(money.One.Neg().Mul(compoundingPeriodsPerYear)).Sub(money.One)
 	}
 
 	return effectiveAnnualRate, nil
@@ -216,7 +214,8 @@ func (rt RateInterest) RateAnticipateNominal() (money.Decimal, error) {
 			return money.Decimal{}, err
 		}
 
-		nominalRate = compoundingPeriodsPerYear.Mul(money.MustFromFloat64((1 - math.Pow(effectiveAnnualRate.Add(money.One).InexactFloat64(), (money.One.Neg().MustDiv(compoundingPeriodsPerYear).InexactFloat64())))))
+		pow := effectiveAnnualRate.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear)).InexactFloat64()
+		nominalRate = compoundingPeriodsPerYear.Mul(money.MustFromFloat64(1 - pow))
 	}
 
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
@@ -248,7 +247,8 @@ func (rt RateInterest) RateAnticipatePeriodic() (money.Decimal, error) {
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		periodicRate = money.MustFromFloat64((1 - math.Pow(rt.value.Add(money.One).InexactFloat64(), (money.One.Neg().MustDiv(compoundingPeriodsPerYear).InexactFloat64()))))
+		pow := rt.value.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear)).InexactFloat64()
+		periodicRate = money.MustFromFloat64(1 - pow)
 	}
 
 	return periodicRate, nil
