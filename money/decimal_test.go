@@ -1,6 +1,8 @@
 package money
 
 import (
+	"errors"
+	"math"
 	"testing"
 )
 
@@ -64,6 +66,93 @@ func TestDecimalMustPowPanicsOnInvalidResult(t *testing.T) {
 	}()
 
 	MustFromFloat64(-2).MustPow(MustFromFloat64(0.5))
+}
+
+func TestDecimalLn(t *testing.T) {
+	tests := []struct {
+		input    float64
+		expected string
+	}{
+		{1, "0"},
+		{math.E, "1"},
+		{2, "0.6931471805599453"},
+	}
+
+	for _, tt := range tests {
+		result, err := MustFromFloat64(tt.input).Ln()
+		if err != nil {
+			t.Fatalf("unexpected error for Ln(%v): %v", tt.input, err)
+		}
+		if result.String() != tt.expected {
+			t.Errorf("expected Ln(%v) = %s, got %s", tt.input, tt.expected, result.String())
+		}
+	}
+}
+
+func TestDecimalLnInvalidResult(t *testing.T) {
+	if _, err := MustFromFloat64(0).Ln(); err == nil {
+		t.Error("expected error for Ln(0)")
+	}
+	if _, err := MustFromFloat64(-1).Ln(); err == nil {
+		t.Error("expected error for Ln(-1)")
+	}
+}
+
+func TestDecimalLog10(t *testing.T) {
+	result, err := MustFromFloat64(1000).Log10()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.String() != "3" {
+		t.Errorf("expected 3, got %s", result.String())
+	}
+}
+
+func TestDecimalLog2(t *testing.T) {
+	result, err := MustFromFloat64(8).Log2()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.String() != "3" {
+		t.Errorf("expected 3, got %s", result.String())
+	}
+}
+
+func TestDecimalLog(t *testing.T) {
+	tests := []struct {
+		x        float64
+		base     float64
+		expected string
+	}{
+		{8, 2, "3"},
+		{100, 10, "2"},
+	}
+
+	for _, tt := range tests {
+		result, err := MustFromFloat64(tt.x).Log(MustFromFloat64(tt.base))
+		if err != nil {
+			t.Fatalf("unexpected error for Log(%v, base %v): %v", tt.x, tt.base, err)
+		}
+		if result.String() != tt.expected {
+			t.Errorf("expected Log(%v, base %v) = %s, got %s", tt.x, tt.base, tt.expected, result.String())
+		}
+	}
+}
+
+func TestDecimalLogInvalidBase(t *testing.T) {
+	if _, err := MustFromFloat64(10).Log(MustFromFloat64(1)); !errors.Is(err, ErrDivideByZero) {
+		t.Errorf("expected ErrDivideByZero for base 1, got %v", err)
+	}
+}
+
+func TestDecimalMustLnPanicsOnInvalidResult(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic for Ln(0)")
+		}
+	}()
+
+	MustFromFloat64(0).MustLn()
 }
 
 func TestNewFromString(t *testing.T) {
