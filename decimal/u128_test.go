@@ -1,6 +1,10 @@
 package decimal
 
-import "testing"
+import (
+	"math/big"
+	"math/rand"
+	"testing"
+)
 
 func TestU128AddOverflow(t *testing.T) {
 	maxU128 := u128{hi: ^uint64(0), lo: ^uint64(0)}
@@ -188,24 +192,29 @@ func TestU128BitLenSmallDividend(t *testing.T) {
 	}
 }
 
-func TestBinaryDivU128ZeroDivisor(t *testing.T) {
-	bitAt := func(_ int) uint64 { return 0 }
-	if _, _, ok := binaryDivU128(bitAt, 0, u128Zero); ok {
-		t.Fatal("expected division by zero to fail")
-	}
-}
+// TestQuoRem128By128FullDivisorCrossCheck hammers the div3by2-based path
+// (v.hi != 0) with full-range random operands, cross-checking against
+// math/big. This covers the normalization shifts (including s == 0), the
+// qhat correction loop, and the a2 == v1 estimate branch.
+func TestQuoRem128By128FullDivisorCrossCheck(t *testing.T) {
+	r := rand.New(rand.NewSource(5))
 
-func TestBinaryDivU128QuotientOverflow(t *testing.T) {
-	// A dividend of exactly 2^200 divided by 1: the true quotient (2^200)
-	// can't possibly fit in 128 bits.
-	bitAt := func(i int) uint64 {
-		if i == 200 {
-			return 1
+	for range 20000 {
+		u := u128{hi: r.Uint64(), lo: r.Uint64()}
+		v := u128{hi: r.Uint64(), lo: r.Uint64()}
+		for v.hi == 0 {
+			v.hi = r.Uint64()
 		}
-		return 0
-	}
-	if _, _, ok := binaryDivU128(bitAt, 201, u128One); ok {
-		t.Fatal("expected overflow: quotient doesn't fit in 128 bits")
+
+		q, rem, ok := quoRem128by128(u, v)
+		if !ok {
+			t.Fatalf("unexpected !ok for u=%+v v=%+v", u, v)
+		}
+
+		wantQ, wantR := new(big.Int).QuoRem(u128ToBig(u), u128ToBig(v), new(big.Int))
+		if u128ToBig(q).Cmp(wantQ) != 0 || u128ToBig(rem).Cmp(wantR) != 0 {
+			t.Fatalf("u=%+v / v=%+v: got q=%+v r=%+v, want q=%s r=%s", u, v, q, rem, wantQ, wantR)
+		}
 	}
 }
 

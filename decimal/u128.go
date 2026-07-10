@@ -175,21 +175,27 @@ func (u u128) bitLen() int {
 	return bits.Len64(u.lo)
 }
 
+// decimalDigits returns the number of base-10 digits of u (1 for zero).
+func (u u128) decimalDigits() int {
+	if u.IsZero() {
+		return 1
+	}
+
+	// 1233/4096 approximates log10(2); the estimate is exact or one low.
+	d := (u.bitLen() * 1233) >> 12
+	if d < len(pow10) && u.Cmp(pow10[d]) >= 0 {
+		d++
+	}
+
+	return d
+}
+
 // bitAt returns the i-th bit (0 = LSB) of u.
 func (u u128) bitAt(i int) uint64 {
 	if i >= 64 {
 		return (u.hi >> uint(i-64)) & 1
 	}
 	return (u.lo >> uint(i)) & 1
-}
-
-// setBit sets the i-th bit (0 = LSB) of u to 1.
-func (u *u128) setBit(i int) {
-	if i >= 64 {
-		u.hi |= 1 << uint(i-64)
-	} else {
-		u.lo |= 1 << uint(i)
-	}
 }
 
 // quoRem128by128 returns q = u/v and r = u%v for a 128-bit divisor v.
@@ -202,44 +208,72 @@ func quoRem128by128(u, v u128) (q, r u128, ok bool) {
 		qq, rr := u.QuoRem64(v.lo)
 		return qq, u128{lo: rr}, true
 	}
-	// v needs the full 128 bits, so the quotient is guaranteed to fit
-	// comfortably within 128 bits too.
-	q, r, _ = binaryDivU128(u.bitAt, u.bitLen(), v)
-	return q, r, true
+
+	// v uses the full 128 bits, so the quotient fits in a single word
+	// (u < 2^128 <= v*2^64): one normalized 3-by-2 division step suffices.
+	s := uint(bits.LeadingZeros64(v.hi))
+	v1 := v.hi<<s | v.lo>>1>>(63-s)
+	v0 := v.lo << s
+
+	d2 := u.hi >> 1 >> (63 - s)
+	d1 := u.hi<<s | u.lo>>1>>(63-s)
+	d0 := u.lo << s
+
+	qw, r1, r0 := div3by2(d2, d1, d0, v1, v0)
+
+	return u128{lo: qw}, u128{hi: r1 >> s, lo: r0>>s | r1<<1<<(63-s)}, true
 }
 
-// binaryDivU128 performs schoolbook binary long division of an arbitrary
-// width dividend (described by bitAt/bitLen) by the 128-bit divisor v,
-// producing a 128-bit quotient. ok is false if the true quotient doesn't
-// fit in 128 bits.
-func binaryDivU128(bitAt func(i int) uint64, bitLen int, v u128) (q, r u128, ok bool) {
-	if v.IsZero() {
-		return u128{}, u128{}, false
+// div3by2 divides the three-word value [a2 a1 a0] by the normalized
+// two-word divisor [v1 v0] (top bit of v1 set), assuming [a2 a1] < [v1 v0]
+// so the quotient fits in a single word. It returns the quotient word and
+// the two-word remainder. This is the base-2^64 schoolbook division step
+// of Knuth's algorithm D.
+func div3by2(a2, a1, a0, v1, v0 uint64) (q, r1, r0 uint64) {
+	var (
+		qhat, rhat uint64
+		rhatBig    bool // rhat >= 2^64: no further correction can apply
+	)
+
+	if a2 == v1 {
+		// bits.Div64 requires a2 < v1; here the estimate is the maximum
+		// word value instead.
+		qhat = ^uint64(0)
+
+		var c uint64
+		rhat, c = bits.Add64(a1, v1, 0)
+		rhatBig = c != 0
+	} else {
+		qhat, rhat = bits.Div64(a2, a1, v1)
 	}
 
-	var rem u128
-	var remCarry uint64
-	var quo u128
-
-	for i := bitLen - 1; i >= 0; i-- {
-		remCarry = (remCarry << 1) | (rem.hi >> 63)
-		rem.hi = (rem.hi << 1) | (rem.lo >> 63)
-		rem.lo = (rem.lo << 1) | bitAt(i)
-
-		if remCarry != 0 || rem.Cmp(v) >= 0 {
-			lo, b1 := bits.Sub64(rem.lo, v.lo, 0)
-			hi, _ := bits.Sub64(rem.hi, v.hi, b1)
-			rem = u128{hi: hi, lo: lo}
-			remCarry = 0
-
-			if i >= 128 {
-				return u128{}, u128{}, false
-			}
-			quo.setBit(i)
+	// Lower qhat until qhat*[v1 v0] <= [a2 a1 a0], comparing via
+	// qhat*v0 <= rhat*2^64 + a0 with rhat = [a2 a1] - qhat*v1. With a
+	// normalized divisor the estimate overshoots by at most 2.
+	for !rhatBig {
+		ph, pl := bits.Mul64(qhat, v0)
+		if ph < rhat || (ph == rhat && pl <= a0) {
+			break
 		}
+
+		qhat--
+
+		var c uint64
+		rhat, c = bits.Add64(rhat, v1, 0)
+		rhatBig = c != 0
 	}
 
-	return quo, rem, true
+	// remainder = [a2 a1 a0] - qhat*[v1 v0]. The correction loop above
+	// guarantees it fits in two words, so working modulo 2^128 (dropping
+	// the top words of both operands) is exact.
+	ph0, pl0 := bits.Mul64(qhat, v0)
+	_, pl1 := bits.Mul64(qhat, v1)
+	p1, _ := bits.Add64(ph0, pl1, 0)
+
+	r0, b := bits.Sub64(a0, pl0, 0)
+	r1, _ = bits.Sub64(a1, p1, b)
+
+	return qhat, r1, r0
 }
 
 // String returns the base-10 representation of u.

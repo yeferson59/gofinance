@@ -28,66 +28,6 @@ func TestU256IsZero(t *testing.T) {
 	}
 }
 
-func TestU256BitLen(t *testing.T) {
-	tests := []struct {
-		name string
-		x    u256
-		want int
-	}{
-		{"zero", u256{}, 0},
-		{"lo only", u256{lo: 5}, 3}, // 0b101
-		{"lo full", u256{lo: ^uint64(0)}, 64},
-		{"hi only", u256{hi: 1}, 65}, // 64 + 1
-		{"hi full", u256{hi: ^uint64(0)}, 128},
-		{"carry.lo only", u256{carry: u128{lo: 1}}, 129}, // 128 + 1
-		{"carry.lo full", u256{carry: u128{lo: ^uint64(0)}}, 192},
-		{"carry.hi only", u256{carry: u128{hi: 1}}, 193}, // 192 + 1
-		{"carry.hi full", u256{carry: u128{hi: ^uint64(0)}}, 256},
-		// carry.hi takes priority over carry.lo/hi/lo even when all are set
-		{"all set", u256{hi: ^uint64(0), lo: ^uint64(0), carry: u128{hi: 1, lo: ^uint64(0)}}, 193},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.x.bitLen(); got != tt.want {
-				t.Errorf("bitLen() = %d, want %d", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestU256BitAt(t *testing.T) {
-	x := u256{
-		lo:    1 << 3,                        // bit 3
-		hi:    1 << 5,                        // bit 64+5 = 69
-		carry: u128{lo: 1 << 7, hi: 1 << 11}, // bits 128+7=135, 192+11=203
-	}
-
-	tests := []struct {
-		i    int
-		want uint64
-	}{
-		{0, 0},
-		{3, 1},
-		{63, 0},
-		{64, 0},
-		{69, 1},
-		{127, 0},
-		{128, 0},
-		{135, 1},
-		{191, 0},
-		{192, 0},
-		{203, 1},
-		{255, 0},
-	}
-
-	for _, tt := range tests {
-		if got := x.bitAt(tt.i); got != tt.want {
-			t.Errorf("bitAt(%d) = %d, want %d", tt.i, got, tt.want)
-		}
-	}
-}
-
 func TestU256QuoRem128ZeroDivisor(t *testing.T) {
 	x := u256{lo: 100}
 	if _, _, ok := x.QuoRem128(u128Zero); ok {
@@ -190,7 +130,7 @@ func TestU256QuoRem128FastPath(t *testing.T) {
 	}
 }
 
-// TestU256QuoRem128GeneralPath exercises the binaryDivU128 path taken when
+// TestU256QuoRem128GeneralPath exercises the quoRemKnuth path taken when
 // v.hi != 0 (a full 128-bit divisor), again reconstructing x = q*v+r so
 // the expected result is known exactly.
 func TestU256QuoRem128GeneralPath(t *testing.T) {
@@ -220,6 +160,38 @@ func TestU256QuoRem128GeneralPath(t *testing.T) {
 		wantR := u128FromBig(t, remBig)
 		if gotR != wantR {
 			t.Fatalf("case %d: remainder = %+v, want %+v", i, gotR, wantR)
+		}
+	}
+}
+
+// TestU256QuoRemKnuthCrossCheck hammers quoRemKnuth with full-range random
+// 256-bit dividends and 128-bit divisors (x reconstructed as q*v+r so the
+// quotient always fits), cross-checking against math/big. Full-range v.hi
+// exercises normalization shifts down to s == 0 and both div3by2 steps'
+// correction branches.
+func TestU256QuoRemKnuthCrossCheck(t *testing.T) {
+	r := rand.New(rand.NewSource(6))
+
+	for range 20000 {
+		v := u128{hi: r.Uint64(), lo: r.Uint64()}
+		for v.hi == 0 {
+			v.hi = r.Uint64()
+		}
+		q := u128{hi: r.Uint64(), lo: r.Uint64()}
+
+		vBig := u128ToBig(v)
+		remBig := new(big.Int).Rand(r, vBig)
+		xBig := new(big.Int).Mul(u128ToBig(q), vBig)
+		xBig.Add(xBig, remBig)
+
+		x := u256FromBig(t, xBig)
+
+		gotQ, gotR, ok := x.QuoRem128(v)
+		if !ok {
+			t.Fatalf("unexpected !ok: v=%+v q=%+v", v, q)
+		}
+		if gotQ != q || u128ToBig(gotR).Cmp(remBig) != 0 {
+			t.Fatalf("got q=%+v r=%+v, want q=%+v r=%s", gotQ, gotR, q, remBig)
 		}
 	}
 }

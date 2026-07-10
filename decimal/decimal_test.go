@@ -23,7 +23,8 @@ func TestDecimalPow(t *testing.T) {
 		expected string
 	}{
 		{2, 10, "1024"},
-		{1.005, 12, "1.0616778118644976"},
+		// exact value of 1.005^12 rounded half away from zero to 19 digits
+		{1.005, 12, "1.0616778118644995688"},
 		{4, 0.5, "2"},
 		{5, 0, "1"},
 	}
@@ -74,8 +75,10 @@ func TestDecimalLn(t *testing.T) {
 		expected string
 	}{
 		{1, "0"},
-		{math.E, "1"},
-		{2, "0.6931471805599453"},
+		// math.E through float64 formatting is 2.718281828459045, which is
+		// slightly below e, and Ln is now precise enough to see it.
+		{math.E, "0.9999999999999999134"},
+		{2, "0.6931471805599453094"},
 	}
 
 	for _, tt := range tests {
@@ -607,8 +610,10 @@ func TestDecimalMustFromFloat64PanicsOnNaN(t *testing.T) {
 }
 
 func TestDecimalMustLnSuccess(t *testing.T) {
-	if got := MustFromFloat64(math.E).MustLn().String(); got != "1" {
-		t.Errorf("expected 1, got %s", got)
+	// float64 can't hold e exactly (2.718281828459045 < e), so the precise
+	// logarithm lands just under 1.
+	if got := MustFromFloat64(math.E).MustLn().String(); got != "0.9999999999999999134" {
+		t.Errorf("expected 0.9999999999999999134, got %s", got)
 	}
 }
 

@@ -2,7 +2,6 @@ package decimal
 
 import (
 	"encoding/json"
-	"math"
 )
 
 var Zero = Decimal{value: decZero}
@@ -154,15 +153,18 @@ func (d Decimal) MustDiv(other Decimal) Decimal {
 	return div
 }
 
-// Pow returns d raised to the power of exponent. decimal128 has no native
-// exponentiation, so the computation is done in float64 via math.Pow and
-// the result converted back to a Decimal. It returns an error if the
-// result isn't a finite number (e.g. a negative base with a fractional
-// exponent, which is undefined).
+// Pow returns d raised to the power of exponent, computed natively on the
+// decimal engine with 120-bit binary fixed-point internals, so the result
+// is accurate to Decimal's full 19-digit precision (rounded half away from
+// zero). Conventions: d^0 = 1 (including 0^0); 0^exponent = 0 for a
+// positive exponent and ErrDivideByZero for a negative one; a negative
+// base requires an integer exponent (the result's sign follows its
+// parity), otherwise ErrPowNegBase is returned. Results beyond Decimal's
+// range return ErrOverflow; results too small to represent round to zero.
 func (d Decimal) Pow(exponent Decimal) (Decimal, error) {
-	result := math.Pow(d.InexactFloat64(), exponent.InexactFloat64())
+	v, err := d.value.Pow(exponent.value)
 
-	return NewFromFloat64(result)
+	return Decimal{v}, err
 }
 
 // MustPow is like Pow but panics on error.
@@ -175,14 +177,14 @@ func (d Decimal) MustPow(exponent Decimal) Decimal {
 	return result
 }
 
-// Ln returns the natural logarithm (base e) of d. decimal128 has no
-// native logarithm, so the computation is done in float64 via math.Log
-// and the result converted back to a Decimal. It returns an error if d
-// is zero or negative, since the natural logarithm is undefined there.
+// Ln returns the natural logarithm (base e) of d, accurate to Decimal's
+// full 19-digit precision (rounded half away from zero). It returns
+// ErrLogNonPositive if d is zero or negative, since the natural logarithm
+// is undefined there.
 func (d Decimal) Ln() (Decimal, error) {
-	result := math.Log(d.InexactFloat64())
+	v, err := d.value.Ln()
 
-	return NewFromFloat64(result)
+	return Decimal{v}, err
 }
 
 // MustLn is like Ln but panics on error.
@@ -195,11 +197,13 @@ func (d Decimal) MustLn() Decimal {
 	return result
 }
 
-// Log10 returns the base-10 logarithm of d.
+// Log10 returns the base-10 logarithm of d, accurate to Decimal's full
+// 19-digit precision. It returns ErrLogNonPositive if d isn't strictly
+// positive.
 func (d Decimal) Log10() (Decimal, error) {
-	result := math.Log10(d.InexactFloat64())
+	v, err := d.value.Log10()
 
-	return NewFromFloat64(result)
+	return Decimal{v}, err
 }
 
 // MustLog10 is like Log10 but panics on error.
@@ -212,11 +216,13 @@ func (d Decimal) MustLog10() Decimal {
 	return result
 }
 
-// Log2 returns the base-2 logarithm of d.
+// Log2 returns the base-2 logarithm of d, accurate to Decimal's full
+// 19-digit precision. It returns ErrLogNonPositive if d isn't strictly
+// positive.
 func (d Decimal) Log2() (Decimal, error) {
-	result := math.Log2(d.InexactFloat64())
+	v, err := d.value.Log2()
 
-	return NewFromFloat64(result)
+	return Decimal{v}, err
 }
 
 // MustLog2 is like Log2 but panics on error.
@@ -230,17 +236,13 @@ func (d Decimal) MustLog2() Decimal {
 }
 
 // Log returns the logarithm of d in the given base, computed as
-// Ln(d) / Ln(base). It returns an error if d or base aren't strictly
-// positive, or if base equals 1 (which makes the logarithm undefined).
+// Ln(d) / Ln(base) and accurate to Decimal's full 19-digit precision. It
+// returns ErrLogNonPositive if d or base aren't strictly positive, and
+// ErrDivideByZero if base equals 1 (which makes the logarithm undefined).
 func (d Decimal) Log(base Decimal) (Decimal, error) {
-	num := math.Log(d.InexactFloat64())
-	den := math.Log(base.InexactFloat64())
+	v, err := d.value.Log(base.value)
 
-	if den == 0 {
-		return Decimal{}, ErrDivideByZero
-	}
-
-	return NewFromFloat64(num / den)
+	return Decimal{v}, err
 }
 
 // MustLog is like Log but panics on error.

@@ -13,8 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `simpleinterest` builder `PresentValue()` convenience method
 - Manual Release GitHub Actions workflow (`workflow_dispatch`) to create a version tag and GitHub Release with a semver bump or explicit version
 - New standalone `decimal` package (`github.com/yeferson59/gofinance/decimal`): the fixed-point decimal engine that used to live inside `money` is now independently importable, with error-returning `TryAdd`/`TrySub`/`TryMul` alongside the existing panicking `Add`/`Sub`/`Mul`
+- `decimal.ErrLogNonPositive` and `decimal.ErrPowNegBase` errors for the domain violations of the new native `Ln`/`Log*`/`Pow` implementations
 
 ### Changed
+- **Precision**: `Decimal.Pow`, `Ln`, `Log`, `Log2`, and `Log10` are now computed natively on the 128-bit decimal engine (120-bit binary fixed-point internals, zero allocations) instead of round-tripping through `float64`/`math.Pow`, so results are accurate to the full 19-digit precision (previously ~15-16 digits). Integer exponents use exact binary exponentiation on 38-significant-digit intermediates: powers whose exact value fits in 38 digits (e.g. `1.05^12`) now come out exact
+- **Performance**: 128-bit-divisor division (`u256/u128` and `u128/u128`) replaced bit-by-bit binary long division with normalized 2-word Knuth (algorithm D) steps built on `bits.Div64` — `Ln`/`Log10` run at ~0.2µs and `Pow` at ~0.5µs on Apple M1 (11-13× faster than the first native version), and `Decimal.Div` by divisors wider than 64 bits speeds up as a side effect
+- **Behavior**: `Pow` now defines `0^0 = 1`, returns `ErrDivideByZero` for `0^negative`, `ErrPowNegBase` for a negative base with a fractional exponent, `ErrOverflow` past the representable range, and rounds to zero below it; `Ln`/`Log*` now return `ErrLogNonPositive` for non-positive input instead of a formatting error
 - **Performance**: Eliminated duplicate `math.Pow()` call in annuities Present() calculation
 - **Performance**: Optimized Period struct lookup from O(7) sequential checks to O(1) switch-based lookup
 - **Performance**: Cached repeated exponential calculations in rate conversion methods

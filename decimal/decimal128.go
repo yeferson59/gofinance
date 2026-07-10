@@ -20,6 +20,8 @@ var (
 	ErrInvalidFormat   = errors.New("money: invalid decimal format")
 	ErrPrecOutOfRange  = errors.New("money: precision out of range, maximum is 19 digits after the decimal point")
 	ErrIntPartOverflow = errors.New("money: integer part is too large to fit in int64")
+	ErrLogNonPositive  = errors.New("money: logarithm of a non-positive number is undefined")
+	ErrPowNegBase      = errors.New("money: negative base with a non-integer exponent is undefined")
 )
 
 // decimal128 is a fixed-point decimal number backed by a 128-bit unsigned
