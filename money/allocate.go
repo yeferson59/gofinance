@@ -1,6 +1,10 @@
 package money
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/yeferson59/gofinance/decimal"
+)
 
 // ErrNoAllocationRatios is returned by Allocate when called without any
 // ratios to split by.
@@ -39,21 +43,21 @@ func (m Money) Allocate(ratios ...uint32) ([]Money, error) {
 		return nil, err
 	}
 
-	totalDec, err := decFromUint64(total, 0)
+	totalDec, err := decimal.NewFromUint64(total, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	results := make([]Money, len(ratios))
-	allocated := decZero
+	allocated := decimal.Zero
 
 	for i, r := range ratios {
-		rDec, err := decFromUint64(uint64(r), 0)
+		rDec, err := decimal.NewFromUint64(uint64(r), 0)
 		if err != nil {
 			return nil, err
 		}
 
-		share, err := m.value.Mul(rDec)
+		share, err := m.value.TryMul(rDec)
 		if err != nil {
 			return nil, err
 		}
@@ -67,18 +71,18 @@ func (m Money) Allocate(ratios ...uint32) ([]Money, error) {
 
 		results[i] = Money{value: share, currency: m.currency}
 
-		allocated, err = allocated.Add(share)
+		allocated, err = allocated.TryAdd(share)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	remainder, err := m.value.Sub(allocated)
+	remainder, err := m.value.TrySub(allocated)
 	if err != nil {
 		return nil, err
 	}
 
-	unit, err := decFromInt64(1, prec)
+	unit, err := decimal.NewFromInt64(1, prec)
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +91,12 @@ func (m Money) Allocate(ratios ...uint32) ([]Money, error) {
 	}
 
 	for i := 0; !remainder.IsZero() && i < len(results); i++ {
-		results[i].value, err = results[i].value.Add(unit)
+		results[i].value, err = results[i].value.TryAdd(unit)
 		if err != nil {
 			return nil, err
 		}
 
-		remainder, err = remainder.Sub(unit)
+		remainder, err = remainder.TrySub(unit)
 		if err != nil {
 			return nil, err
 		}

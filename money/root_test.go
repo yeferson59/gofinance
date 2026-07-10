@@ -4,6 +4,8 @@ import (
 	"errors"
 	"math"
 	"testing"
+
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 func TestNewMoney(t *testing.T) {
@@ -18,7 +20,7 @@ func TestNewMoney(t *testing.T) {
 		t.Errorf("expected USD, got %v", m.Currency())
 	}
 
-	if _, err := New(1, 20, USD); !errors.Is(err, ErrPrecOutOfRange) {
+	if _, err := New(1, 20, USD); !errors.Is(err, decimal.ErrPrecOutOfRange) {
 		t.Errorf("expected ErrPrecOutOfRange, got %v", err)
 	}
 }
@@ -127,7 +129,7 @@ func TestMoneyDiv(t *testing.T) {
 		t.Errorf("expected 2.5, got %s", q.String())
 	}
 
-	if _, err := a.Div(MoneyZero); !errors.Is(err, ErrDivideByZero) {
+	if _, err := a.Div(MoneyZero); !errors.Is(err, decimal.ErrDivideByZero) {
 		t.Errorf("expected ErrDivideByZero, got %v", err)
 	}
 
@@ -209,7 +211,7 @@ func TestMoneyEqualRequiresSameCurrency(t *testing.T) {
 }
 
 func TestMoneyMarshalJSONInvalidCurrency(t *testing.T) {
-	m := Money{value: decOne, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(9999)}
 	if _, err := m.MarshalJSON(); err == nil {
 		t.Error("expected error marshalling money with an unknown currency")
 	}
@@ -322,10 +324,10 @@ func TestMoneyScan(t *testing.T) {
 }
 
 func TestNewMoneyFromFloat64InvalidValue(t *testing.T) {
-	if _, err := NewMoneyFromFloat64(math.NaN(), USD); !errors.Is(err, ErrInvalidFormat) {
+	if _, err := NewMoneyFromFloat64(math.NaN(), USD); !errors.Is(err, decimal.ErrInvalidFormat) {
 		t.Errorf("expected ErrInvalidFormat for NaN, got %v", err)
 	}
-	if _, err := NewMoneyFromFloat64(math.Inf(-1), USD); !errors.Is(err, ErrInvalidFormat) {
+	if _, err := NewMoneyFromFloat64(math.Inf(-1), USD); !errors.Is(err, decimal.ErrInvalidFormat) {
 		t.Errorf("expected ErrInvalidFormat for -Inf, got %v", err)
 	}
 }
@@ -341,7 +343,7 @@ func TestMustMoneyFromFloat64PanicsOnInvalidValue(t *testing.T) {
 
 func hugeMoney(currency Currency) Money {
 	return Money{
-		value:    decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0},
+		value:    decimal.MustFromHiLo(false, ^uint64(0), ^uint64(0), 0),
 		currency: currency,
 	}
 }
@@ -373,7 +375,7 @@ func TestMoneyMulOverflowPanics(t *testing.T) {
 		}
 	}()
 	m := Money{
-		value:    decimal128{coef: u128{hi: ^uint64(0) >> 1, lo: ^uint64(0)}, scale: 0},
+		value:    decimal.MustFromHiLo(false, ^uint64(0)>>1, ^uint64(0), 0),
 		currency: USD,
 	}
 	m.Mul(m)
@@ -386,7 +388,7 @@ func TestMoneyMulInt64OverflowPanics(t *testing.T) {
 		}
 	}()
 	m := Money{
-		value:    decimal128{coef: u128{hi: ^uint64(0) >> 1, lo: ^uint64(0)}, scale: 0},
+		value:    decimal.MustFromHiLo(false, ^uint64(0)>>1, ^uint64(0), 0),
 		currency: USD,
 	}
 	m.MulInt64(math.MaxInt64)
@@ -396,7 +398,7 @@ func TestMoneyDivInt64Overflow(t *testing.T) {
 	// Dividing by a tiny divisor forces the result's coefficient past 128
 	// bits once rescaled to maxScale digits of precision.
 	m := hugeMoney(USD)
-	if _, err := m.DivInt64(1); !errors.Is(err, ErrOverflow) {
+	if _, err := m.DivInt64(1); !errors.Is(err, decimal.ErrOverflow) {
 		t.Errorf("expected ErrOverflow, got %v", err)
 	}
 }

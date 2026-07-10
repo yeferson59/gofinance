@@ -5,22 +5,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 // ErrCurrencyMismatch is returned by operations that require both operands
 // to share the same currency, such as SafeAdd and SafeSub.
 var ErrCurrencyMismatch = errors.New("money: currency mismatch")
 
-var MoneyZero = Money{value: decZero, currency: USD}
-var MoneyOne = Money{value: decOne, currency: USD}
+var MoneyZero = Money{value: decimal.Zero, currency: USD}
+var MoneyOne = Money{value: decimal.One, currency: USD}
 
 type Money struct {
-	value    decimal128
+	value    decimal.Decimal
 	currency Currency
 }
 
 func New(value int64, precision uint8, currency Currency) (Money, error) {
-	parsedValue, err := decFromInt64(value, precision)
+	parsedValue, err := decimal.NewFromInt64(value, precision)
 	if err != nil {
 		return Money{}, err
 	}
@@ -32,7 +34,7 @@ func New(value int64, precision uint8, currency Currency) (Money, error) {
 }
 
 func NewMoneyFromFloat64(f float64, currency Currency) (Money, error) {
-	parsedValue, err := decFromFloat64(f)
+	parsedValue, err := decimal.NewFromFloat64(f)
 	if err != nil {
 		return Money{}, err
 	}
@@ -53,7 +55,7 @@ func MustMoneyFromFloat64(f float64, currency Currency) Money {
 }
 
 func NewMoneyFromString(s string, currency Currency) (Money, error) {
-	parsedValue, err := parseDecimal(s)
+	parsedValue, err := decimal.NewFromString(s)
 	if err != nil {
 		return Money{}, err
 	}
@@ -78,13 +80,8 @@ func (m Money) ToDecimal() Decimal {
 }
 
 func (m Money) Add(other Money) Money {
-	v, err := m.value.Add(other.value)
-	if err != nil {
-		panic(err)
-	}
-
 	return Money{
-		value:    v,
+		value:    m.value.Add(other.value),
 		currency: m.currency,
 	}
 }
@@ -100,25 +97,15 @@ func (m Money) SafeAdd(other Money) (Money, error) {
 }
 
 func (m Money) Mul(other Money) Money {
-	v, err := m.value.Mul(other.value)
-	if err != nil {
-		panic(err)
-	}
-
 	return Money{
-		value:    v,
+		value:    m.value.Mul(other.value),
 		currency: m.currency,
 	}
 }
 
 func (m Money) Sub(other Money) Money {
-	v, err := m.value.Sub(other.value)
-	if err != nil {
-		panic(err)
-	}
-
 	return Money{
-		value:    v,
+		value:    m.value.Sub(other.value),
 		currency: m.currency,
 	}
 }
@@ -193,25 +180,20 @@ func (m Money) IsNegative() bool {
 // MulInt64 multiplies m by a plain integer factor, such as a quantity
 // (e.g. unit price * quantity).
 func (m Money) MulInt64(n int64) Money {
-	factor, err := decFromInt64(n, 0)
-	if err != nil {
-		panic(err)
-	}
-
-	v, err := m.value.Mul(factor)
+	factor, err := decimal.NewFromInt64(n, 0)
 	if err != nil {
 		panic(err)
 	}
 
 	return Money{
-		value:    v,
+		value:    m.value.Mul(factor),
 		currency: m.currency,
 	}
 }
 
 // DivInt64 divides m by a plain integer divisor.
 func (m Money) DivInt64(n int64) (Money, error) {
-	divisor, err := decFromInt64(n, 0)
+	divisor, err := decimal.NewFromInt64(n, 0)
 	if err != nil {
 		return Money{}, err
 	}
@@ -362,8 +344,8 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 
 	var num json.Number
 	if err := json.Unmarshal(data, &num); err == nil {
-		dec, err := parseDecimalJSON(data)
-		if err != nil {
+		var dec decimal.Decimal
+		if err := dec.UnmarshalJSON(data); err != nil {
 			return err
 		}
 
@@ -378,8 +360,8 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	dec, err := parseDecimalJSON(mj.Value)
-	if err != nil {
+	var dec decimal.Decimal
+	if err := dec.UnmarshalJSON(mj.Value); err != nil {
 		return err
 	}
 
@@ -407,25 +389,25 @@ func (m Money) Value() (driver.Value, error) {
 
 func (m *Money) Scan(src any) error {
 	var (
-		dec decimal128
+		dec decimal.Decimal
 		err error
 	)
 
 	switch v := src.(type) {
 	case []byte:
-		dec, err = parseDecimal(string(v))
+		dec, err = decimal.NewFromString(string(v))
 	case string:
-		dec, err = parseDecimal(v)
+		dec, err = decimal.NewFromString(v)
 	case uint64:
-		dec, err = decFromUint64(v, 0)
+		dec, err = decimal.NewFromUint64(v, 0)
 	case int64:
-		dec, err = decFromInt64(v, 0)
+		dec, err = decimal.NewFromInt64(v, 0)
 	case int:
-		dec, err = decFromInt64(int64(v), 0)
+		dec, err = decimal.NewFromInt64(int64(v), 0)
 	case int32:
-		dec, err = decFromInt64(int64(v), 0)
+		dec, err = decimal.NewFromInt64(int64(v), 0)
 	case float64:
-		dec, err = decFromFloat64(v)
+		dec, err = decimal.NewFromFloat64(v)
 	case nil:
 		err = fmt.Errorf("money: can't scan nil to Money")
 	default:

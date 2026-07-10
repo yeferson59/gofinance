@@ -1,42 +1,43 @@
-package money
+package decimal
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
+	"encoding/json"
+	"math"
 )
 
-// Decimal is money's general-purpose numeric type, a thin wrapper around
-// decimal.Decimal. It exists alongside Money so that rates, factors, and
-// other currency-less quantities (e.g. an exchange rate or a periodic
-// interest rate) can be modeled distinctly from an amount of money.
+var Zero = Decimal{value: decZero}
+var One = Decimal{value: decOne}
+
+// Decimal is a fixed-point decimal number with up to 19 digits of
+// precision after the decimal point, backed by a 128-bit coefficient.
+// It performs arithmetic without heap allocations or external
+// dependencies.
 type Decimal struct {
-	value decimal.Decimal
+	value decimal128
 }
 
-var Zero = Decimal{decimal.Zero}
-var One = Decimal{decimal.One}
-
 func NewFromFloat64(f float64) (Decimal, error) {
-	d, err := decimal.NewFromFloat64(f)
+	decimal, err := decFromFloat64(f)
 
-	return Decimal{d}, err
+	return Decimal{decimal}, err
 }
 
 func NewFromInt64(coef int64, prec uint8) (Decimal, error) {
-	d, err := decimal.NewFromInt64(coef, prec)
+	decimal, err := decFromInt64(coef, prec)
 
-	return Decimal{d}, err
+	return Decimal{decimal}, err
 }
 
 func NewFromUint64(coef uint64, prec uint8) (Decimal, error) {
-	d, err := decimal.NewFromUint64(coef, prec)
+	decimal, err := decFromUint64(coef, prec)
 
-	return Decimal{d}, err
+	return Decimal{decimal}, err
 }
 
 func NewFromHiLo(neg bool, hi, lo uint64, prec uint8) (Decimal, error) {
-	d, err := decimal.NewFromHiLo(neg, hi, lo, prec)
+	decimal, err := decFromHiLo(neg, hi, lo, prec)
 
-	return Decimal{d}, err
+	return Decimal{decimal}, err
 }
 
 func MustFromFloat64(f float64) Decimal {
@@ -76,9 +77,9 @@ func MustFromHiLo(neg bool, hi, lo uint64, prec uint8) Decimal {
 }
 
 func NewFromString(s string) (Decimal, error) {
-	d, err := decimal.NewFromString(s)
+	decimal, err := parseDecimal(s)
 
-	return Decimal{d}, err
+	return Decimal{decimal}, err
 }
 
 func MustFromString(s string) Decimal {
@@ -90,128 +91,178 @@ func MustFromString(s string) Decimal {
 	return d
 }
 
-// ToMoney attaches a currency to d, turning it into a Money value. It
-// defaults to USD when currency is omitted.
-func (d Decimal) ToMoney(currency ...Currency) Money {
-	if len(currency) != 0 {
-		return Money{value: d.value, currency: currency[0]}
-	}
+// TryAdd is like Add but returns an error instead of panicking on overflow.
+func (d Decimal) TryAdd(other Decimal) (Decimal, error) {
+	v, err := d.value.Add(other.value)
 
-	return Money{value: d.value, currency: USD}
+	return Decimal{v}, err
 }
 
 func (d Decimal) Add(other Decimal) Decimal {
-	return Decimal{d.value.Add(other.value)}
+	v, err := d.TryAdd(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// TrySub is like Sub but returns an error instead of panicking on overflow.
+func (d Decimal) TrySub(other Decimal) (Decimal, error) {
+	v, err := d.value.Sub(other.value)
+
+	return Decimal{v}, err
 }
 
 func (d Decimal) Sub(other Decimal) Decimal {
-	return Decimal{d.value.Sub(other.value)}
+	v, err := d.TrySub(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// TryMul is like Mul but returns an error instead of panicking on overflow.
+func (d Decimal) TryMul(other Decimal) (Decimal, error) {
+	v, err := d.value.Mul(other.value)
+
+	return Decimal{v}, err
 }
 
 func (d Decimal) Mul(other Decimal) Decimal {
-	return Decimal{d.value.Mul(other.value)}
+	v, err := d.TryMul(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
 }
 
 func (d Decimal) Div(other Decimal) (Decimal, error) {
-	v, err := d.value.Div(other.value)
+	div, err := d.value.Div(other.value)
 
-	return Decimal{v}, err
+	return Decimal{div}, err
 }
 
 func (d Decimal) MustDiv(other Decimal) Decimal {
-	v, err := d.Div(other)
+	div, err := d.Div(other)
 	if err != nil {
 		panic(err)
 	}
 
-	return v
+	return div
 }
 
+// Pow returns d raised to the power of exponent. decimal128 has no native
+// exponentiation, so the computation is done in float64 via math.Pow and
+// the result converted back to a Decimal. It returns an error if the
+// result isn't a finite number (e.g. a negative base with a fractional
+// exponent, which is undefined).
 func (d Decimal) Pow(exponent Decimal) (Decimal, error) {
-	v, err := d.value.Pow(exponent.value)
+	result := math.Pow(d.InexactFloat64(), exponent.InexactFloat64())
 
-	return Decimal{v}, err
+	return NewFromFloat64(result)
 }
 
+// MustPow is like Pow but panics on error.
 func (d Decimal) MustPow(exponent Decimal) Decimal {
-	v, err := d.Pow(exponent)
+	result, err := d.Pow(exponent)
 	if err != nil {
 		panic(err)
 	}
 
-	return v
+	return result
 }
 
+// Ln returns the natural logarithm (base e) of d. decimal128 has no
+// native logarithm, so the computation is done in float64 via math.Log
+// and the result converted back to a Decimal. It returns an error if d
+// is zero or negative, since the natural logarithm is undefined there.
 func (d Decimal) Ln() (Decimal, error) {
-	v, err := d.value.Ln()
+	result := math.Log(d.InexactFloat64())
 
-	return Decimal{v}, err
+	return NewFromFloat64(result)
 }
 
+// MustLn is like Ln but panics on error.
 func (d Decimal) MustLn() Decimal {
-	v, err := d.Ln()
+	result, err := d.Ln()
 	if err != nil {
 		panic(err)
 	}
 
-	return v
+	return result
 }
 
+// Log10 returns the base-10 logarithm of d.
 func (d Decimal) Log10() (Decimal, error) {
-	v, err := d.value.Log10()
+	result := math.Log10(d.InexactFloat64())
 
-	return Decimal{v}, err
+	return NewFromFloat64(result)
 }
 
+// MustLog10 is like Log10 but panics on error.
 func (d Decimal) MustLog10() Decimal {
-	v, err := d.Log10()
+	result, err := d.Log10()
 	if err != nil {
 		panic(err)
 	}
 
-	return v
+	return result
 }
 
+// Log2 returns the base-2 logarithm of d.
 func (d Decimal) Log2() (Decimal, error) {
-	v, err := d.value.Log2()
+	result := math.Log2(d.InexactFloat64())
 
-	return Decimal{v}, err
+	return NewFromFloat64(result)
 }
 
+// MustLog2 is like Log2 but panics on error.
 func (d Decimal) MustLog2() Decimal {
-	v, err := d.Log2()
+	result, err := d.Log2()
 	if err != nil {
 		panic(err)
 	}
 
-	return v
+	return result
 }
 
+// Log returns the logarithm of d in the given base, computed as
+// Ln(d) / Ln(base). It returns an error if d or base aren't strictly
+// positive, or if base equals 1 (which makes the logarithm undefined).
 func (d Decimal) Log(base Decimal) (Decimal, error) {
-	v, err := d.value.Log(base.value)
+	num := math.Log(d.InexactFloat64())
+	den := math.Log(base.InexactFloat64())
 
-	return Decimal{v}, err
+	if den == 0 {
+		return Decimal{}, ErrDivideByZero
+	}
+
+	return NewFromFloat64(num / den)
 }
 
+// MustLog is like Log but panics on error.
 func (d Decimal) MustLog(base Decimal) Decimal {
-	v, err := d.Log(base)
+	result, err := d.Log(base)
 	if err != nil {
 		panic(err)
 	}
 
-	return v
+	return result
 }
 
 func (d Decimal) Mod(other Decimal) (Decimal, error) {
-	v, err := d.value.Mod(other.value)
+	mod, err := d.value.Mod(other.value)
 
-	return Decimal{v}, err
+	return Decimal{mod}, err
 }
 
 func (d Decimal) Div64(other uint64) (Decimal, error) {
-	v, err := d.value.Div64(other)
+	div, err := d.value.Div64(other)
 
-	return Decimal{v}, err
+	return Decimal{div}, err
 }
 
 func (d Decimal) InexactFloat64() float64 {
@@ -271,7 +322,7 @@ func (d Decimal) StringFixed(prec uint8) string {
 }
 
 func (d Decimal) Float64() (float64, error) {
-	return d.value.Float64()
+	return d.value.InexactFloat64(), nil
 }
 
 func (d Decimal) Int64() (int64, error) {
@@ -311,9 +362,30 @@ func (d Decimal) Equal(other Decimal) bool {
 }
 
 func (d Decimal) MarshalJSON() ([]byte, error) {
-	return d.value.MarshalJSON()
+	return json.Marshal(d.value.String())
 }
 
 func (d *Decimal) UnmarshalJSON(data []byte) error {
-	return d.value.UnmarshalJSON(data)
+	dec, err := parseDecimalJSON(data)
+	if err != nil {
+		return err
+	}
+
+	d.value = dec
+
+	return nil
+}
+
+func parseDecimalJSON(data []byte) (decimal128, error) {
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		return parseDecimal(s)
+	}
+
+	var num json.Number
+	if err := json.Unmarshal(data, &num); err == nil {
+		return parseDecimal(num.String())
+	}
+
+	return decimal128{}, ErrInvalidFormat
 }

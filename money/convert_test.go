@@ -4,6 +4,8 @@ import (
 	"errors"
 	"math"
 	"testing"
+
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 func TestConvertAppliesRateAndCurrency(t *testing.T) {
@@ -72,11 +74,11 @@ func TestConvertFloat64(t *testing.T) {
 
 func TestConvertOverflow(t *testing.T) {
 	huge := Money{
-		value:    decimal128{coef: u128{hi: ^uint64(0) >> 1, lo: ^uint64(0)}, scale: 0},
+		value:    decimal.MustFromHiLo(false, ^uint64(0)>>1, ^uint64(0), 0),
 		currency: USD,
 	}
 
-	if _, err := huge.Convert(EUR, MustFromFloat64(1e30)); !errors.Is(err, ErrOverflow) {
+	if _, err := huge.Convert(EUR, MustFromFloat64(1e30)); !errors.Is(err, decimal.ErrOverflow) {
 		t.Errorf("expected ErrOverflow, got %v", err)
 	}
 }
@@ -96,11 +98,11 @@ func TestMustConvertSuccess(t *testing.T) {
 func TestConvertFloat64InvalidRate(t *testing.T) {
 	usd := MustMoneyFromFloat64(10, USD)
 
-	if _, err := usd.ConvertFloat64(EUR, math.NaN()); !errors.Is(err, ErrInvalidFormat) {
-		t.Errorf("expected ErrInvalidFormat for NaN rate, got %v", err)
+	if _, err := usd.ConvertFloat64(EUR, math.NaN()); !errors.Is(err, decimal.ErrInvalidFormat) {
+		t.Errorf("expected decimal.ErrInvalidFormat for NaN rate, got %v", err)
 	}
-	if _, err := usd.ConvertFloat64(EUR, math.Inf(1)); !errors.Is(err, ErrInvalidFormat) {
-		t.Errorf("expected ErrInvalidFormat for +Inf rate, got %v", err)
+	if _, err := usd.ConvertFloat64(EUR, math.Inf(1)); !errors.Is(err, decimal.ErrInvalidFormat) {
+		t.Errorf("expected decimal.ErrInvalidFormat for +Inf rate, got %v", err)
 	}
 }
 

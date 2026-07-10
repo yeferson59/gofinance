@@ -3,6 +3,8 @@ package money
 import (
 	"errors"
 	"testing"
+
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 func TestAllocateSumsExactly(t *testing.T) {
@@ -92,7 +94,7 @@ func TestAllocateEvenlyInvalidCount(t *testing.T) {
 }
 
 func TestAllocateInvalidCurrency(t *testing.T) {
-	m := Money{value: decOne, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(9999)}
 
 	if _, err := m.Allocate(1, 1); err == nil {
 		t.Error("expected error for unknown currency")
@@ -104,11 +106,11 @@ func TestAllocateOverflow(t *testing.T) {
 	// the uint32 ceiling, overflows well past 128 bits during Allocate's
 	// internal share = m.value * ratio step.
 	huge := Money{
-		value:    decimal128{coef: u128{hi: ^uint64(0) >> 1, lo: ^uint64(0)}, scale: 0},
+		value:    decimal.MustFromHiLo(false, ^uint64(0)>>1, ^uint64(0), 0),
 		currency: USD,
 	}
 
-	if _, err := huge.Allocate(1, ^uint32(0)); !errors.Is(err, ErrOverflow) {
+	if _, err := huge.Allocate(1, ^uint32(0)); !errors.Is(err, decimal.ErrOverflow) {
 		t.Errorf("expected ErrOverflow, got %v", err)
 	}
 }
@@ -146,7 +148,7 @@ func TestAllocateZeroPrecisionCurrency(t *testing.T) {
 }
 
 func TestAllocateEvenlyInvalidCurrency(t *testing.T) {
-	m := Money{value: decOne, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(9999)}
 
 	if _, err := m.AllocateEvenly(3); err == nil {
 		t.Error("expected error for unknown currency")

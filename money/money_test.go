@@ -3,6 +3,8 @@ package money
 import (
 	"errors"
 	"testing"
+
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 func TestSafeAddSameCurrency(t *testing.T) {
@@ -133,7 +135,7 @@ func TestDivInt64(t *testing.T) {
 		t.Errorf("expected 10.00, got %s", share.StringFixed(2))
 	}
 
-	if _, err := total.DivInt64(0); !errors.Is(err, ErrDivideByZero) {
+	if _, err := total.DivInt64(0); !errors.Is(err, decimal.ErrDivideByZero) {
 		t.Errorf("expected ErrDivideByZero, got %v", err)
 	}
 }
@@ -235,7 +237,7 @@ func TestMoneyStringMoney(t *testing.T) {
 }
 
 func TestMoneyStringMoneyInvalidCurrency(t *testing.T) {
-	m := Money{value: decOne, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(9999)}
 
 	if _, err := m.StringMoney(); err == nil {
 		t.Error("expected error for unknown currency")
@@ -243,7 +245,7 @@ func TestMoneyStringMoneyInvalidCurrency(t *testing.T) {
 }
 
 func TestMoneyFormatInvalidCurrency(t *testing.T) {
-	m := Money{value: decOne, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(9999)}
 
 	if _, err := m.Format(); err == nil {
 		t.Error("expected error for unknown currency")

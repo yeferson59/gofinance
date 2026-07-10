@@ -18,7 +18,7 @@ func (m Money) Convert(to Currency, rate Decimal) (Money, error) {
 		return Money{}, ErrInvalidExchangeRate
 	}
 
-	v, err := m.value.Mul(rate.value)
+	v, err := m.value.TryMul(rate.value)
 	if err != nil {
 		return Money{}, err
 	}

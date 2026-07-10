@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `money.SafeAdd`/`money.SafeSub` currency-checked arithmetic returning `ErrCurrencyMismatch` on mixed currencies
 - `simpleinterest` builder `PresentValue()` convenience method
 - Manual Release GitHub Actions workflow (`workflow_dispatch`) to create a version tag and GitHub Release with a semver bump or explicit version
+- New standalone `decimal` package (`github.com/yeferson59/gofinance/decimal`): the fixed-point decimal engine that used to live inside `money` is now independently importable, with error-returning `TryAdd`/`TrySub`/`TryMul` alongside the existing panicking `Add`/`Sub`/`Mul`
 
 ### Changed
 - **Performance**: Eliminated duplicate `math.Pow()` call in annuities Present() calculation
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Performance**: Cached repeated exponential calculations in rate conversion methods
 - **Breaking**: `simpleinterest.Periods()` and `PeriodsWithPresentAndFuture()` now return `money.Decimal` instead of `money.Money`, matching `compositeinterest.Periods()`
 - **Breaking**: `SimpleConfig.Build()` and `CompositeConfig.Build()` now use value receivers so documented fluent chains compile
+- **Breaking**: `money`'s decimal engine moved into the new `decimal` package; `money.ErrOverflow`, `ErrDivideByZero`, `ErrEmptyString`, `ErrInvalidFormat`, `ErrPrecOutOfRange`, and `ErrIntPartOverflow` no longer exist — use `decimal.ErrOverflow`, etc. instead. `money.Decimal` and `money.Money` keep their existing public methods, now implemented as a wrapper around `decimal.Decimal`
 - `compositeinterest.NewComposite()` now defaults the rate type to `RateEffectyPeriodic`, matching `annuities.NewAnnuity()`
 - `money.MoneyZero`/`money.MoneyOne` now use the `USD` constant instead of the magic number 143
 - `compositeinterest.Bimonthly` constant value corrected from `"Bimontly"` to `"bimonthly"`

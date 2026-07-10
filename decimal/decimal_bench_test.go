@@ -1,6 +1,8 @@
-package money
+package decimal
 
-import "testing"
+import (
+	"testing"
+)
 
 func BenchmarkDecimalAdd(b *testing.B) {
 	x := MustFromString("12345.6789")
@@ -50,14 +52,5 @@ func BenchmarkDecimalString(b *testing.B) {
 	b.ReportAllocs()
 	for b.Loop() {
 		_ = x.String()
-	}
-}
-
-func BenchmarkMoneyAdd(b *testing.B) {
-	x := MustMoneyFromString("12345.68", USD)
-	y := MustMoneyFromString("987.65", USD)
-	b.ReportAllocs()
-	for b.Loop() {
-		_ = x.Add(y)
 	}
 }
