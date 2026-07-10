@@ -25,6 +25,7 @@ func (a Annuity) Future() (money.Money, error) {
 	if err != nil {
 		return money.Money{}, err
 	}
+
 	accumulationFactor := quotient
 
 	futureDecimal := a.value.Mul(accumulationFactor.ToMoney(a.value.Currency()))
@@ -42,7 +43,7 @@ func (a Annuity) AnticipateFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	numerator, err := money.NewFromFloat64(math.Pow(rateInterest.Add(money.One).InexactFloat64(), money.One.Add(periods).InexactFloat64()))
+	numerator, err := rateInterest.Add(money.One).Pow(money.One.Add(periods))
 	if err != nil {
 		return money.Money{}, err
 	}
