@@ -47,6 +47,7 @@ func newDec(neg bool, coef u128, scale uint8) decimal128 {
 	if coef.IsZero() {
 		return decimal128{}
 	}
+
 	return decimal128{coef: coef, neg: neg, scale: scale}
 }
 
@@ -57,6 +58,7 @@ func mulPow10(coef u128, exp uint8) (u128, bool) {
 	if exp == 0 {
 		return coef, true
 	}
+
 	return coef.Mul64(pow10[exp].lo)
 }
 
@@ -64,6 +66,7 @@ func decFromUint64(coef uint64, scale uint8) (decimal128, error) {
 	if scale > maxScale {
 		return decimal128{}, ErrPrecOutOfRange
 	}
+
 	return newDec(false, u128FromU64(coef), scale), nil
 }
 
@@ -76,6 +79,7 @@ func decFromInt64(coef int64, scale uint8) (decimal128, error) {
 		neg bool
 		mag uint64
 	)
+
 	switch {
 	case coef < 0 && coef == math.MinInt64:
 		neg = true
@@ -94,6 +98,7 @@ func decFromHiLo(neg bool, hi, lo uint64, scale uint8) (decimal128, error) {
 	if scale > maxScale {
 		return decimal128{}, ErrPrecOutOfRange
 	}
+
 	return newDec(neg, u128{hi: hi, lo: lo}, scale), nil
 }
 
@@ -103,6 +108,7 @@ func decFromFloat64(f float64) (decimal128, error) {
 	}
 
 	s := strconv.FormatFloat(f, 'f', -1, 64)
+
 	return parseDecimal(s)
 }
 
@@ -113,8 +119,9 @@ func parseDecimal(s string) (decimal128, error) {
 		return decimal128{}, ErrEmptyString
 	}
 
-	i := 0
-	neg := false
+	var i int
+	var neg bool
+
 	switch s[0] {
 	case '-':
 		neg = true
@@ -141,7 +148,9 @@ func parseDecimal(s string) (decimal128, error) {
 			if seenDot {
 				return decimal128{}, ErrInvalidFormat
 			}
+
 			seenDot = true
+
 			continue
 		}
 
@@ -151,7 +160,9 @@ func parseDecimal(s string) (decimal128, error) {
 
 		seenDigit = true
 		if seenDot {
+
 			fracDigits++
+
 			if fracDigits > int(maxScale) {
 				return decimal128{}, ErrPrecOutOfRange
 			}
@@ -161,6 +172,7 @@ func parseDecimal(s string) (decimal128, error) {
 		if !ok {
 			return decimal128{}, ErrOverflow
 		}
+
 		coef, ok = coef.Add64(uint64(c - '0'))
 		if !ok {
 			return decimal128{}, ErrOverflow
@@ -190,9 +202,11 @@ func (a decimal128) Sign() int {
 	if a.coef.IsZero() {
 		return 0
 	}
+
 	if a.neg {
 		return -1
 	}
+
 	return 1
 }
 
@@ -200,6 +214,7 @@ func (a decimal128) Neg() decimal128 {
 	if a.coef.IsZero() {
 		return a
 	}
+
 	return decimal128{coef: a.coef, neg: !a.neg, scale: a.scale}
 }
 
@@ -225,6 +240,7 @@ func (a decimal128) cmpMagnitude(b decimal128) int {
 		if !ok {
 			return -1
 		}
+
 		return a.coef.Cmp(scaled)
 	}
 }
@@ -233,6 +249,7 @@ func (a decimal128) Cmp(b decimal128) int {
 	if a.neg && !b.neg {
 		return -1
 	}
+
 	if !a.neg && b.neg {
 		return 1
 	}
@@ -241,6 +258,7 @@ func (a decimal128) Cmp(b decimal128) int {
 	if a.neg {
 		return -cmp
 	}
+
 	return cmp
 }
 
@@ -273,6 +291,7 @@ func (a decimal128) Add(b decimal128) (decimal128, error) {
 		if !ok {
 			return decimal128{}, ErrOverflow
 		}
+
 		return newDec(a.neg, sum, scale), nil
 	}
 
@@ -281,9 +300,11 @@ func (a decimal128) Add(b decimal128) (decimal128, error) {
 		return decimal128{}, nil
 	case 1:
 		d, _ := ac.Sub(bc)
+
 		return newDec(a.neg, d, scale), nil
 	default:
 		d, _ := bc.Sub(ac)
+
 		return newDec(b.neg, d, scale), nil
 	}
 }
@@ -317,6 +338,7 @@ func (a decimal128) Mul(b decimal128) (decimal128, error) {
 	if !ok {
 		return decimal128{}, ErrOverflow
 	}
+
 	return newDec(neg, q, maxScale), nil
 }
 
@@ -326,6 +348,7 @@ func (a decimal128) Div(b decimal128) (decimal128, error) {
 	if b.coef.IsZero() {
 		return decimal128{}, ErrDivideByZero
 	}
+
 	if a.coef.IsZero() {
 		return decimal128{}, nil
 	}
@@ -338,6 +361,7 @@ func (a decimal128) Div(b decimal128) (decimal128, error) {
 	if !ok {
 		return decimal128{}, ErrOverflow
 	}
+
 	return newDec(neg, q, maxScale), nil
 }
 
@@ -347,6 +371,7 @@ func (a decimal128) Div64(v uint64) (decimal128, error) {
 	if v == 0 {
 		return decimal128{}, ErrDivideByZero
 	}
+
 	if a.coef.IsZero() {
 		return decimal128{}, nil
 	}
@@ -356,6 +381,7 @@ func (a decimal128) Div64(v uint64) (decimal128, error) {
 	if !ok {
 		return decimal128{}, ErrOverflow
 	}
+
 	return newDec(a.neg, q, maxScale), nil
 }
 
@@ -365,19 +391,18 @@ func (a decimal128) QuoRem(b decimal128) (q, r decimal128, err error) {
 	if b.coef.IsZero() {
 		return decimal128{}, decimal128{}, ErrDivideByZero
 	}
+
 	if a.coef.IsZero() {
 		return decimal128{}, decimal128{}, nil
 	}
 
-	factor := a.scale
-	if b.scale > factor {
-		factor = b.scale
-	}
+	factor := max(b.scale, a.scale)
 
 	ac, ok := mulPow10(a.coef, factor-a.scale)
 	if !ok {
 		return decimal128{}, decimal128{}, ErrOverflow
 	}
+
 	bc, ok := mulPow10(b.coef, factor-b.scale)
 	if !ok {
 		return decimal128{}, decimal128{}, ErrOverflow
@@ -390,11 +415,13 @@ func (a decimal128) QuoRem(b decimal128) (q, r decimal128, err error) {
 
 	q = newDec(a.neg != b.neg, qc, 0)
 	r = newDec(a.neg, rc, factor)
+
 	return q, r, nil
 }
 
 func (a decimal128) Mod(b decimal128) (decimal128, error) {
 	_, r, err := a.QuoRem(b)
+
 	return r, err
 }
 
@@ -412,6 +439,7 @@ func (a decimal128) RoundBank(prec uint8) decimal128 {
 	if half < r || (half == r && q.lo%2 == 1) {
 		q, _ = q.Add64(1)
 	}
+
 	return newDec(a.neg, q, prec)
 }
 
@@ -427,6 +455,7 @@ func (a decimal128) RoundAway(prec uint8) decimal128 {
 	if r != 0 {
 		q, _ = q.Add64(1)
 	}
+
 	return newDec(a.neg, q, prec)
 }
 
@@ -470,6 +499,7 @@ func (a decimal128) Trunc(prec uint8) decimal128 {
 
 	factor := pow10[a.scale-prec].lo
 	q, _ := a.coef.QuoRem64(factor)
+
 	return newDec(a.neg, q, prec)
 }
 
@@ -484,6 +514,7 @@ func (a decimal128) Floor() decimal128 {
 	if a.neg && r != 0 {
 		q, _ = q.Add64(1)
 	}
+
 	return newDec(a.neg, q, 0)
 }
 
@@ -498,6 +529,7 @@ func (a decimal128) Ceil() decimal128 {
 	if !a.neg && r != 0 {
 		q, _ = q.Add64(1)
 	}
+
 	return newDec(a.neg, q, 0)
 }
 
@@ -512,11 +544,13 @@ func (a decimal128) Int64() (int64, error) {
 	if t.neg {
 		v = -v
 	}
+
 	return v, nil
 }
 
 func (a decimal128) InexactFloat64() float64 {
 	f, _ := strconv.ParseFloat(a.String(), 64)
+
 	return f
 }
 
@@ -534,9 +568,11 @@ func (a decimal128) trimTrailingZeros() decimal128 {
 		if r != 0 {
 			break
 		}
+
 		coef = q
 		scale--
 	}
+
 	return decimal128{coef: coef, neg: a.neg, scale: scale}
 }
 
@@ -548,6 +584,7 @@ func (a decimal128) rescale(prec uint8) decimal128 {
 	if prec > maxScale {
 		prec = maxScale
 	}
+
 	if prec <= dTrim.scale {
 		return dTrim
 	}
@@ -568,6 +605,7 @@ func (a decimal128) String() string {
 	if a.coef.IsZero() {
 		return "0"
 	}
+
 	return a.formatString(a.scale, true)
 }
 
@@ -579,6 +617,7 @@ func (a decimal128) StringFixed(prec uint8) string {
 	if prec < d.scale {
 		return d.String()
 	}
+
 	return d.formatString(d.scale, false)
 }
 
@@ -600,13 +639,17 @@ func (a decimal128) formatString(scale uint8, trim bool) string {
 	}
 
 	var b strings.Builder
+
 	if a.neg {
 		b.WriteByte('-')
 	}
+
 	b.WriteString(intPart)
+
 	if len(fracPart) > 0 {
 		b.WriteByte('.')
 		b.WriteString(fracPart)
 	}
+
 	return b.String()
 }
