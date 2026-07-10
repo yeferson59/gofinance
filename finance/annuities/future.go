@@ -31,3 +31,26 @@ func (a Annuity) Future() (money.Money, error) {
 
 	return futureDecimal, nil
 }
+
+func (a Annuity) AnticipateFuture() (money.Money, error) {
+	if future, err := a.compositeInterest.Future(); err == nil && !future.IsZero() {
+		return future, nil
+	}
+
+	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	numerator, err := money.NewFromFloat64(math.Pow(rateInterest.Add(money.One).InexactFloat64(), money.One.Add(periods).InexactFloat64()))
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	resultDiv, err := numerator.Div(rateInterest)
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return resultDiv.Sub(money.One).Mul(a.value.ToDecimal()).ToMoney(a.value.Currency()), nil
+}
