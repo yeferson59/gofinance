@@ -5,9 +5,6 @@ import (
 )
 
 func (a Annuity) Future() (money.Money, error) {
-	// If the underlying compound interest data can already resolve a future
-	// value (explicit or derivable), use it. Otherwise fall back to the
-	// annuity formula based on the periodic payment.
 	if future, err := a.compositeInterest.Future(); err == nil && !future.IsZero() {
 		return future, nil
 	}
@@ -17,20 +14,17 @@ func (a Annuity) Future() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthFactor := rateInterest.Add(money.One)
-
-	growthPower := growthFactor.MustPow(periods)
-
-	quotient, err := growthPower.Sub(money.One).Div(rateInterest)
+	growthPower, err := money.One.Add(rateInterest).Pow(periods)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	accumulationFactor := quotient
+	result, err := growthPower.Sub(money.One).Div(rateInterest)
+	if err != nil {
+		return money.Money{}, err
+	}
 
-	futureDecimal := a.value.Mul(accumulationFactor.ToMoney(a.value.Currency()))
-
-	return futureDecimal, nil
+	return a.value.ToDecimal().Mul(result).ToMoney(a.value.Currency()), nil
 }
 
 func (a Annuity) AnticipateFuture() (money.Money, error) {
@@ -48,10 +42,10 @@ func (a Annuity) AnticipateFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	resultDiv, err := numerator.Div(rateInterest)
+	result, err := numerator.Div(rateInterest)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return resultDiv.Sub(money.One).Mul(a.value.ToDecimal()).ToMoney(a.value.Currency()), nil
+	return result.Sub(money.One).Mul(a.value.ToDecimal()).ToMoney(a.value.Currency()), nil
 }

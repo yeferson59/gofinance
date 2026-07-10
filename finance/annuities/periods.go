@@ -35,30 +35,27 @@ func (a Annuity) PeriodsWithPresent() (money.Decimal, error) {
 		return money.Decimal{}, err
 	}
 
-	presentFloat := present.InexactFloat64()
-	valueFloat := a.value.InexactFloat64()
-	rateFloat := rateInterest.InexactFloat64()
+	ratio, err := a.value.ToDecimal().Div(a.value.ToDecimal().Sub(present.ToDecimal().Mul(rateInterest)))
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 1: Calculate the denominator base: Present × rate
-	presentTimesRate := presentFloat * rateFloat
+	logarithmRatio, err := ratio.Ln()
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 2: Calculate the denominator: PMT - (PV × rate)
-	denominatorValue := valueFloat - presentTimesRate
+	logarithmGrowth, err := money.One.Add(rateInterest).Ln()
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 3: Calculate the ratio: PMT / (PMT - (PV × rate))
-	ratio := valueFloat / denominatorValue
+	periods, err := logarithmRatio.Div(logarithmGrowth)
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 4: Calculate the natural logarithm of the ratio (numerator)
-	logarithmRatio := money.MustFromFloat64(ratio).MustLn().InexactFloat64()
-
-	// Step 5: Calculate the natural logarithm of the growth factor (denominator)
-	growthFactor := 1 + rateFloat
-	logarithmGrowth := money.MustFromFloat64(growthFactor).MustLn().InexactFloat64()
-
-	// Step 6: Divide to get the number of periods
-	periods := logarithmRatio / logarithmGrowth
-
-	return money.MustFromFloat64(periods), nil
+	return periods, nil
 }
 
 // PeriodsWithFuture calculates the number of periods needed for periodic payments to reach
@@ -92,31 +89,25 @@ func (a Annuity) PeriodsWithFuture() (money.Decimal, error) {
 		return money.Decimal{}, err
 	}
 
-	futureFloat := future.InexactFloat64()
-	valueFloat := a.value.InexactFloat64()
-	rateFloat := rateInterest.InexactFloat64()
+	ratio, err := future.ToDecimal().Mul(rateInterest).Add(a.value.ToDecimal()).Div(a.value.ToDecimal())
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 1: Calculate the numerator base: Future × rate
-	futureTimesRate := futureFloat * rateFloat
+	logarithmRatio, err := ratio.Ln()
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 2: Calculate the numerator: (FV × rate) + PMT
-	numeratorValue := futureTimesRate + valueFloat
+	logarithmGrowth, err := money.One.Add(rateInterest).Ln()
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 3: Calculate the natural logarithm of the numerator
-	logarithmNumerator := money.MustFromFloat64(numeratorValue).MustLn().InexactFloat64()
+	periods, err := logarithmRatio.Div(logarithmGrowth)
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	// Step 4: Calculate the natural logarithm of the denominator (PMT)
-	logarithmDenominator := money.MustFromFloat64(valueFloat).MustLn().InexactFloat64()
-
-	// Step 5: Calculate the numerator of the periods formula
-	logarithmRatio := logarithmNumerator - logarithmDenominator
-
-	// Step 6: Calculate the natural logarithm of the growth factor
-	growthFactor := 1 + rateFloat
-	logarithmGrowth := money.MustFromFloat64(growthFactor).MustLn().InexactFloat64()
-
-	// Step 7: Divide to get the number of periods
-	periods := logarithmRatio / logarithmGrowth
-
-	return money.MustFromFloat64(periods), nil
+	return periods, nil
 }

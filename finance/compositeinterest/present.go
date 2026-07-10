@@ -43,9 +43,15 @@ func (c CompositeInterest) Present() (money.Money, error) {
 	}
 
 	growthFactor := periodicRate.Add(money.One)
-	discountFactor := growthFactor.MustPow(numberOfPeriods)
+	discountFactor, err := growthFactor.Pow(numberOfPeriods)
+	if err != nil {
+		return money.Money{}, err
+	}
 
-	present := c.future.MustDiv(discountFactor.ToMoney(c.future.Currency()))
+	present, err := c.future.ToDecimal().Div(discountFactor)
+	if err != nil {
+		return money.Money{}, err
+	}
 
-	return present, nil
+	return present.ToMoney(c.future.Currency()), nil
 }

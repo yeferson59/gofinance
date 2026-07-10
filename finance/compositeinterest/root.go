@@ -240,7 +240,12 @@ func (c CompositeInterest) GetEqualsRateInterestPeriods() (money.Decimal, money.
 				return periodsInMonths.Mul(periodValue), periodicRate, nil
 			}
 
-			return periodValue.MustDiv(rateFrequencyInMonths), periodicRate, nil
+			div, err := periodValue.Div(rateFrequencyInMonths)
+			if err != nil {
+				return money.Decimal{}, money.Decimal{}, err
+			}
+
+			return div, periodicRate, nil
 		}
 
 		return periodsInMonths.Mul(periodValue), periodicRate, nil

@@ -42,13 +42,20 @@ func (c CompositeInterest) Interest() (money.Decimal, error) {
 		return money.Decimal{}, ErrInvalidOperation
 	}
 
-	futureToPresent := c.future.MustDiv(c.present)
+	futureToPresent, err := c.future.Div(c.present)
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	reciprocalPeriods := money.One.MustDiv(numberOfPeriods)
+	reciprocalPeriods, err := money.One.Div(numberOfPeriods)
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	growthFactor := futureToPresent.ToDecimal().MustPow(reciprocalPeriods).InexactFloat64()
+	growthFactor, err := futureToPresent.ToDecimal().Pow(reciprocalPeriods)
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	periodicRate := growthFactor - 1
-
-	return money.MustFromFloat64(periodicRate), nil
+	return growthFactor.Sub(money.One), nil
 }

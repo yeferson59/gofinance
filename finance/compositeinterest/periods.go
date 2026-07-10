@@ -42,14 +42,26 @@ func (c CompositeInterest) Periods() (money.Decimal, error) {
 		return money.Decimal{}, ErrInvalidOperation
 	}
 
-	futureToPresent := c.future.MustDiv(c.present)
+	futureToPresent, err := c.future.Div(c.present)
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	logarithmRatio := futureToPresent.ToDecimal().MustLn()
+	logarithmRatio, err := futureToPresent.ToDecimal().Ln()
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
 	growthFactor := periodicRate.Add(money.One)
-	logarithmGrowth := growthFactor.MustLn()
+	logarithmGrowth, err := growthFactor.Ln()
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
-	numberOfPeriods := logarithmRatio.MustDiv(logarithmGrowth)
+	numberOfPeriods, err := logarithmRatio.Div(logarithmGrowth)
+	if err != nil {
+		return money.Decimal{}, err
+	}
 
 	return numberOfPeriods, nil
 }

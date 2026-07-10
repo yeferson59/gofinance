@@ -26,19 +26,35 @@ func (rt RateInterest) RatePeriodic() (money.Decimal, error) {
 		return money.Decimal{}, err
 	}
 
-	var periodicRate money.Decimal
-
 	if rt.typeRate == RateEffectyNominal {
-		periodicRate = rt.value.MustDiv(compoundingPeriodsPerYear)
+		periodicRate, err := rt.value.Div(compoundingPeriodsPerYear)
+		if err != nil {
+			return money.Decimal{}, err
+		}
+
+		return periodicRate, nil
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		pow := rt.value.Add(money.One).MustPow(money.One.MustDiv(compoundingPeriodsPerYear))
-		nominalRate := compoundingPeriodsPerYear.Mul(pow.Sub(money.One))
-		periodicRate = nominalRate.MustDiv(compoundingPeriodsPerYear)
+		div, err := money.One.Div(compoundingPeriodsPerYear)
+		if err != nil {
+			return money.Decimal{}, err
+		}
+
+		pow, err := rt.value.Add(money.One).Pow(div)
+		if err != nil {
+			return money.Decimal{}, err
+		}
+
+		periodicRate, err := compoundingPeriodsPerYear.Mul(pow.Sub(money.One)).Div(compoundingPeriodsPerYear)
+		if err != nil {
+			return money.Decimal{}, err
+		}
+
+		return periodicRate, nil
 	}
 
-	return periodicRate, nil
+	return money.Decimal{}, nil
 }
 
 // RateNominal converts the current interest rate to a nominal rate.
