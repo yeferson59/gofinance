@@ -22,6 +22,7 @@ var (
 	ErrIntPartOverflow = errors.New("money: integer part is too large to fit in int64")
 	ErrLogNonPositive  = errors.New("money: logarithm of a non-positive number is undefined")
 	ErrPowNegBase      = errors.New("money: negative base with a non-integer exponent is undefined")
+	ErrSqrtNegative    = errors.New("money: square root of a negative number is undefined")
 )
 
 // decimal128 is a fixed-point decimal number backed by a 128-bit unsigned

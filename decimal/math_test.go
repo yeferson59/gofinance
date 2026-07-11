@@ -555,6 +555,112 @@ func TestPowOverflowAndUnderflow(t *testing.T) {
 	}
 }
 
+func TestSqrtExactSquares(t *testing.T) {
+	cases := [][2]string{
+		{"0", "0"},
+		{"1", "1"},
+		{"4", "2"},
+		{"100", "10"},
+		{"2.25", "1.5"},
+		{"0.25", "0.5"},
+		{"0.0625", "0.25"},
+		{"152.2756", "12.34"},
+		{"100000000000000000000000000000000000000", "10000000000000000000"}, // sqrt(10^38) = 10^19
+	}
+
+	for _, tt := range cases {
+		got, err := mustParseDec(t, tt[0]).Sqrt()
+		if err != nil {
+			t.Fatalf("Sqrt(%s): %v", tt[0], err)
+		}
+		if got.String() != tt[1] {
+			t.Errorf("Sqrt(%s) = %s, want %s", tt[0], got.String(), tt[1])
+		}
+	}
+}
+
+func TestSqrtKnownValues(t *testing.T) {
+	cases := [][2]string{
+		// sqrt(2) = 1.4142135623730950488016887...
+		{"2", "1.4142135623730950488"},
+		// sqrt(3) = 1.7320508075688772935274463...
+		{"3", "1.7320508075688772935"},
+		// sqrt(0.5) = 0.7071067811865475244008443...
+		{"0.5", "0.7071067811865475244"},
+		// sqrt(10) = 3.1622776601683793319988935... rounds up, zero trimmed
+		{"10", "3.162277660168379332"},
+		// smallest positive value: sqrt(1e-19) = 3.1622776601...e-10, whose
+		// scale-19 coefficient rounds to 3162277660
+		{"0.0000000000000000001", "0.000000000316227766"},
+	}
+
+	for _, tt := range cases {
+		got, err := mustParseDec(t, tt[0]).Sqrt()
+		if err != nil {
+			t.Fatalf("Sqrt(%s): %v", tt[0], err)
+		}
+		if got.String() != tt[1] {
+			t.Errorf("Sqrt(%s) = %s, want %s", tt[0], got.String(), tt[1])
+		}
+	}
+}
+
+func TestSqrtNegative(t *testing.T) {
+	if _, err := mustParseDec(t, "-4").Sqrt(); !errors.Is(err, ErrSqrtNegative) {
+		t.Errorf("Sqrt(-4): got %v, want ErrSqrtNegative", err)
+	}
+}
+
+// TestSqrtCrossCheckRandom checks correct rounding against big.Float.Sqrt:
+// since exact ties are impossible, the result must always be within half
+// an ulp of the true root.
+func TestSqrtCrossCheckRandom(t *testing.T) {
+	r := rand.New(rand.NewSource(31))
+	halfUlp := refFromString(t, "0.5000001e-19")
+
+	for range 2000 {
+		s := strings.TrimPrefix(randDecimalString(r, 12, 15), "-")
+		a := mustParseDec(t, s)
+
+		got, err := a.Sqrt()
+		if err != nil {
+			t.Fatalf("Sqrt(%s): %v", s, err)
+		}
+
+		want := new(big.Float).SetPrec(refPrec).Sqrt(refFromString(t, s))
+		assertClose(t, "Sqrt("+s+")", got, want, halfUlp)
+	}
+}
+
+// TestSqrtCrossCheckSpec replicates the rounding spec with big.Int over
+// extreme coefficients: coefficient = nearest integer to
+// sqrt(coef * 10^(38-scale)).
+func TestSqrtCrossCheckSpec(t *testing.T) {
+	r := rand.New(rand.NewSource(32))
+
+	for range 2000 {
+		a := newDec(false, u128{hi: r.Uint64(), lo: r.Uint64()}, uint8(r.Intn(20)))
+
+		got, err := a.Sqrt()
+		if err != nil {
+			t.Fatalf("Sqrt(%s): %v", a.String(), err)
+		}
+
+		n := new(big.Int).Mul(u128ToBig(a.coef),
+			new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(38-a.scale)), nil))
+		sq := new(big.Int).Sqrt(n)
+		bound := new(big.Int).Mul(sq, new(big.Int).Add(sq, big.NewInt(1)))
+		if n.Cmp(bound) > 0 {
+			sq.Add(sq, big.NewInt(1))
+		}
+
+		want := newDec(false, u128FromBig(t, sq), maxScale)
+		if !got.Equal(want) {
+			t.Fatalf("Sqrt(%s) = %s, want %s", a.String(), got.String(), want.String())
+		}
+	}
+}
+
 func TestU128DecimalDigits(t *testing.T) {
 	if got := u128Zero.decimalDigits(); got != 1 {
 		t.Errorf("digits(0) = %d, want 1", got)

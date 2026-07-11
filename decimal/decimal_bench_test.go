@@ -80,6 +80,14 @@ func BenchmarkDecimalPowInt(b *testing.B) {
 	}
 }
 
+func BenchmarkDecimalSqrt(b *testing.B) {
+	x := MustFromString("12345.6789")
+	b.ReportAllocs()
+	for b.Loop() {
+		_, _ = x.Sqrt()
+	}
+}
+
 func BenchmarkDecimalPowFrac(b *testing.B) {
 	x := MustFromString("1.05")
 	n := MustFromString("2.5")

@@ -344,6 +344,65 @@ func (a decimal128) Log(base decimal128) (decimal128, error) {
 	return newDec(neg, coef, 0), nil
 }
 
+// isqrt256 returns floor(sqrt(n)) for n > 0, using Newton's integer
+// iteration x <- (x + n/x)/2 from an initial upper bound. Starting at
+// 2^ceil(bitLen/2) >= sqrt(n), the sequence decreases monotonically to
+// floor(sqrt(n)) and converges quadratically (~8 division steps).
+func isqrt256(n u256) u128 {
+	x := u128{hi: ^uint64(0), lo: ^uint64(0)}
+	if shift := (n.bitLen() + 1) / 2; shift < 128 {
+		if shift >= 64 {
+			x = u128{hi: 1 << (shift - 64)}
+		} else {
+			x = u128{lo: 1 << shift}
+		}
+	}
+
+	for {
+		// x >= floor(sqrt(n)) throughout, so q = n/x <= sqrt(n) always
+		// fits in 128 bits.
+		q, _, _ := n.QuoRem128(x)
+
+		// y = (x + q) / 2, keeping the 129-bit sum's carry.
+		lo, c := bits.Add64(x.lo, q.lo, 0)
+		hi, c := bits.Add64(x.hi, q.hi, c)
+		y := u128{hi: c<<63 | hi>>1, lo: hi<<63 | lo>>1}
+
+		if y.Cmp(x) >= 0 {
+			return x
+		}
+
+		x = y
+	}
+}
+
+// Sqrt returns the square root of a, correctly rounded to the nearest
+// maxScale-digit value (exact ties are impossible: (s+0.5)^2 is never an
+// integer). It errors if a < 0.
+func (a decimal128) Sqrt() (decimal128, error) {
+	if a.coef.IsZero() {
+		return decimal128{}, nil
+	}
+
+	if a.neg {
+		return decimal128{}, ErrSqrtNegative
+	}
+
+	// The result at scale 19 has coefficient round(sqrt(coef*10^(38-scale))).
+	// The radicand n < 2^128 * 10^38 < 2^255 always fits in 256 bits, and
+	// even the maximum input (2^128-1 at scale 0) roots to ~1.85e19, whose
+	// scale-19 coefficient ~1.85e38 still fits in 128 bits.
+	n := a.coef.MulFull(pow10[38-a.scale])
+	s := isqrt256(n)
+
+	// Round to nearest: sqrt(n) > s+0.5 iff n > s*(s+1).
+	if sInc, _ := s.Add64(1); n.cmp(s.MulFull(sInc)) > 0 {
+		s = sInc
+	}
+
+	return newDec(false, s, maxScale), nil
+}
+
 // fd is a small floating-decimal value used by powInt: value = coef *
 // 10^exp, with coef kept to at most 38 significant digits.
 type fd struct {

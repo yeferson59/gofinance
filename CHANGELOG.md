@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manual Release GitHub Actions workflow (`workflow_dispatch`) to create a version tag and GitHub Release with a semver bump or explicit version
 - New standalone `decimal` package (`github.com/yeferson59/gofinance/decimal`): the fixed-point decimal engine that used to live inside `money` is now independently importable, with error-returning `TryAdd`/`TrySub`/`TryMul` alongside the existing panicking `Add`/`Sub`/`Mul`
 - `decimal.ErrLogNonPositive` and `decimal.ErrPowNegBase` errors for the domain violations of the new native `Ln`/`Log*`/`Pow` implementations
+- `Decimal.Sqrt`/`MustSqrt` (in both `decimal` and `money`): direct square root via Newton's integer iteration on the exact 256-bit radicand — always correctly rounded to 19 fractional digits (exact for perfect squares), ~0.4µs and zero allocations; returns the new `decimal.ErrSqrtNegative` for negative input
 
 ### Changed
 - **Precision**: `Decimal.Pow`, `Ln`, `Log`, `Log2`, and `Log10` are now computed natively on the 128-bit decimal engine (120-bit binary fixed-point internals, zero allocations) instead of round-tripping through `float64`/`math.Pow`, so results are accurate to the full 19-digit precision (previously ~15-16 digits). Integer exponents use exact binary exponentiation on 38-significant-digit intermediates: powers whose exact value fits in 38 digits (e.g. `1.05^12`) now come out exact

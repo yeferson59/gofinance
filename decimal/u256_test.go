@@ -28,6 +28,54 @@ func TestU256IsZero(t *testing.T) {
 	}
 }
 
+func TestU256BitLen(t *testing.T) {
+	tests := []struct {
+		name string
+		x    u256
+		want int
+	}{
+		{"zero", u256{}, 0},
+		{"lo only", u256{lo: 5}, 3}, // 0b101
+		{"lo full", u256{lo: ^uint64(0)}, 64},
+		{"hi only", u256{hi: 1}, 65}, // 64 + 1
+		{"hi full", u256{hi: ^uint64(0)}, 128},
+		{"carry.lo only", u256{carry: u128{lo: 1}}, 129}, // 128 + 1
+		{"carry.lo full", u256{carry: u128{lo: ^uint64(0)}}, 192},
+		{"carry.hi only", u256{carry: u128{hi: 1}}, 193}, // 192 + 1
+		{"carry.hi full", u256{carry: u128{hi: ^uint64(0)}}, 256},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.x.bitLen(); got != tt.want {
+				t.Errorf("bitLen() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestU256Cmp(t *testing.T) {
+	tests := []struct {
+		x, y u256
+		want int
+	}{
+		{u256{}, u256{}, 0},
+		{u256{lo: 1}, u256{}, 1},
+		{u256{}, u256{lo: 1}, -1},
+		{u256{hi: 1}, u256{lo: ^uint64(0)}, 1},
+		{u256{carry: u128{lo: 1}}, u256{hi: ^uint64(0), lo: ^uint64(0)}, 1},
+		{u256{carry: u128{hi: 1}}, u256{carry: u128{lo: ^uint64(0)}}, 1},
+		{u256{carry: u128{lo: 1}, lo: 5}, u256{carry: u128{lo: 1}, lo: 5}, 0},
+		{u256{carry: u128{lo: 1}, lo: 4}, u256{carry: u128{lo: 1}, lo: 5}, -1},
+	}
+
+	for i, tt := range tests {
+		if got := tt.x.cmp(tt.y); got != tt.want {
+			t.Errorf("case %d: cmp = %d, want %d", i, got, tt.want)
+		}
+	}
+}
+
 func TestU256QuoRem128ZeroDivisor(t *testing.T) {
 	x := u256{lo: 100}
 	if _, _, ok := x.QuoRem128(u128Zero); ok {

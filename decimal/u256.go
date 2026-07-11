@@ -16,6 +16,28 @@ func (x u256) IsZero() bool {
 	return x.hi == 0 && x.lo == 0 && x.carry.IsZero()
 }
 
+func (x u256) bitLen() int {
+	switch {
+	case x.carry.hi != 0:
+		return 192 + bits.Len64(x.carry.hi)
+	case x.carry.lo != 0:
+		return 128 + bits.Len64(x.carry.lo)
+	case x.hi != 0:
+		return 64 + bits.Len64(x.hi)
+	default:
+		return bits.Len64(x.lo)
+	}
+}
+
+// cmp compares x and y, returning -1, 0 or 1.
+func (x u256) cmp(y u256) int {
+	if c := x.carry.Cmp(y.carry); c != 0 {
+		return c
+	}
+
+	return (u128{hi: x.hi, lo: x.lo}).Cmp(u128{hi: y.hi, lo: y.lo})
+}
+
 // quoRem64 returns q = x/v and r = x%v for a 64-bit divisor v (v != 0),
 // keeping the full 256-bit quotient.
 func (x u256) quoRem64(v uint64) (q u256, r uint64) {

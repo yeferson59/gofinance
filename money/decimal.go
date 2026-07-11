@@ -142,6 +142,21 @@ func (d Decimal) MustPow(exponent Decimal) Decimal {
 	return v
 }
 
+func (d Decimal) Sqrt() (Decimal, error) {
+	v, err := d.value.Sqrt()
+
+	return Decimal{v}, err
+}
+
+func (d Decimal) MustSqrt() Decimal {
+	v, err := d.Sqrt()
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
 func (d Decimal) Ln() (Decimal, error) {
 	v, err := d.value.Ln()
 

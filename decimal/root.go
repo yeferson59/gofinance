@@ -177,6 +177,27 @@ func (d Decimal) MustPow(exponent Decimal) Decimal {
 	return result
 }
 
+// Sqrt returns the square root of d, computed directly with Newton's
+// integer iteration on the exact 256-bit radicand, so the result is always
+// the 19-fractional-digit value nearest to the true root (exact for
+// perfect squares, e.g. Sqrt(2.25) = 1.5). It returns ErrSqrtNegative if
+// d is negative. For other roots, use Pow (e.g. d.Pow(1/3) for cube roots).
+func (d Decimal) Sqrt() (Decimal, error) {
+	v, err := d.value.Sqrt()
+
+	return Decimal{v}, err
+}
+
+// MustSqrt is like Sqrt but panics on error.
+func (d Decimal) MustSqrt() Decimal {
+	v, err := d.Sqrt()
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
 // Ln returns the natural logarithm (base e) of d, accurate to Decimal's
 // full 19-digit precision (rounded half away from zero). It returns
 // ErrLogNonPositive if d is zero or negative, since the natural logarithm
