@@ -1,39 +1,45 @@
 # 💰 GoFinance
 
-A robust, type-safe Go library for financial calculations and money management. **GoFinance** provides comprehensive tools for handling complex financial mathematics including simple interest, compound interest, annuities, and precise monetary operations.
+A robust, type-safe Go library for financial calculations and money management. **GoFinance** provides comprehensive tools for handling complex financial mathematics including simple interest, compound interest, annuities, and precise monetary operations — all built on its own zero-dependency, allocation-free decimal engine.
 
 ---
 
 ## ✨ Features
 
-### 💵 **Money Management**
+### 🔢 **Decimal Engine** (`decimal`)
 
-- Precise decimal-based money handling using `udecimal` for accuracy
-- Multi-currency support with ISO code standards
-- Thread-safe operations with built-in mutex protection
-- Clean string representation of monetary values
+- Fixed-point decimal type backed by a 128-bit coefficient: up to 19 digits after the decimal point, no `float64` rounding surprises
+- Zero external dependencies and zero heap allocations for arithmetic
+- Native mathematical functions computed directly on the decimal representation:
+  - `Pow` — exact binary exponentiation for integer exponents (e.g. `(1+i)^n`), 120-bit fixed-point `exp(e·ln x)` for fractional ones
+  - `Sqrt` — Newton's integer iteration on the exact 256-bit radicand, always correctly rounded (exact for perfect squares)
+  - `Ln`, `Log`, `Log2`, `Log10` — accurate to the full 19-digit precision
+- Banker's, half-away, half-toward, truncating and away-from-zero rounding modes
+- JSON marshaling/unmarshaling and exact string round-tripping
 
-### 📊 **Simple Interest Calculations**
+### 💵 **Money Management** (`money`)
 
-- Calculate future and present values
-- Determine interest rates and periods
-- Support for multiple time units:
-  - Days, Weeks, Months, Years
-- Comprehensive interest computation
+- Precise monetary amounts built on the `decimal` engine
+- Multi-currency support with ISO 4217 codes, symbols, and per-currency precision
+- Currency-checked arithmetic (`SafeAdd`/`SafeSub` return `ErrCurrencyMismatch`)
+- Penny-exact allocation: split amounts by ratios or evenly without losing a cent (`Allocate`, `AllocateEvenly`)
+- Currency conversion with explicit exchange rates (`Convert`, `ConvertFloat64`)
 
-### 🔄 **Compound Interest Calculations**
+### 📊 **Simple Interest** (`finance/simpleinterest`)
 
-- Complex interest rate calculations with flexible compounding frequencies
-- Support for multiple compounding periods:
-  - Daily, Monthly, Bimonthly
-  - Quarterly (two variations), Semi-annually, Annually
-- Rate conversion and period calculations
-- Advanced financial data structures
+- Future value, present value, interest, rate, and period calculations
+- Fluent builder API with day/week/month/year time units
 
-### 📈 **Annuities**
+### 🔄 **Compound Interest** (`finance/compositeinterest`)
 
-- Annuity calculations for financial planning
-- Support for various annuity types and scenarios
+- Future/present value and period calculations with flexible compounding frequencies (daily, monthly, bimonthly, quarterly, semi-annual, annual)
+- Rate conversions between periodic, nominal, effective annual, and anticipated rate types
+
+### 📈 **Annuities** (`finance/annuities`)
+
+- Payment, present/future value, rate, and period calculations
+- Full amortization schedule generation (`BuildSchedule`)
+- Optional chart rendering of schedules via `finance/charts` (go-echarts)
 
 ---
 
@@ -42,7 +48,6 @@ A robust, type-safe Go library for financial calculations and money management. 
 ### Prerequisites
 
 - Go 1.26.4 or higher
-- Basic knowledge of financial mathematics
 
 ### Installation
 
@@ -57,55 +62,57 @@ package main
 
 import (
     "fmt"
+
     "github.com/yeferson59/gofinance/money"
 )
 
 func main() {
-    // Create money with USD currency
+    // $100.00 from an integer amount (10000) and a precision (2)
     m, err := money.New(10000, 2, money.USD)
     if err != nil {
         panic(err)
     }
 
-    // Get string representation
-    str, err := m.String()
+    str, err := m.StringMoney()
     if err != nil {
         panic(err)
     }
+    fmt.Println(str) // USD 100.00
 
-    fmt.Println(str) // Output: 100.00 USD
+    // Split $100.00 in the ratio 1:1:1 without losing a cent
+    parts, err := m.Allocate(1, 1, 1)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(parts[0].StringFixed(2), parts[1].StringFixed(2), parts[2].StringFixed(2))
+    // 33.34 33.33 33.33
 }
 ```
 
-### Quick Example: Simple Interest
+### Quick Example: Decimal Math
 
 ```go
 package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/simpleinterest"
+
+    "github.com/yeferson59/gofinance/decimal"
 )
 
 func main() {
-    // Create a period of 2 years
-    period := simpleinterest.NewPeriod(2, simpleinterest.Years)
+    // Exact integer power: 30-year monthly compounding factor
+    growth := decimal.MustFromString("1.005").
+        MustPow(decimal.MustFromString("360"))
+    fmt.Println(growth) // 6.0225752122632161841
 
-    // Create simple interest calculation
-    si := simpleinterest.New(
-        future,
-        present,
-        interest,
-        rateInterest,
-        period,
-    )
+    // Correctly rounded square root
+    fmt.Println(decimal.MustFromString("2").MustSqrt())
+    // 1.4142135623730950488
 
-    periods, err := si.GetPeriods()
-    if err != nil {
-        panic(err)
-    }
-
-    fmt.Println("Periods:", periods)
+    // Natural logarithm at full 19-digit precision
+    fmt.Println(decimal.MustFromString("2").MustLn())
+    // 0.6931471805599453094
 }
 ```
 
@@ -116,40 +123,79 @@ package main
 
 import (
     "fmt"
+
     "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/money"
 )
 
 func main() {
-    // Create monthly compounding periods
-    period, err := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    ci := compositeinterest.NewComposite().
+        Present(1000, money.USD).
+        Rate(0.05).
+        Periods(12).
+        Monthly().
+        RateType(compositeinterest.RateEffectyPeriodic).
+        MustBuild()
+
+    future, err := ci.Future()
     if err != nil {
         panic(err)
     }
-
-    // Create interest rate with monthly compounding
-    rateInterest, err := compositeinterest.NewRateInterest(
-        0.08,
-        compositeinterest.Monthly,
-        compositeinterest.Nominal,
-    )
-    if err != nil {
-        panic(err)
-    }
-
-    // Create compound interest calculation
-    ci, err := compositeinterest.New(
-        1000,    // present value
-        1500,    // future value
-        rateInterest,
-        period,
-    )
-    if err != nil {
-        panic(err)
-    }
-
-    fmt.Println("Compound interest:", ci)
+    fmt.Println("Future value:", future.StringFixed(2))
 }
 ```
+
+### Quick Example: Annuities
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/yeferson59/gofinance/finance/annuities"
+    "github.com/yeferson59/gofinance/money"
+)
+
+func main() {
+    // Monthly payment for a $300,000 loan at 6% over 360 months
+    payment := annuities.NewAnnuity().
+        Present(300000, money.USD).
+        AnnualRate(0.06).
+        Periods(360).
+        Monthly().
+        MustPayment()
+
+    fmt.Println("Monthly payment:", payment.StringFixed(2))
+}
+```
+
+More runnable examples live in [`examples/main.go`](examples/main.go).
+
+---
+
+## 🎯 Precision & Performance
+
+The `decimal` engine performs every operation on a 128-bit integer coefficient, so results carry up to 19 exact fractional digits — where `float64`-based math starts drifting after ~15-16 significant digits:
+
+| Expression | `float64` | GoFinance `decimal` |
+| --- | --- | --- |
+| `1.005^12` | `1.0616778118644976` | `1.0616778118644995688` (exact) |
+| `ln(2)` | `0.6931471805599453` | `0.6931471805599453094` |
+| `sqrt(2)` | `1.4142135623730951` | `1.4142135623730950488` |
+
+Internally, `Ln`/`Log*`/`Pow` run on 120-bit binary fixed-point kernels (~36 internal decimal digits), integer `Pow` uses exact 38-significant-digit binary exponentiation, and `Sqrt` computes the integer square root of the exact 256-bit radicand — so it is *always* correctly rounded.
+
+Indicative benchmarks (Apple M1, `make bench`):
+
+| Operation | Time | Allocations |
+| --- | --- | --- |
+| `Add` / `Mul` / `Cmp` | ~20 ns | 0 |
+| `Div` | ~60 ns | 0 |
+| `Parse` | ~70 ns | 0 |
+| `Sqrt` | ~0.2-0.4 µs | 0 |
+| `Ln` / `Log10` | ~0.2-0.7 µs | 0 |
+| `Pow` | ~0.5-0.8 µs | 0 |
 
 ---
 
@@ -157,38 +203,29 @@ func main() {
 
 ```
 gofinance/
+├── decimal/                        # Fixed-point decimal engine (stdlib only)
+│   ├── decimal128.go              # Core 128-bit coefficient arithmetic
+│   ├── math.go                    # Native Pow, Sqrt, Ln, Log, Log2, Log10
+│   ├── u128.go / u256.go          # 128/256-bit integer primitives
+│   └── root.go                    # Public Decimal API
+│
 ├── money/                          # Money and currency handling
-│   ├── money.go                   # Core Money struct
-│   ├── currency.go                # Currency definitions
-│   └── root.go                    # Root package definitions
+│   ├── money.go / root.go         # Core Money type and operations
+│   ├── currency.go                # ISO 4217 currencies, symbols, precision
+│   ├── allocate.go                # Penny-exact allocation
+│   ├── convert.go                 # Currency conversion
+│   └── decimal.go                 # money.Decimal wrapper for rates/factors
 │
-├── finance/                        # Financial calculations
-│   ├── simpleinterest/            # Simple interest calculations
-│   │   ├── interest.go            # Interest computation
-│   │   ├── future.go              # Future value calculations
-│   │   ├── present.go             # Present value calculations
-│   │   ├── rate_interest.go       # Interest rate calculations
-│   │   ├── periods.go             # Period definitions
-│   │   └── *_test.go              # Comprehensive tests
-│   │
-│   ├── compositeinterest/         # Compound interest calculations
-│   │   ├── root.go                # Core structures
-│   │   ├── future.go              # Future value calculations
-│   │   ├── present.go             # Present value calculations
-│   │   ├── rate_interest.go       # Rate conversion
-│   │   ├── rate_conversion.go     # Period conversions
-│   │   ├── periods.go             # Compounding frequencies
-│   │   ├── utils.go               # Utility functions
-│   │   └── data.go                # Data structures
-│   │
-│   └── annuities/               # Annuity calculations
-│       └── root.go                # Annuity definitions
+├── finance/
+│   ├── simpleinterest/            # Simple interest (fluent builder)
+│   ├── compositeinterest/         # Compound interest and rate conversions
+│   ├── annuities/                 # Annuities and amortization schedules
+│   └── charts/                    # Amortization chart rendering (go-echarts)
 │
-├── go.mod                          # Module definition
-├── go.sum                          # Dependencies hash
+├── benchmarks/                     # Cross-package benchmark suites
+├── examples/                       # Runnable usage examples
 ├── Makefile                        # Development tasks
-├── .golangci.yaml                 # Linting configuration
-└── README.md                       # This file
+└── .golangci.yaml                  # Linting configuration
 ```
 
 ---
@@ -217,6 +254,9 @@ make test
 
 # Format code and run imports
 make fmt
+
+# Run benchmarks
+make bench
 ```
 
 ### Running Tests
@@ -258,36 +298,26 @@ Where:
 - n = Compounding frequency
 - t = Time in years
 
+GoFinance evaluates the `(1 + r/n)^(nt)` factor with exact binary exponentiation on the decimal engine, so compounding factors don't accumulate floating-point drift.
+
 ### Annuities
 
 An annuity is a series of equal payments made at regular intervals. Useful for loans, pensions, and investments.
 
 ---
 
-## 🔐 Thread Safety
+## 🔐 Concurrency
 
-The Money struct uses `sync.RWMutex` to ensure thread-safe operations. You can safely use Money objects in concurrent applications.
-
-```go
-var m *money.Money
-var wg sync.WaitGroup
-
-for i := 0; i < 100; i++ {
-    wg.Add(1)
-    go func() {
-        defer wg.Done()
-        str, _ := m.String() // Safe concurrent access
-    }()
-}
-wg.Wait()
-```
+`Decimal` and `Money` are immutable value types: every operation returns a new value and never mutates its receiver. They can be shared freely across goroutines without locks.
 
 ---
 
 ## 📖 Dependencies
 
-- **github.com/quagmt/udecimal** - Decimal arithmetic for precise monetary calculations
-- **github.com/stretchr/testify** - Testing utilities (dev dependency)
+The core packages (`decimal`, `money`, `finance/...`) depend only on the Go standard library.
+
+- **github.com/go-echarts/go-echarts/v2** — used exclusively by the optional `finance/charts` package
+- **github.com/stretchr/testify** — testing utilities (dev dependency)
 
 ---
 
@@ -323,7 +353,7 @@ This project is open source and available under the terms specified in the repos
 If you have questions or issues:
 
 - Open an issue on GitHub
-- Check existing documentation
+- Check existing documentation ([`CHANGELOG.md`](CHANGELOG.md), [`PERFORMANCE.md`](PERFORMANCE.md))
 - Review the test files for usage examples
 
 ---
@@ -331,7 +361,7 @@ If you have questions or issues:
 ## 🎯 Roadmap
 
 - [ ] Additional financial instruments support
-- [ ] Performance optimizations
+- [x] Performance optimizations (native decimal math, Knuth division, zero-allocation kernels)
 - [ ] Extended documentation with more examples
 - [ ] CLI tools for quick calculations
 - [ ] Web API wrapper
