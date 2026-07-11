@@ -25,3 +25,6 @@ go.work.sum
 
 .DS_Store
 /bin
+
+# Generated chart HTML output from examples/main.go
+/examples/output/
