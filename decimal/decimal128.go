@@ -23,7 +23,7 @@ var (
 	ErrLogNonPositive  = errors.New("logarithm of a non-positive number is undefined")
 	ErrPowNegBase      = errors.New("negative base with a non-integer exponent is undefined")
 	ErrSqrtNegative    = errors.New("square root of a negative number is undefined")
-	ErrSymbolFraction  = errors.New("invalid symbol for create fraction")
+	ErrSymbolFraction  = errors.New("fraction must contain exactly one '/'")
 )
 
 // decimal128 is a fixed-point decimal number backed by a 128-bit unsigned

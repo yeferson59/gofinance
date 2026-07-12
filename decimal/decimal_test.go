@@ -676,3 +676,131 @@ func TestDecimalMustLogPanicsOnInvalidBase(t *testing.T) {
 	}()
 	MustFromFloat64(10).MustLog(MustFromFloat64(1))
 }
+
+func TestNewFractionFloat64(t *testing.T) {
+	d, err := NewFractionFloat64(1, 2)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if d.String() != "0.5" {
+		t.Errorf("expected 0.5, got %s", d.String())
+	}
+}
+
+func TestNewFractionFloat64DivideByZero(t *testing.T) {
+	_, err := NewFractionFloat64(1, 0)
+	if !errors.Is(err, ErrDivideByZero) {
+		t.Errorf("expected ErrDivideByZero, got %v", err)
+	}
+}
+
+func TestNewFractionInt64(t *testing.T) {
+	tests := []struct {
+		name       string
+		num        int64
+		numPrec    uint8
+		den        int64
+		denPrec    uint8
+		wantString string
+	}{
+		{"whole numbers", 1, 0, 2, 0, "0.5"},
+		{"scaled numerator", 150, 2, 3, 0, "0.5"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d, err := NewFractionInt64(tt.num, tt.numPrec, tt.den, tt.denPrec)
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if d.String() != tt.wantString {
+				t.Errorf("expected %s, got %s", tt.wantString, d.String())
+			}
+		})
+	}
+}
+
+func TestNewFractionInt64DivideByZero(t *testing.T) {
+	_, err := NewFractionInt64(1, 0, 0, 0)
+	if !errors.Is(err, ErrDivideByZero) {
+		t.Errorf("expected ErrDivideByZero, got %v", err)
+	}
+}
+
+func TestNewFractionString(t *testing.T) {
+	tests := []struct {
+		name       string
+		frac       string
+		wantString string
+	}{
+		{"simple", "1/5", "0.2"},
+		{"whitespace around whole string", "  1/2  ", "0.5"},
+		{"whitespace around operands", "1 / 2", "0.5"},
+		{"decimal operands", "1.5/3", "0.5"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d, err := NewFractionString(tt.frac)
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if d.String() != tt.wantString {
+				t.Errorf("expected %s, got %s", tt.wantString, d.String())
+			}
+		})
+	}
+}
+
+func TestNewFractionStringErrors(t *testing.T) {
+	tests := []struct {
+		name    string
+		frac    string
+		wantErr error
+	}{
+		{"no slash", "5", ErrSymbolFraction},
+		{"too many slashes", "1/2/3", ErrSymbolFraction},
+		{"invalid numerator", "abc/2", ErrInvalidFormat},
+		{"invalid denominator", "1/abc", ErrInvalidFormat},
+		{"divide by zero", "1/0", ErrDivideByZero},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewFractionString(tt.frac)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("expected %v, got %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestMustFractionFloat64(t *testing.T) {
+	if got := MustFractionFloat64(1, 4).String(); got != "0.25" {
+		t.Errorf("expected 0.25, got %s", got)
+	}
+}
+
+func TestMustFractionFloat64Panics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic on divide by zero")
+		}
+	}()
+	MustFractionFloat64(1, 0)
+}
+
+func TestMustFractionInt64(t *testing.T) {
+	if got := MustFractionInt64(1, 0, 4, 0).String(); got != "0.25" {
+		t.Errorf("expected 0.25, got %s", got)
+	}
+}
+
+func TestMustFractionInt64Panics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic on divide by zero")
+		}
+	}()
+	MustFractionInt64(1, 0, 0, 0)
+}

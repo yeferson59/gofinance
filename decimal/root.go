@@ -46,6 +46,16 @@ func NewFromString(s string) (Decimal, error) {
 	return Decimal{decimal}, err
 }
 
+// newFraction divides num by den, wrapping the result in a Decimal. It
+// returns ErrDivideByZero if den is zero.
+func newFraction(num, den decimal128) (Decimal, error) {
+	result, err := num.Div(den)
+
+	return Decimal{result}, err
+}
+
+// NewFractionFloat64 returns the Decimal value of numerator / denominator.
+// It returns ErrDivideByZero if denominator is zero.
 func NewFractionFloat64(numerator float64, denominator float64) (Decimal, error) {
 	num, err := decFromFloat64(numerator)
 	if err != nil {
@@ -57,14 +67,13 @@ func NewFractionFloat64(numerator float64, denominator float64) (Decimal, error)
 		return Decimal{}, err
 	}
 
-	result, err := num.Div(den)
-	if err != nil {
-		return Decimal{}, err
-	}
-
-	return Decimal{result}, nil
+	return newFraction(num, den)
 }
 
+// NewFractionInt64 returns the Decimal value of numerator / denominator,
+// with each operand scaled by its own precision (e.g. numerator=150,
+// numeratorPrec=2 represents 1.50). It returns ErrDivideByZero if
+// denominator is zero.
 func NewFractionInt64(numerator int64, numeratorPrec uint8, denominator int64, denominatorPrec uint8) (Decimal, error) {
 	num, err := decFromInt64(numerator, numeratorPrec)
 	if err != nil {
@@ -76,41 +85,36 @@ func NewFractionInt64(numerator int64, numeratorPrec uint8, denominator int64, d
 		return Decimal{}, err
 	}
 
-	result, err := num.Div(den)
-	if err != nil {
-		return Decimal{}, err
-	}
-
-	return Decimal{result}, nil
+	return newFraction(num, den)
 }
 
+// NewFractionString parses a "numerator/denominator" string (e.g. "1/3")
+// and returns the resulting Decimal value. Leading/trailing whitespace
+// around the whole string and around each operand is ignored. It returns
+// ErrSymbolFraction if frac doesn't contain exactly one '/', and
+// ErrDivideByZero if the denominator is zero.
 func NewFractionString(frac string) (Decimal, error) {
 	frac = strings.TrimSpace(frac)
 
 	sep := "/"
 
-	if !strings.Contains(frac, sep) {
+	if strings.Count(frac, sep) != 1 {
 		return Decimal{}, ErrSymbolFraction
 	}
 
-	split := strings.Split(frac, sep)
+	split := strings.SplitN(frac, sep, 2)
 
-	num, err := parseDecimal(split[0])
+	num, err := parseDecimal(strings.TrimSpace(split[0]))
 	if err != nil {
 		return Decimal{}, err
 	}
 
-	den, err := parseDecimal(split[1])
+	den, err := parseDecimal(strings.TrimSpace(split[1]))
 	if err != nil {
 		return Decimal{}, err
 	}
 
-	result, err := num.Div(den)
-	if err != nil {
-		return Decimal{}, err
-	}
-
-	return Decimal{result}, nil
+	return newFraction(num, den)
 }
 
 func MustFromFloat64(f float64) Decimal {
