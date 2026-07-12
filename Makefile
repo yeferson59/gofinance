@@ -9,8 +9,10 @@ lint:
 tidy:
 	@go mod tidy
 
+PKGS := $(shell go list ./... | grep -v /examples)
+
 test:
-	@go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+	@go test -race -coverpkg=$(shell echo $(PKGS) | tr ' ' ',') -coverprofile=coverage.out -covermode=atomic $(PKGS)
 	@go tool cover -html=coverage.out
 
 fmt:
