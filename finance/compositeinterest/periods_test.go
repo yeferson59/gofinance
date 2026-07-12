@@ -1,6 +1,7 @@
 package compositeinterest
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -298,6 +299,45 @@ func TestPeriodsWithHighInterestRate(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.InDelta(t, 25.1211, periods.InexactFloat64(), 0.0001)
+}
+
+func TestPeriodsPropagatesPeriodError(t *testing.T) {
+	// A zero-value CompositeInterest has an invalid (empty) period
+	// frequency, so both the shortcut check and GetEqualsRateInterestPeriods
+	// fail, and Periods must surface that error.
+	var ci CompositeInterest
+
+	_, err := ci.Periods()
+	require.Error(t, err)
+}
+
+func TestPeriodsPropagatesOverflowFromRatio(t *testing.T) {
+	// future/present computed at an extreme magnitude mismatch overflows
+	// decimal128's 128-bit coefficient.
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	require.NoError(t, err)
+
+	period, err := NewPeriod(money.MustFromFloat64(0), Monthly)
+	require.NoError(t, err)
+
+	present, err := money.New(1, 19, money.USD)
+	require.NoError(t, err)
+	future, err := money.New(math.MaxInt64, 0, money.USD)
+	require.NoError(t, err)
+
+	ci, err := New(present, future, rateInterest, period)
+	require.NoError(t, err)
+
+	_, err = ci.Periods()
+	require.Error(t, err)
+}
+
+func TestPeriodsPropagatesLnErrorWhenRatioIsNegative(t *testing.T) {
+	// A negative future/present ratio has no logarithm.
+	ci := newPeriodsCase(t, 100000, -50000, 0.01, Monthly, RateEffectyPeriodic)
+
+	_, err := ci.Periods()
+	require.Error(t, err)
 }
 
 func TestPeriodsWithZeroPresent(t *testing.T) {

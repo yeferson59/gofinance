@@ -1,6 +1,7 @@
 package compositeinterest
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -250,6 +251,60 @@ func TestInterestFutureGreaterThanPresent(t *testing.T) {
 			assert.InDelta(t, tc.expected, interestRate.InexactFloat64(), 0.0000001)
 		})
 	}
+}
+
+func TestInterestPropagatesPeriodError(t *testing.T) {
+	// A zero-value CompositeInterest has an invalid (empty) period
+	// frequency, so GetEqualsRateInterestPeriods fails and Interest must
+	// surface that error instead of deriving a bogus rate.
+	var ci CompositeInterest
+
+	_, err := ci.Interest()
+	require.Error(t, err)
+}
+
+func TestInterestErrorsWhenFutureIsZero(t *testing.T) {
+	ci := newInterestCase(t, 100000, 0, Monthly, RateEffectyPeriodic, 12)
+
+	_, err := ci.Interest()
+	require.ErrorIs(t, err, ErrInvalidOperation)
+}
+
+func TestInterestErrorsWhenPresentIsZero(t *testing.T) {
+	ci := newInterestCase(t, 0, 100000, Monthly, RateEffectyPeriodic, 12)
+
+	_, err := ci.Interest()
+	require.ErrorIs(t, err, ErrInvalidOperation)
+}
+
+func TestInterestPropagatesOverflowFromRatio(t *testing.T) {
+	// future/present computed at an extreme magnitude mismatch overflows
+	// decimal128's 128-bit coefficient.
+	rateInterest, err := NewRateInterest(money.MustFromFloat64(0), Monthly, RateEffectyPeriodic)
+	require.NoError(t, err)
+
+	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+	require.NoError(t, err)
+
+	present, err := money.New(1, 19, money.USD)
+	require.NoError(t, err)
+	future, err := money.New(math.MaxInt64, 0, money.USD)
+	require.NoError(t, err)
+
+	ci, err := New(present, future, rateInterest, period)
+	require.NoError(t, err)
+
+	_, err = ci.Interest()
+	require.Error(t, err)
+}
+
+func TestInterestPropagatesPowErrorWhenRatioIsNegative(t *testing.T) {
+	// A negative future/present ratio raised to a fractional exponent
+	// (1/n for n != 1) is mathematically undefined.
+	ci := newInterestCase(t, 100000, -50000, Monthly, RateEffectyPeriodic, 12)
+
+	_, err := ci.Interest()
+	require.Error(t, err)
 }
 
 func TestInterestNegativeWhenFutureLessThanPresent(t *testing.T) {

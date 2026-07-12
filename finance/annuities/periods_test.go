@@ -9,6 +9,28 @@ import (
 	"github.com/yeferson59/gofinance/money"
 )
 
+// newMonthlyPeriodicAnnuity builds an Annuity with a monthly periodic rate
+// (so the rate is used as-is, with no frequency/type conversion), for
+// exercising the error branches of the Periods* methods.
+func newMonthlyPeriodicAnnuity(t *testing.T, value, present, future, rate float64) Annuity {
+	t.Helper()
+
+	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	require.NoError(t, err)
+
+	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(rate), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	require.NoError(t, err)
+
+	valueMoney := money.MustMoneyFromFloat64(value, money.USD)
+	presentMoney := money.MustMoneyFromFloat64(present, money.USD)
+	futureMoney := money.MustMoneyFromFloat64(future, money.USD)
+
+	annuity, err := New(valueMoney, presentMoney, futureMoney, period, rateInterest)
+	require.NoError(t, err)
+
+	return annuity
+}
+
 func TestAnnuityPeriodsWithPresent(t *testing.T) {
 	// PMT = 1000, PV = 10000, i = 0.01
 	// n = ln(PMT / (PMT - PV×i)) / ln(1+i) = ln(1000/900) / ln(1.01) = 10.5886
@@ -220,4 +242,137 @@ func TestAnnuityPeriodsWithFutureAcrossFrequencies(t *testing.T) {
 			assert.InDelta(t, 12.0, periods.InexactFloat64(), 0.01)
 		})
 	}
+}
+
+func TestAnnuityPeriodsPropagatesRateInterestPeriodsError(t *testing.T) {
+	// A zero-value Annuity has an invalid (empty) period frequency, so
+	// GetEqualsRateInterestPeriods fails and every Periods* method must
+	// surface that error.
+	var annuity Annuity
+
+	_, err := annuity.PeriodsWithPresent()
+	assert.Error(t, err)
+
+	_, err = annuity.PeriodsWithFuture()
+	assert.Error(t, err)
+
+	_, err = annuity.AnticipatePeriodsWithPresent()
+	assert.Error(t, err)
+
+	_, err = annuity.AnticipatePeriodsWithFuture()
+	assert.Error(t, err)
+}
+
+func TestAnnuityPeriodsPropagatesPresentAndFutureErrors(t *testing.T) {
+	// With present = future = 0, Present()/Future() can't derive either
+	// value (both branches of their own ErrInvalidOperation check trigger),
+	// so PeriodsWithPresent/PeriodsWithFuture and their anticipated variants
+	// must surface that error instead of dividing by an empty value.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0.05)
+
+	_, err := annuity.PeriodsWithPresent()
+	assert.Error(t, err)
+
+	_, err = annuity.PeriodsWithFuture()
+	assert.Error(t, err)
+
+	_, err = annuity.AnticipatePeriodsWithPresent()
+	assert.Error(t, err)
+
+	_, err = annuity.AnticipatePeriodsWithFuture()
+	assert.Error(t, err)
+}
+
+func TestAnnuityPeriodsWithPresentPropagatesDivideByZero(t *testing.T) {
+	// PMT - PV×i = 0 when PV×i exactly equals PMT (1000 = 20000 × 0.05),
+	// so the ratio's denominator is zero.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 20000, 0, 0.05)
+
+	_, err := annuity.PeriodsWithPresent()
+	assert.Error(t, err)
+}
+
+func TestAnnuityPeriodsWithPresentPropagatesLnError(t *testing.T) {
+	// PV×i (30000 × 0.05 = 1500) exceeds PMT (1000), so the ratio's
+	// denominator (and therefore the ratio itself) is negative, which has
+	// no logarithm.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 30000, 0, 0.05)
+
+	_, err := annuity.PeriodsWithPresent()
+	assert.Error(t, err)
+}
+
+func TestAnnuityPeriodsWithFuturePropagatesDivideByZero(t *testing.T) {
+	// The ratio's denominator is PMT itself, so a zero payment divides by
+	// zero.
+	annuity := newMonthlyPeriodicAnnuity(t, 0, 0, 1500000, 0.5)
+
+	_, err := annuity.PeriodsWithFuture()
+	assert.Error(t, err)
+}
+
+func TestAnnuityPeriodsWithFuturePropagatesLnError(t *testing.T) {
+	// A negative PMT with FV×i large enough to flip the numerator positive
+	// makes the ratio negative, which has no logarithm.
+	annuity := newMonthlyPeriodicAnnuity(t, -1000, 0, 1000000, 0.5)
+
+	_, err := annuity.PeriodsWithFuture()
+	assert.Error(t, err)
+}
+
+func TestAnnuityAnticipatePeriodsWithPresentZeroRate(t *testing.T) {
+	// With rate = 0, ln(1+i) = ln(1) = 0, so AnticipatePeriodsWithPresent
+	// must return an error instead of dividing by that zero.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 20000, 0, 0)
+
+	_, err := annuity.AnticipatePeriodsWithPresent()
+	assert.Error(t, err)
+}
+
+func TestAnnuityAnticipatePeriodsWithPresentPropagatesDivideByZero(t *testing.T) {
+	// Reduced to the ordinary present value (present/(1+i) = 21000/1.05 =
+	// 20000) times the rate exactly equals PMT (1000), so the ratio's
+	// denominator is zero.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 21000, 0, 0.05)
+
+	_, err := annuity.AnticipatePeriodsWithPresent()
+	assert.Error(t, err)
+}
+
+func TestAnnuityAnticipatePeriodsWithPresentPropagatesLnError(t *testing.T) {
+	// Same as the divide-by-zero case but scaled up (31500/1.05 = 30000)
+	// so the reduced present value's contribution exceeds PMT, making the
+	// ratio negative.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 31500, 0, 0.05)
+
+	_, err := annuity.AnticipatePeriodsWithPresent()
+	assert.Error(t, err)
+}
+
+func TestAnnuityAnticipatePeriodsWithFutureZeroRate(t *testing.T) {
+	// With rate = 0, ln(1+i) = ln(1) = 0, so AnticipatePeriodsWithFuture
+	// must return an error instead of dividing by that zero.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 1500000, 0)
+
+	_, err := annuity.AnticipatePeriodsWithFuture()
+	assert.Error(t, err)
+}
+
+func TestAnnuityAnticipatePeriodsWithFuturePropagatesDivideByZero(t *testing.T) {
+	// The ratio's denominator is PMT itself, so a zero payment divides by
+	// zero regardless of the future/(1+i) reduction.
+	annuity := newMonthlyPeriodicAnnuity(t, 0, 0, 1500000, 0.5)
+
+	_, err := annuity.AnticipatePeriodsWithFuture()
+	assert.Error(t, err)
+}
+
+func TestAnnuityAnticipatePeriodsWithFuturePropagatesLnError(t *testing.T) {
+	// A negative PMT with the reduced future value's contribution large
+	// enough to flip the numerator positive makes the ratio negative,
+	// which has no logarithm.
+	annuity := newMonthlyPeriodicAnnuity(t, -1000, 0, 1500000, 0.5)
+
+	_, err := annuity.AnticipatePeriodsWithFuture()
+	assert.Error(t, err)
 }

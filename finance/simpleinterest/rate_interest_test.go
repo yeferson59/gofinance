@@ -1,6 +1,7 @@
 package simpleinterest
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,6 +38,33 @@ func TestRateInterest(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestRateInterestPropagatesPeriodError(t *testing.T) {
+	// An empty Period has no valid time unit set, so getPeriod fails and
+	// RateInterest must surface that error.
+	present, _ := money.New(5_000, 0, money.COP)
+	interest, _ := money.New(500, 0, money.COP)
+
+	simpleInterest := New(money.Money{}, present, interest, money.Decimal{}, Period{})
+
+	_, err := simpleInterest.RateInterest()
+	assert.Error(t, err)
+}
+
+func TestRateInterestPropagatesOverflowFromDivision(t *testing.T) {
+	// interest / (present × periods) overflows decimal128's 128-bit
+	// coefficient when interest is astronomically larger than present.
+	numPeriods, _ := money.NewFromInt64(1, 0)
+	periods := NewPeriod(numPeriods, Days)
+
+	present, _ := money.New(1, 19, money.COP)
+	interest, _ := money.New(math.MaxInt64, 0, money.COP)
+
+	simpleInterest := New(money.Money{}, present, interest, money.Decimal{}, periods)
+
+	_, err := simpleInterest.RateInterest()
+	assert.Error(t, err)
+}
+
 func TestRateInterestWithPresentAndFuture(t *testing.T) {
 	numPeriods, _ := money.NewFromInt64(2, 0)
 	periods := NewPeriod(numPeriods, Days)
@@ -62,6 +90,49 @@ func TestRateInterestWithPresentAndFuture(t *testing.T) {
 	simpleInterest.present = present
 	zeroPeriod, _ := money.NewFromInt64(0, 0)
 	simpleInterest.periods = NewPeriod(zeroPeriod, Days)
+	_, err = simpleInterest.RateInterestWithPresentAndFuture()
+	assert.Error(t, err)
+}
+
+func TestRateInterestWithPresentAndFuturePropagatesPeriodError(t *testing.T) {
+	// An empty Period has no valid time unit set, so getPeriod fails and
+	// RateInterestWithPresentAndFuture must surface that error.
+	future, _ := money.New(5_500, 0, money.COP)
+	present, _ := money.New(5_000, 0, money.COP)
+
+	simpleInterest := New(future, present, money.Money{}, money.Decimal{}, Period{})
+
+	_, err := simpleInterest.RateInterestWithPresentAndFuture()
+	assert.Error(t, err)
+}
+
+func TestRateInterestWithPresentAndFuturePropagatesOverflowFromRatio(t *testing.T) {
+	// future/present computed at an extreme magnitude mismatch overflows
+	// decimal128's 128-bit coefficient.
+	numPeriods, _ := money.NewFromInt64(1, 0)
+	periods := NewPeriod(numPeriods, Days)
+
+	present, _ := money.New(1, 19, money.COP)
+	future, _ := money.New(math.MaxInt64, 0, money.COP)
+
+	simpleInterest := New(future, present, money.Money{}, money.Decimal{}, periods)
+
+	_, err := simpleInterest.RateInterestWithPresentAndFuture()
+	assert.Error(t, err)
+}
+
+func TestRateInterestWithPresentAndFuturePropagatesOverflowFromDivision(t *testing.T) {
+	// (future/present - 1) divided by an astronomically tiny number of
+	// periods overflows decimal128's 128-bit coefficient.
+	tinyPeriods, err := money.NewFromString("0.0000000000000000001")
+	require.NoError(t, err)
+	periods := NewPeriod(tinyPeriods, Days)
+
+	future, _ := money.New(1_000_000, 2, money.COP)
+	present, _ := money.New(1_000, 2, money.COP)
+
+	simpleInterest := New(future, present, money.Money{}, money.Decimal{}, periods)
+
 	_, err = simpleInterest.RateInterestWithPresentAndFuture()
 	assert.Error(t, err)
 }
