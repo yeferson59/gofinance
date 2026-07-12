@@ -47,7 +47,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 ### Prerequisites
 
-- Go 1.26.4 or higher
+- Go 1.26.5 or higher
 
 ### Installation
 
@@ -178,24 +178,24 @@ More runnable examples live in [`examples/main.go`](examples/main.go).
 
 The `decimal` engine performs every operation on a 128-bit integer coefficient, so results carry up to 19 exact fractional digits — where `float64`-based math starts drifting after ~15-16 significant digits:
 
-| Expression | `float64` | GoFinance `decimal` |
-| --- | --- | --- |
+| Expression | `float64`            | GoFinance `decimal`             |
+| ---------- | -------------------- | ------------------------------- |
 | `1.005^12` | `1.0616778118644976` | `1.0616778118644995688` (exact) |
-| `ln(2)` | `0.6931471805599453` | `0.6931471805599453094` |
-| `sqrt(2)` | `1.4142135623730951` | `1.4142135623730950488` |
+| `ln(2)`    | `0.6931471805599453` | `0.6931471805599453094`         |
+| `sqrt(2)`  | `1.4142135623730951` | `1.4142135623730950488`         |
 
-Internally, `Ln`/`Log*`/`Pow` run on 120-bit binary fixed-point kernels (~36 internal decimal digits), integer `Pow` uses exact 38-significant-digit binary exponentiation, and `Sqrt` computes the integer square root of the exact 256-bit radicand — so it is *always* correctly rounded.
+Internally, `Ln`/`Log*`/`Pow` run on 120-bit binary fixed-point kernels (~36 internal decimal digits), integer `Pow` uses exact 38-significant-digit binary exponentiation, and `Sqrt` computes the integer square root of the exact 256-bit radicand — so it is _always_ correctly rounded.
 
 Indicative benchmarks (Apple M1, `make bench`):
 
-| Operation | Time | Allocations |
-| --- | --- | --- |
-| `Add` / `Mul` / `Cmp` | ~20 ns | 0 |
-| `Div` | ~60 ns | 0 |
-| `Parse` | ~70 ns | 0 |
-| `Sqrt` | ~0.2-0.4 µs | 0 |
-| `Ln` / `Log10` | ~0.2-0.7 µs | 0 |
-| `Pow` | ~0.5-0.8 µs | 0 |
+| Operation             | Time        | Allocations |
+| --------------------- | ----------- | ----------- |
+| `Add` / `Mul` / `Cmp` | ~20 ns      | 0           |
+| `Div`                 | ~60 ns      | 0           |
+| `Parse`               | ~70 ns      | 0           |
+| `Sqrt`                | ~0.2-0.4 µs | 0           |
+| `Ln` / `Log10`        | ~0.2-0.7 µs | 0           |
+| `Pow`                 | ~0.5-0.8 µs | 0           |
 
 ---
 
