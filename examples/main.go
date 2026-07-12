@@ -22,6 +22,10 @@ func main() {
 	simpleExample()
 
 	chartsExample()
+
+	growthExample()
+
+	investmentExample()
 }
 
 func compoundExample() {
@@ -37,27 +41,35 @@ func compoundExample() {
 
 	future, _ := ci.Future()
 	fmt.Println("Present: $1000, Rate: 5%, 12 months")
-	fmt.Println("Future value:", future.StringFixed(2))
+	fmt.Println("Future value:", future.RoundBankString(2))
 }
 
 func annuityExample() {
 	fmt.Println("\n=== Annuity Payment ===")
 
+	// Compute the monthly periodic rate once and reuse it for both the
+	// payment and the schedule below, instead of duplicating "0.06/12" as a
+	// separate hardcoded literal — a drift between the two would silently
+	// produce negative amortization (payment too small to cover interest).
+	const annualRate = 0.06
+	const periods = 360
+	periodicRate := annualRate / 12
+
 	payment := annuities.NewAnnuity().
 		Present(300000, money.USD).
-		AnnualRate(0.06).
-		Periods(360).
+		Rate(periodicRate).
+		Periods(periods).
 		Monthly().
 		MustPayment()
 
 	fmt.Println("Loan: $300,000, Rate: 6%, 360 months")
-	fmt.Println("Monthly payment:", payment.StringFixed(2))
+	fmt.Println("Monthly payment:", payment.RoundBankString(2))
 
 	schedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(300000, money.USD),
-		money.MustFromFloat64(0.005),
+		money.MustFromFloat64(periodicRate),
 		payment,
-		money.MustFromFloat64(360),
+		money.MustFromFloat64(periods),
 	)
 	if err != nil {
 		fmt.Println("schedule error:", err)
@@ -77,7 +89,7 @@ func simpleExample() {
 		FutureValue()
 
 	fmt.Println("Present: $5000, Rate: 12%, 18 months")
-	fmt.Println("Future value:", future.StringFixed(2))
+	fmt.Println("Future value:", future.RoundBankString(2))
 }
 
 // chartsExample renders a variety of amortization charts using the
@@ -92,18 +104,26 @@ func chartsExample() {
 		return
 	}
 
+	// Compute the monthly periodic rate once and reuse it for both the
+	// payment and the schedule below, instead of duplicating "0.06/12" as a
+	// separate hardcoded literal — a drift between the two would silently
+	// produce negative amortization (payment too small to cover interest).
+	const chartAnnualRate = 0.06
+	const chartPeriods = 360
+	chartPeriodicRate := chartAnnualRate / 12
+
 	payment := annuities.NewAnnuity().
 		Present(300000, money.USD).
-		AnnualRate(0.06).
-		Periods(360).
+		Rate(chartPeriodicRate).
+		Periods(chartPeriods).
 		Monthly().
 		MustPayment()
 
 	schedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(300000, money.USD),
-		money.MustFromFloat64(0.005),
+		money.MustFromFloat64(chartPeriodicRate),
 		payment,
-		money.MustFromFloat64(360),
+		money.MustFromFloat64(chartPeriods),
 	)
 	if err != nil {
 		fmt.Println("schedule error:", err)
@@ -155,17 +175,21 @@ func chartsExample() {
 
 	// Non-2-decimal currency (JPY has 0 decimal places): each series is
 	// rounded to JPY's own precision instead of assuming 2 decimals.
+	const jpyAnnualRate = 0.03
+	const jpyPeriods = 24
+	jpyPeriodicRate := jpyAnnualRate / 12
+
 	jpyPayment := annuities.NewAnnuity().
 		Present(3000000, money.JPY).
-		AnnualRate(0.03).
-		Periods(24).
+		Rate(jpyPeriodicRate).
+		Periods(jpyPeriods).
 		Monthly().
 		MustPayment()
 	jpySchedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(3000000, money.JPY),
-		money.MustFromFloat64(0.0025),
+		money.MustFromFloat64(jpyPeriodicRate),
 		jpyPayment,
-		money.MustFromFloat64(24),
+		money.MustFromFloat64(jpyPeriods),
 	)
 	if err != nil {
 		fmt.Println("JPY schedule error:", err)
@@ -177,6 +201,145 @@ func chartsExample() {
 		return
 	}
 	saveChart(outDir, "amortization-jpy.html", jpyChart)
+
+	fmt.Println("Charts saved to", outDir+"/")
+}
+
+// growthExample builds a plain compound interest growth schedule (a lump
+// sum with no periodic contributions) and renders it with the
+// finance/charts package as standalone HTML files under examples/output/.
+func growthExample() {
+	fmt.Println("\n=== Compound Interest Growth ===")
+
+	outDir := "output"
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		fmt.Println("failed to create output dir:", err)
+		return
+	}
+
+	present := money.MustMoneyFromFloat64(10000, money.USD)
+	rate := money.MustFromFloat64(0.01)
+	periods := money.MustFromFloat64(24)
+
+	schedule, err := compositeinterest.BuildGrowthSchedule(present, rate, periods)
+	if err != nil {
+		fmt.Println("growth schedule error:", err)
+		return
+	}
+
+	last := schedule[len(schedule)-1]
+	fmt.Println("Present: $10,000, Rate: 1% monthly, 24 months")
+	fmt.Println("Final balance:", last.Balance.RoundBankString(2))
+	fmt.Println("Total interest earned:", last.SumInterest.RoundBankString(2))
+
+	growth, err := charts.GrowthChart(schedule)
+	if err != nil {
+		fmt.Println("GrowthChart error:", err)
+		return
+	}
+	saveChart(outDir, "growth.html", growth)
+
+	balanceOnly, err := charts.GrowthBalanceOnlyChart(schedule)
+	if err != nil {
+		fmt.Println("GrowthBalanceOnlyChart error:", err)
+		return
+	}
+	saveChart(outDir, "growth-balance-only.html", balanceOnly)
+
+	// The interest earned per period, growing even though the rate itself
+	// is constant — "interest on interest".
+	change, err := charts.GrowthChangeChart(schedule)
+	if err != nil {
+		fmt.Println("GrowthChangeChart error:", err)
+		return
+	}
+	saveChart(outDir, "growth-change.html", change)
+
+	fmt.Println("Charts saved to", outDir+"/")
+}
+
+// investmentExample builds an investment growth schedule (compound interest
+// plus a fixed contribution every period), for both ordinary (end of
+// period) and anticipated (start of period) contribution timing, and
+// renders them with the finance/charts package as standalone HTML files
+// under examples/output/.
+func investmentExample() {
+	fmt.Println("\n=== Investment With Contributions ===")
+
+	outDir := "output"
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		fmt.Println("failed to create output dir:", err)
+		return
+	}
+
+	principal := money.MustMoneyFromFloat64(1000, money.USD)
+	contribution := money.MustMoneyFromFloat64(100, money.USD)
+	rate := money.MustFromFloat64(0.01)
+	periods := money.MustFromFloat64(24)
+
+	total := annuities.NewAnnuity().
+		Present(1000, money.USD).
+		Value(100, money.USD).
+		Rate(0.01).
+		Periods(24).
+		Monthly().
+		MustFutureValue()
+
+	fmt.Println("Principal: $1,000, Contribution: $100/month, Rate: 1% monthly, 24 months")
+	fmt.Println("Future value:", total.RoundBankString(2))
+
+	schedule, err := annuities.BuildInvestmentSchedule(principal, contribution, rate, periods)
+	if err != nil {
+		fmt.Println("investment schedule error:", err)
+		return
+	}
+
+	investment, err := charts.InvestmentChart(schedule)
+	if err != nil {
+		fmt.Println("InvestmentChart error:", err)
+		return
+	}
+	saveChart(outDir, "investment.html", investment)
+
+	balanceOnly, err := charts.InvestmentBalanceOnlyChart(schedule)
+	if err != nil {
+		fmt.Println("InvestmentBalanceOnlyChart error:", err)
+		return
+	}
+	saveChart(outDir, "investment-balance-only.html", balanceOnly)
+
+	// Cumulative contributions vs. cumulative interest, stacked.
+	contributionVsInterest, err := charts.ContributionVsInterestChart(schedule)
+	if err != nil {
+		fmt.Println("ContributionVsInterestChart error:", err)
+		return
+	}
+	saveChart(outDir, "investment-contribution-vs-interest.html", contributionVsInterest)
+
+	// How the fixed contribution's relative weight shrinks over time as
+	// the compounding balance grows past it.
+	changePercent := charts.InvestmentChangePercentChart(schedule)
+	saveChart(outDir, "investment-change-percent.html", changePercent)
+
+	// Anticipated (due): contributions made at the start of each period
+	// instead of the end, so they also earn interest in their own first
+	// period — the balance ends up slightly higher than the ordinary case.
+	anticipatedSchedule, err := annuities.BuildAnticipateInvestmentSchedule(principal, contribution, rate, periods)
+	if err != nil {
+		fmt.Println("anticipated investment schedule error:", err)
+		return
+	}
+
+	anticipatedOption := charts.DefaultChartOption()
+	anticipatedOption.Title = "Investment Growth (Anticipated)"
+	anticipatedOption.Subtitle = "Contributions at the start of each period"
+
+	anticipatedChart, err := charts.InvestmentChart(anticipatedSchedule, anticipatedOption)
+	if err != nil {
+		fmt.Println("anticipated InvestmentChart error:", err)
+		return
+	}
+	saveChart(outDir, "investment-anticipated.html", anticipatedChart)
 
 	fmt.Println("Charts saved to", outDir+"/")
 }
