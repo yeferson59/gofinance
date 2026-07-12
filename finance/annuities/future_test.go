@@ -126,3 +126,97 @@ func TestAnnuityConfigAnticipateFutureValue(t *testing.T) {
 
 	assert.InDelta(t, 24077.5783, total.ToDecimal().InexactFloat64(), 0.01)
 }
+
+func TestFuturePropagatesRateInterestPeriodsError(t *testing.T) {
+	// A zero-value Annuity has an invalid (empty) period frequency, so
+	// GetEqualsRateInterestPeriods fails inside contributionsFuture, and
+	// Future must surface that error instead of a bogus zero value.
+	var annuity Annuity
+
+	_, err := annuity.Future()
+	assert.Error(t, err)
+}
+
+func TestContributionsFuturePropagatesPowOverflow(t *testing.T) {
+	// (1+r)^n overflows decimal128's 128-bit coefficient when both the rate
+	// and the period count are astronomically large. This needs a 1000-period
+	// term, which newMonthlyPeriodicAnnuity's fixed 12 periods can't express,
+	// so it's built directly here instead.
+	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(1000), compositeinterest.Monthly)
+	require.NoError(t, err)
+	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(1000), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	require.NoError(t, err)
+	annuity, err := New(
+		money.MustMoneyFromFloat64(1000, money.USD),
+		money.MoneyZero,
+		money.MoneyZero,
+		period,
+		rateInterest,
+	)
+	require.NoError(t, err)
+
+	_, err = annuity.contributionsFuture()
+	assert.Error(t, err)
+}
+
+func TestContributionsFuturePropagatesDivideByZero(t *testing.T) {
+	// With rate = 0, (1+r)^n - 1 = 0, so dividing by the zero rate must
+	// return an error instead of a bogus value.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
+
+	_, err := annuity.contributionsFuture()
+	assert.Error(t, err)
+}
+
+func TestAnticipateFutureReturnsPresetFutureValue(t *testing.T) {
+	// When the underlying compositeInterest.Future() succeeds with a
+	// nonzero value (present and rate both configured), AnticipateFuture
+	// must short-circuit and return it directly instead of deriving
+	// anything from the payment amount.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 1000, 0, 0.01)
+
+	future, err := annuity.AnticipateFuture()
+	require.NoError(t, err)
+
+	// FV = PV × (1+i)^n = 1000 × 1.01^12 = 1126.8250
+	assert.InDelta(t, 1126.8250, future.InexactFloat64(), 0.01)
+}
+
+func TestContributionsAnticipateFuturePropagatesContributionsFutureError(t *testing.T) {
+	// contributionsAnticipateFuture calls contributionsFuture first, so any
+	// error from it (here, a zero rate causing a divide-by-zero) must
+	// propagate instead of being swallowed.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
+
+	_, err := annuity.contributionsAnticipateFuture()
+	assert.Error(t, err)
+}
+
+func TestPrincipalFuturePropagatesNonInvalidOperationError(t *testing.T) {
+	// A zero-value Annuity fails GetEqualsRateInterestPeriods with a
+	// different error than ErrInvalidOperation, so principalFuture must
+	// surface it instead of silently returning zero.
+	var annuity Annuity
+
+	_, err := annuity.principalFuture()
+	assert.Error(t, err)
+	assert.NotErrorIs(t, err, compositeinterest.ErrInvalidOperation)
+}
+
+func TestFutureWithContributionsPropagatesContributionsError(t *testing.T) {
+	// With rate = 0, contributionsFuture fails with a divide-by-zero error,
+	// so FutureWithContributions must surface it before even attempting to
+	// compute the principal's future value.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
+
+	_, err := annuity.FutureWithContributions()
+	assert.Error(t, err)
+}
+
+func TestAnticipateFutureWithContributionsPropagatesContributionsError(t *testing.T) {
+	// Same as above, but through the anticipated (annuity due) variant.
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
+
+	_, err := annuity.AnticipateFutureWithContributions()
+	assert.Error(t, err)
+}

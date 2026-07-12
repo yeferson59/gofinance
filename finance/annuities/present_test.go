@@ -255,3 +255,85 @@ func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
 		})
 	}
 }
+
+func TestPresentPropagatesRateInterestPeriodsError(t *testing.T) {
+	// A zero-value Annuity has an invalid (empty) period frequency, so
+	// GetEqualsRateInterestPeriods fails and Present must surface that
+	// error instead of a bogus zero value.
+	var annuity Annuity
+
+	_, err := annuity.Present()
+	assert.Error(t, err)
+}
+
+func TestPresentPropagatesPowOverflow(t *testing.T) {
+	// (1+r)^n overflows decimal128's 128-bit coefficient when both the rate
+	// and the period count are astronomically large.
+	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(1000), compositeinterest.Monthly)
+	require.NoError(t, err)
+	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(1000), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	require.NoError(t, err)
+	annuity, err := New(
+		money.MustMoneyFromFloat64(1000, money.USD),
+		money.MoneyZero,
+		money.MoneyZero,
+		period,
+		rateInterest,
+	)
+	require.NoError(t, err)
+
+	_, err = annuity.Present()
+	assert.Error(t, err)
+}
+
+func TestAnticipatePresentPropagatesRateInterestPeriodsError(t *testing.T) {
+	// A zero-value Annuity has an invalid (empty) period frequency, so
+	// GetEqualsRateInterestPeriods fails and AnticipatePresent must surface
+	// that error instead of a bogus zero value.
+	var annuity Annuity
+
+	_, err := annuity.AnticipatePresent()
+	assert.Error(t, err)
+}
+
+func TestAnticipatePresentPropagatesPowOverflow(t *testing.T) {
+	// (1+r)^(n-1) overflows decimal128's 128-bit coefficient when both the
+	// rate and the period count are astronomically large.
+	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(1000), compositeinterest.Monthly)
+	require.NoError(t, err)
+	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(1000), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	require.NoError(t, err)
+	annuity, err := New(
+		money.MustMoneyFromFloat64(1000, money.USD),
+		money.MoneyZero,
+		money.MoneyZero,
+		period,
+		rateInterest,
+	)
+	require.NoError(t, err)
+
+	_, err = annuity.AnticipatePresent()
+	assert.Error(t, err)
+}
+
+func TestAnticipatePresentWithZeroInterestRate(t *testing.T) {
+	// With a zero interest rate the annuity formula divides by zero, so
+	// AnticipatePresent must return an error instead of a value.
+	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	require.NoError(t, err)
+
+	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0.0), compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
+	require.NoError(t, err)
+
+	value, err := money.New(100000, 2, money.USD)
+	require.NoError(t, err)
+	present, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	future, err := money.New(1200000, 2, money.USD)
+	require.NoError(t, err)
+	annuity, err := New(value, present, future, period, rateInterest)
+	require.NoError(t, err)
+
+	_, err = annuity.AnticipatePresent()
+	assert.Error(t, err)
+}
