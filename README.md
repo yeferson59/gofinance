@@ -1,3 +1,6 @@
+[![CI](https://github.com/yeferson59/gofinance/actions/workflows/ci.yml/badge.svg)](https://github.com/yeferson59/gofinance/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/yeferson59/gofinance/graph/badge.svg?token=OQAWSDRWEZ)](https://codecov.io/github/yeferson59/gofinance)
+
 # 💰 GoFinance
 
 A robust, type-safe Go library for financial calculations and money management. **GoFinance** provides comprehensive tools for handling complex financial mathematics including simple interest, compound interest, annuities, and precise monetary operations — all built on its own zero-dependency, allocation-free decimal engine.
