@@ -14,15 +14,16 @@ import (
 const maxScale uint8 = 19
 
 var (
-	ErrOverflow        = errors.New("money: numeric overflow")
-	ErrDivideByZero    = errors.New("money: division by zero")
-	ErrEmptyString     = errors.New("money: can't parse empty string")
-	ErrInvalidFormat   = errors.New("money: invalid decimal format")
-	ErrPrecOutOfRange  = errors.New("money: precision out of range, maximum is 19 digits after the decimal point")
-	ErrIntPartOverflow = errors.New("money: integer part is too large to fit in int64")
-	ErrLogNonPositive  = errors.New("money: logarithm of a non-positive number is undefined")
-	ErrPowNegBase      = errors.New("money: negative base with a non-integer exponent is undefined")
-	ErrSqrtNegative    = errors.New("money: square root of a negative number is undefined")
+	ErrOverflow        = errors.New("numeric overflow")
+	ErrDivideByZero    = errors.New("division by zero")
+	ErrEmptyString     = errors.New("can't parse empty string")
+	ErrInvalidFormat   = errors.New("invalid decimal format")
+	ErrPrecOutOfRange  = errors.New("precision out of range, maximum is 19 digits after the decimal point")
+	ErrIntPartOverflow = errors.New("integer part is too large to fit in int64")
+	ErrLogNonPositive  = errors.New("logarithm of a non-positive number is undefined")
+	ErrPowNegBase      = errors.New("negative base with a non-integer exponent is undefined")
+	ErrSqrtNegative    = errors.New("square root of a negative number is undefined")
+	ErrSymbolFraction  = errors.New("invalid symbol for create fraction")
 )
 
 // decimal128 is a fixed-point decimal number backed by a 128-bit unsigned

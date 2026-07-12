@@ -2,6 +2,7 @@ package decimal
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 var Zero = Decimal{value: decZero}
@@ -37,6 +38,79 @@ func NewFromHiLo(neg bool, hi, lo uint64, prec uint8) (Decimal, error) {
 	decimal, err := decFromHiLo(neg, hi, lo, prec)
 
 	return Decimal{decimal}, err
+}
+
+func NewFromString(s string) (Decimal, error) {
+	decimal, err := parseDecimal(s)
+
+	return Decimal{decimal}, err
+}
+
+func NewFractionFloat64(numerator float64, denominator float64) (Decimal, error) {
+	num, err := decFromFloat64(numerator)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	den, err := decFromFloat64(denominator)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	result, err := num.Div(den)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	return Decimal{result}, nil
+}
+
+func NewFractionInt64(numerator int64, numeratorPrec uint8, denominator int64, denominatorPrec uint8) (Decimal, error) {
+	num, err := decFromInt64(numerator, numeratorPrec)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	den, err := decFromInt64(denominator, denominatorPrec)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	result, err := num.Div(den)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	return Decimal{result}, nil
+}
+
+func NewFractionString(frac string) (Decimal, error) {
+	frac = strings.TrimSpace(frac)
+
+	sep := "/"
+
+	if !strings.Contains(frac, sep) {
+		return Decimal{}, ErrSymbolFraction
+	}
+
+	split := strings.Split(frac, sep)
+
+	num, err := parseDecimal(split[0])
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	den, err := parseDecimal(split[1])
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	result, err := num.Div(den)
+	if err != nil {
+		return Decimal{}, err
+	}
+
+	return Decimal{result}, nil
 }
 
 func MustFromFloat64(f float64) Decimal {
@@ -75,14 +149,26 @@ func MustFromHiLo(neg bool, hi, lo uint64, prec uint8) Decimal {
 	return d
 }
 
-func NewFromString(s string) (Decimal, error) {
-	decimal, err := parseDecimal(s)
-
-	return Decimal{decimal}, err
-}
-
 func MustFromString(s string) Decimal {
 	d, err := NewFromString(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return d
+}
+
+func MustFractionFloat64(numerator float64, denominator float64) Decimal {
+	d, err := NewFractionFloat64(numerator, denominator)
+	if err != nil {
+		panic(err)
+	}
+
+	return d
+}
+
+func MustFractionInt64(numerator int64, numeratorPrec uint8, denominator int64, denominatorPrec uint8) Decimal {
+	d, err := NewFractionInt64(numerator, numeratorPrec, denominator, denominatorPrec)
 	if err != nil {
 		panic(err)
 	}
