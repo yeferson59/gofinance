@@ -101,6 +101,30 @@ func TestAnnuityFuture(t *testing.T) {
 	assert.InDelta(t, 11268.2503, futureValue.ToDecimal().InexactFloat64(), 0.01)
 }
 
+func TestAnnuityAnticipatePresent(t *testing.T) {
+	// PV_due = PV_ordinary × (1+i); with the same inputs as
+	// TestAnnuityPresent, PV_ordinary = 11255.0775, so
+	// PV_due = 11255.0775 × 1.01 = 11367.628275.
+	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	require.NoError(t, err)
+
+	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0.12), compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
+	require.NoError(t, err)
+
+	value, err := money.New(100000, 2, money.USD)
+	require.NoError(t, err)
+	present, err := money.New(0, 2, money.USD)
+	require.NoError(t, err)
+	future, err := money.New(1500000, 2, money.USD)
+	require.NoError(t, err)
+	annuity, err := New(value, present, future, period, rateInterest)
+	require.NoError(t, err)
+
+	presentValue, err := annuity.AnticipatePresent()
+	require.NoError(t, err)
+	assert.InDelta(t, 11367.628275, presentValue.ToDecimal().InexactFloat64(), 0.01)
+}
+
 func TestAnnuityPaymentFromPresentValue(t *testing.T) {
 	// PV = 10000, i = 0.01, n = 12
 	// PMT = PV × i(1+i)^n / [(1+i)^n - 1] = 888.4879

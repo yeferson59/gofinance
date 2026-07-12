@@ -28,3 +28,15 @@ func TestInterest(t *testing.T) {
 	_, err = simpleInterest.Interest()
 	assert.Error(t, err)
 }
+
+func TestInterestWithPresentAndFuture(t *testing.T) {
+	present, _ := money.New(5_000, 0, money.COP)
+	future, _ := money.New(5_500, 0, money.COP)
+	simpleInterest := New(future, present, money.Money{}, money.Decimal{}, Period{})
+
+	expectedInterest, _ := money.New(500, 0, money.COP)
+
+	interest, err := simpleInterest.InterestWithPresentAndFuture()
+	require.NoError(t, err)
+	assert.Equal(t, expectedInterest.String(), interest.String())
+}

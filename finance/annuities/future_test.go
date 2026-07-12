@@ -1,6 +1,7 @@
 package annuities
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,6 +9,30 @@ import (
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
+
+func TestAnticipateFutureFromPaymentsOnly(t *testing.T) {
+	// With no principal or preset future value, AnticipateFuture must fall
+	// through to contributionsAnticipateFuture: FV_due = FV_ordinary × (1+i).
+	rate, err := compositeinterest.NewRateInterest(
+		money.MustFromFloat64(0.01),
+		compositeinterest.Monthly,
+		compositeinterest.RateEffectyPeriodic,
+	)
+	require.NoError(t, err)
+
+	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	require.NoError(t, err)
+
+	ann, err := New(money.MustMoneyFromFloat64(500, money.USD), money.MoneyZero, money.MoneyZero, period, rate)
+	require.NoError(t, err)
+
+	future, err := ann.AnticipateFuture()
+	require.NoError(t, err)
+
+	ordinary := 500 * (math.Pow(1.01, 12) - 1) / 0.01
+	expected := ordinary * 1.01
+	assert.InDelta(t, expected, future.InexactFloat64(), 0.01)
+}
 
 func TestAnnuityFutureWithContributions(t *testing.T) {
 	// PV = 10000, PMT = 1000, i = 0.01, n = 12

@@ -114,6 +114,105 @@ func TestRateConversionBuild(t *testing.T) {
 	assertRate(t, periodic, err, 0.01)
 }
 
+func TestRateConversionConfigSetters(t *testing.T) {
+	rate := money.MustFromFloat64(0.03)
+
+	config := NewRateConversion().
+		RateDecimal(rate).
+		Frequency(QuarterlyOne).
+		RateType(RateEffectyNominal)
+
+	if !config.rate.Equal(rate) {
+		t.Errorf("expected rate %v, got %v", rate, config.rate)
+	}
+	if config.frequency != QuarterlyOne {
+		t.Errorf("expected QuarterlyOne, got %v", config.frequency)
+	}
+	if config.rateType != RateEffectyNominal {
+		t.Errorf("expected RateEffectyNominal, got %v", config.rateType)
+	}
+}
+
+func TestRateConversionFrequencyConvenienceMethods(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   RateConversionConfig
+		expected CompoundingFrequency
+	}{
+		{"daily", NewRateConversion().Daily(), Daily},
+		{"quarterly", NewRateConversion().Quarterly(), QuarterlyOne},
+		{"semiannually", NewRateConversion().SemiAnnually(), SemiAnnually},
+		{"annually", NewRateConversion().Annually(), Annually},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.config.frequency != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, tt.config.frequency)
+			}
+		})
+	}
+}
+
+func TestRateConversionAnticipatedNominal(t *testing.T) {
+	config := NewRateConversion().Rate(0.01).AnticipatedNominal().Monthly()
+
+	if config.rateType != RateAnticipateEffectyNominal {
+		t.Errorf("expected RateAnticipateEffectyNominal, got %v", config.rateType)
+	}
+	if !config.isAnticipated() {
+		t.Error("expected isAnticipated() to be true")
+	}
+}
+
+func TestRateConversionAnticipatedNominalRoundTrip(t *testing.T) {
+	// An anticipated nominal rate of 12×(1 - 1/1.01) corresponds to an
+	// ordinary periodic rate of 0.01 monthly, i.e. an ordinary nominal
+	// rate of 0.12.
+	anticipatedNominal := 12 * (1 - 1/1.01)
+
+	nominal, err := NewRateConversion().
+		Rate(anticipatedNominal).
+		AnticipatedNominal().
+		Monthly().
+		ToNominal()
+
+	assertRate(t, nominal, err, 0.12)
+}
+
+func TestRateConversionToAnticipatedNominal(t *testing.T) {
+	// From an ordinary periodic rate of 0.01 monthly, the anticipated
+	// nominal rate is 12×(1 - 1/1.01).
+	anticipatedNominal, err := NewRateConversion().
+		Rate(0.01).
+		Periodic().
+		Monthly().
+		ToAnticipatedNominal()
+
+	assertRate(t, anticipatedNominal, err, 12*(1-1/1.01))
+}
+
+func TestRateConversionConfigMustBuild(t *testing.T) {
+	rt := NewRateConversion().
+		Rate(0.12).
+		Nominal().
+		Monthly().
+		MustBuild()
+
+	periodic, err := rt.RatePeriodic()
+	assertRate(t, periodic, err, 0.01)
+}
+
+func TestRateConversionConfigMustBuildPanicsOnInvalidRate(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic for negative rate")
+		}
+	}()
+
+	NewRateConversion().Rate(-0.05).MustBuild()
+}
+
 func TestRateConversionNegativeRate(t *testing.T) {
 	if _, err := NewRateConversion().Rate(-0.05).ToPeriodic(); err == nil {
 		t.Error("expected error for negative rate, got nil")

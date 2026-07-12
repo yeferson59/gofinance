@@ -69,6 +69,50 @@ func TestDecimalMustPowPanicsOnInvalidResult(t *testing.T) {
 	MustFromFloat64(-2).MustPow(MustFromFloat64(0.5))
 }
 
+func TestDecimalSqrt(t *testing.T) {
+	tests := []struct {
+		input    float64
+		expected string
+	}{
+		{4, "2"},
+		{2.25, "1.5"},
+		{0, "0"},
+	}
+
+	for _, tt := range tests {
+		result, err := MustFromFloat64(tt.input).Sqrt()
+		if err != nil {
+			t.Fatalf("unexpected error for sqrt(%v): %v", tt.input, err)
+		}
+		if result.String() != tt.expected {
+			t.Errorf("expected sqrt(%v) = %s, got %s", tt.input, tt.expected, result.String())
+		}
+	}
+}
+
+func TestDecimalSqrtNegative(t *testing.T) {
+	if _, err := MustFromFloat64(-4).Sqrt(); !errors.Is(err, ErrSqrtNegative) {
+		t.Errorf("expected ErrSqrtNegative, got %v", err)
+	}
+}
+
+func TestDecimalMustSqrt(t *testing.T) {
+	result := MustFromFloat64(9).MustSqrt()
+	if result.String() != "3" {
+		t.Errorf("expected 3, got %s", result.String())
+	}
+}
+
+func TestDecimalMustSqrtPanicsOnNegative(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic for negative input")
+		}
+	}()
+
+	MustFromFloat64(-4).MustSqrt()
+}
+
 func TestDecimalLn(t *testing.T) {
 	tests := []struct {
 		input    float64
@@ -724,6 +768,30 @@ func TestNewFractionInt64DivideByZero(t *testing.T) {
 	_, err := NewFractionInt64(1, 0, 0, 0)
 	if !errors.Is(err, ErrDivideByZero) {
 		t.Errorf("expected ErrDivideByZero, got %v", err)
+	}
+}
+
+func TestNewFractionFloat64InvalidNumerator(t *testing.T) {
+	if _, err := NewFractionFloat64(math.NaN(), 2); err == nil {
+		t.Error("expected error for NaN numerator")
+	}
+}
+
+func TestNewFractionFloat64InvalidDenominator(t *testing.T) {
+	if _, err := NewFractionFloat64(1, math.Inf(1)); err == nil {
+		t.Error("expected error for Inf denominator")
+	}
+}
+
+func TestNewFractionInt64InvalidNumeratorPrecision(t *testing.T) {
+	if _, err := NewFractionInt64(1, 200, 2, 0); !errors.Is(err, ErrPrecOutOfRange) {
+		t.Errorf("expected ErrPrecOutOfRange, got %v", err)
+	}
+}
+
+func TestNewFractionInt64InvalidDenominatorPrecision(t *testing.T) {
+	if _, err := NewFractionInt64(1, 0, 2, 200); !errors.Is(err, ErrPrecOutOfRange) {
+		t.Errorf("expected ErrPrecOutOfRange, got %v", err)
 	}
 }
 
