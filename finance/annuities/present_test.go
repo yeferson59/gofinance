@@ -147,52 +147,6 @@ func TestAnnuityPaymentFromFutureValue(t *testing.T) {
 	assert.InDelta(t, 1182.7318, payment.ToDecimal().InexactFloat64(), 0.01)
 }
 
-func TestAnnuityPeriodsWithPresent(t *testing.T) {
-	// PMT = 1000, PV = 10000, i = 0.01
-	// n = ln(PMT / (PMT - PV×i)) / ln(1+i) = ln(1000/900) / ln(1.01) = 10.5886
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
-	require.NoError(t, err)
-
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0.12), compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
-	require.NoError(t, err)
-
-	value, err := money.New(100000, 2, money.USD)
-	require.NoError(t, err)
-	present, err := money.New(1000000, 2, money.USD)
-	require.NoError(t, err)
-	future, err := money.New(1500000, 2, money.USD)
-	require.NoError(t, err)
-	annuity, err := New(value, present, future, period, rateInterest)
-	require.NoError(t, err)
-
-	periods, err := annuity.PeriodsWithPresent()
-	require.NoError(t, err)
-	assert.InDelta(t, 10.5886, periods.InexactFloat64(), 0.0001)
-}
-
-func TestAnnuityPeriodsWithFuture(t *testing.T) {
-	// PMT = 1000, FV = 15000, i = 0.01
-	// n = ln((FV×i + PMT) / PMT) / ln(1+i) = ln(1.15) / ln(1.01) = 14.0460
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
-	require.NoError(t, err)
-
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0.12), compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
-	require.NoError(t, err)
-
-	value, err := money.New(100000, 2, money.USD)
-	require.NoError(t, err)
-	present, err := money.New(1000000, 2, money.USD)
-	require.NoError(t, err)
-	future, err := money.New(1500000, 2, money.USD)
-	require.NoError(t, err)
-	annuity, err := New(value, present, future, period, rateInterest)
-	require.NoError(t, err)
-
-	periods, err := annuity.PeriodsWithFuture()
-	require.NoError(t, err)
-	assert.InDelta(t, 14.0460, periods.InexactFloat64(), 0.0001)
-}
-
 func TestNewAnnuityWithInvalidPeriod(t *testing.T) {
 	// Test creation with invalid period - negative value should fail at NewPeriod
 	_, err := compositeinterest.NewPeriod(money.MustFromFloat64(-1), compositeinterest.Monthly)

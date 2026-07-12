@@ -203,7 +203,7 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 	}
 
 	a.rate = r / divisor
-	a.rateType = compositeinterest.RateEffectyNominal
+	a.rateType = compositeinterest.RateEffectyPeriodic
 
 	return a
 }
@@ -376,6 +376,100 @@ func (a AnnuityConfig) Payment() (money.Money, error) {
 //	    MustPayment()
 func (a AnnuityConfig) MustPayment() money.Money {
 	m, err := a.Payment()
+	if err != nil {
+		panic(err)
+	}
+
+	return m
+}
+
+// AnticipatePayment is like Payment, but assumes each payment is made at the
+// beginning of its period (annuity due) instead of the end (ordinary
+// annuity).
+//
+// Example:
+//
+//	payment, err := NewAnnuity().
+//	    Present(300000, money.USD).
+//	    AnnualRate(0.06).
+//	    Periods(360).
+//	    Monthly().
+//	    AnticipatePayment()
+func (a AnnuityConfig) AnticipatePayment() (money.Money, error) {
+	annuity, err := a.Build()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return annuity.AnticipatePaymentFromPresentValue()
+}
+
+// MustAnticipatePayment is like AnticipatePayment, but panics if the
+// calculation fails.
+func (a AnnuityConfig) MustAnticipatePayment() money.Money {
+	m, err := a.AnticipatePayment()
+	if err != nil {
+		panic(err)
+	}
+
+	return m
+}
+
+// FutureValue builds the Annuity and calculates the future value of a
+// recurring investment: the initial principal (Present) compounded over the
+// term, plus the future value of equal periodic contributions (Value) made
+// at the end of each period (ordinary annuity).
+//
+// Use this to model an investment plan such as "I have $1,000 today and add
+// $100 every month".
+//
+// Returns:
+//   - The total future value as a Money instance
+//   - An error if the calculation fails
+//
+// Example:
+//
+//	future, err := NewAnnuity().
+//	    Present(1000, money.USD).
+//	    Value(100, money.USD).
+//	    AnnualRate(0.06).
+//	    Periods(12).
+//	    Monthly().
+//	    FutureValue()
+func (a AnnuityConfig) FutureValue() (money.Money, error) {
+	annuity, err := a.Build()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return annuity.FutureWithContributions()
+}
+
+// MustFutureValue is like FutureValue, but panics if the calculation fails.
+func (a AnnuityConfig) MustFutureValue() money.Money {
+	m, err := a.FutureValue()
+	if err != nil {
+		panic(err)
+	}
+
+	return m
+}
+
+// AnticipateFutureValue is like FutureValue, but assumes each contribution is
+// made at the beginning of its period (annuity due) instead of at the end.
+func (a AnnuityConfig) AnticipateFutureValue() (money.Money, error) {
+	annuity, err := a.Build()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return annuity.AnticipateFutureWithContributions()
+}
+
+// MustAnticipateFutureValue is like AnticipateFutureValue, but panics if the
+// calculation fails.
+func (a AnnuityConfig) MustAnticipateFutureValue() money.Money {
+	m, err := a.AnticipateFutureValue()
 	if err != nil {
 		panic(err)
 	}

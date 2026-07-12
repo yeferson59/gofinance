@@ -68,3 +68,62 @@ func (a Annuity) PaymentFromFutureValue() (money.Money, error) {
 
 	return annuity, nil
 }
+
+// AnticipatePaymentFromPresentValue is like PaymentFromPresentValue, but
+// assumes each payment is made at the beginning of its period (annuity due)
+// instead of at the end (ordinary annuity).
+//
+// Formula: PMT = PV × [i(1+i)^n] / {[(1+i)^n - 1] × (1+i)}
+// This is PaymentFromPresentValue divided by (1+i): paying one period
+// earlier lets a smaller payment reach the same present value.
+func (a Annuity) AnticipatePaymentFromPresentValue() (money.Money, error) {
+	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	present, err := a.compositeInterest.Present()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	growthFactor := rateInterest.Add(money.One)
+
+	growthPower := growthFactor.MustPow(periods)
+
+	numerator := rateInterest.Mul(growthPower)
+
+	denominator := growthPower.Sub(money.One).Mul(growthFactor)
+
+	annuity := present.Mul(numerator.MustDiv(denominator).ToMoney(present.Currency()))
+
+	return annuity, nil
+}
+
+// AnticipatePaymentFromFutureValue is like PaymentFromFutureValue, but
+// assumes each payment is made at the beginning of its period (annuity due)
+// instead of at the end (ordinary annuity).
+//
+// Formula: PMT = FV × i / {[(1+i)^n - 1] × (1+i)}
+// This is PaymentFromFutureValue divided by (1+i).
+func (a Annuity) AnticipatePaymentFromFutureValue() (money.Money, error) {
+	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	future, err := a.compositeInterest.Future()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	growthFactor := rateInterest.Add(money.One)
+
+	growthPower := growthFactor.MustPow(periods)
+
+	denominator := growthPower.Sub(money.One).Mul(growthFactor)
+
+	annuity := future.Mul(rateInterest.MustDiv(denominator).ToMoney(future.Currency()))
+
+	return annuity, nil
+}
