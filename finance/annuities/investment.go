@@ -63,7 +63,6 @@ func buildInvestmentSchedule(principal, contribution money.Money, rate decimal.D
 
 	currency := principal.Currency()
 	zero := money.MustMoneyFromFloat64(0, currency)
-	rateMoney := money.FromDecimal(rate, currency)
 
 	balance := principal
 	sumContributions, sumInterest := zero, zero
@@ -85,10 +84,10 @@ func buildInvestmentSchedule(principal, contribution money.Money, rate decimal.D
 
 		if anticipated {
 			balance = balance.Add(contribution)
-			interest = balance.Mul(rateMoney)
+			interest = balance.MulDecimal(rate)
 			balance = balance.Add(interest)
 		} else {
-			interest = balance.Mul(rateMoney)
+			interest = balance.MulDecimal(rate)
 			balance = balance.Add(interest).Add(contribution)
 		}
 
