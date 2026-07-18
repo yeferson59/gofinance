@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -15,10 +16,10 @@ import (
 func newPeriodsCase(t *testing.T, present, future int64, rate float64, freq CompoundingFrequency, typeRate TypeRate) CompositeInterest {
 	t.Helper()
 
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(rate), freq, typeRate)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(rate), freq, typeRate)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(0), freq)
+	period, err := NewPeriod(decimal.MustFromFloat64(0), freq)
 	require.NoError(t, err)
 
 	presentMoney, err := money.New(present, 2, money.USD)
@@ -34,10 +35,10 @@ func newPeriodsCase(t *testing.T, present, future int64, rate float64, freq Comp
 func TestPeriodsReturnsConfiguredPeriod(t *testing.T) {
 	// When a non-zero period is configured, Periods() returns it directly
 	// without computing anything from present/future/rate.
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(18), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(18), Monthly)
 	require.NoError(t, err)
 
 	presentMoney, err := money.New(100000, 2, money.USD)
@@ -251,11 +252,11 @@ func TestPeriodsWithFractionalPeriods(t *testing.T) {
 }
 
 func TestPeriodsConsistencyWithFuture(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	originalPeriods := 12.0
-	period, err := NewPeriod(money.MustFromFloat64(originalPeriods), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(originalPeriods), Monthly)
 	require.NoError(t, err)
 
 	presentMoney, err := money.New(100000, 2, money.USD)
@@ -270,7 +271,7 @@ func TestPeriodsConsistencyWithFuture(t *testing.T) {
 
 	// Recover the periods from the computed future value using a zero period
 	// so that Periods() derives the answer instead of echoing the input.
-	zeroPeriod, err := NewPeriod(money.MustFromFloat64(0), Monthly)
+	zeroPeriod, err := NewPeriod(decimal.MustFromFloat64(0), Monthly)
 	require.NoError(t, err)
 	ci2, err := New(presentMoney, future, rateInterest, zeroPeriod)
 	require.NoError(t, err)
@@ -314,10 +315,10 @@ func TestPeriodsPropagatesPeriodError(t *testing.T) {
 func TestPeriodsPropagatesOverflowFromRatio(t *testing.T) {
 	// future/present computed at an extreme magnitude mismatch overflows
 	// decimal128's 128-bit coefficient.
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(0), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(0), Monthly)
 	require.NoError(t, err)
 
 	present, err := money.New(1, 19, money.USD)

@@ -1,8 +1,6 @@
 package compositeinterest
 
-import (
-	"github.com/yeferson59/gofinance/money"
-)
+import "github.com/yeferson59/gofinance/decimal"
 
 // Periods calculates the number of compounding periods needed to reach a target future value
 // from a present value at a given interest rate.
@@ -28,39 +26,39 @@ import (
 //	)
 //	periods, _ := ci.Periods()
 //	// periods contains how many periods needed to reach $1500 from $1000
-func (c CompositeInterest) Periods() (money.Decimal, error) {
+func (c CompositeInterest) Periods() (decimal.Decimal, error) {
 	if periodValue, _, err := c.periods.getPeriod(); err == nil && !periodValue.IsZero() {
 		return periodValue, nil
 	}
 
 	_, periodicRate, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if c.present.IsZero() || c.future.IsZero() || periodicRate.IsZero() {
-		return money.Decimal{}, ErrInvalidOperation
+		return decimal.Decimal{}, ErrInvalidOperation
 	}
 
 	futureToPresent, err := c.future.Div(c.present)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	logarithmRatio, err := futureToPresent.ToDecimal().Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	growthFactor := periodicRate.Add(money.One)
+	growthFactor := periodicRate.Add(decimal.One)
 	logarithmGrowth, err := growthFactor.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	numberOfPeriods, err := logarithmRatio.Div(logarithmGrowth)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return numberOfPeriods, nil

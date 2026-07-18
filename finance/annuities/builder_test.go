@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -126,7 +127,7 @@ func TestAnnuityConfigMustBuildPanicsOnInvalidParams(t *testing.T) {
 
 func TestFutureFromPaymentsOnly(t *testing.T) {
 	rate, err := compositeinterest.NewRateInterest(
-		money.MustFromFloat64(0.01),
+		decimal.MustFromFloat64(0.01),
 		compositeinterest.Monthly,
 		compositeinterest.RateEffectyPeriodic,
 	)
@@ -134,7 +135,7 @@ func TestFutureFromPaymentsOnly(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

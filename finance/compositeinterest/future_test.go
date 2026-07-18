@@ -6,17 +6,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
 func TestFutureWithPeriodicRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 
 	tx := require.New(t)
 
 	tx.NoError(err)
 
-	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
 	tx.NoError(err)
 
 	present, err := money.New(100000, 2, money.USD)
@@ -34,10 +35,10 @@ func TestFutureWithPeriodicRate(t *testing.T) {
 }
 
 func TestFutureWithNominalRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
 	present, err := money.New(100000, 2, money.USD)
@@ -55,10 +56,10 @@ func TestFutureWithNominalRate(t *testing.T) {
 }
 
 func TestFutureWithAnnuallyRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Annually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Annually, RateEffectyAnnually)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(1), Annually)
+	period, err := NewPeriod(decimal.MustFromFloat64(1), Annually)
 	require.NoError(t, err)
 
 	present, err := money.New(100000, 2, money.USD)
@@ -76,10 +77,10 @@ func TestFutureWithAnnuallyRate(t *testing.T) {
 }
 
 func TestFutureWithDailyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.10), Daily, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), Daily, RateEffectyAnnually)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(365), Daily)
+	period, err := NewPeriod(decimal.MustFromFloat64(365), Daily)
 	require.NoError(t, err)
 
 	present, err := money.New(100000, 2, money.USD)
@@ -98,10 +99,10 @@ func TestFutureWithDailyCompounding(t *testing.T) {
 }
 
 func TestFutureWithQuarterlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), QuarterlyOne, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), QuarterlyOne, RateEffectyNominal)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(4), QuarterlyOne)
+	period, err := NewPeriod(decimal.MustFromFloat64(4), QuarterlyOne)
 	require.NoError(t, err)
 
 	present, err := money.New(100000, 2, money.USD)
@@ -119,10 +120,10 @@ func TestFutureWithQuarterlyCompounding(t *testing.T) {
 }
 
 func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.10), SemiAnnually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), SemiAnnually, RateEffectyAnnually)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(2), SemiAnnually)
+	period, err := NewPeriod(decimal.MustFromFloat64(2), SemiAnnually)
 	require.NoError(t, err)
 
 	present, err := money.New(500000, 2, money.USD)
@@ -142,10 +143,10 @@ func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
 }
 
 func TestFutureWithZeroPresent(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
 	present, err := money.New(0, 2, money.USD)
@@ -203,10 +204,10 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rateInterest, err := NewRateInterest(money.MustFromFloat64(tc.rate), tc.freq, tc.typeRate)
+			rateInterest, err := NewRateInterest(decimal.MustFromFloat64(tc.rate), tc.freq, tc.typeRate)
 			require.NoError(t, err)
 
-			period, err := NewPeriod(money.MustFromFloat64(tc.periods), tc.freq)
+			period, err := NewPeriod(decimal.MustFromFloat64(tc.periods), tc.freq)
 			require.NoError(t, err)
 
 			presentMoney, err := money.New(int64(tc.present*100), 2, money.USD)
@@ -225,10 +226,10 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 }
 
 func TestFutureWithBimonthlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.06), Bimonthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.06), Bimonthly, RateEffectyNominal)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(6), Bimonthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(6), Bimonthly)
 	require.NoError(t, err)
 
 	present, err := money.New(100000, 2, money.USD)
@@ -263,10 +264,10 @@ func TestFutureWithDifferentRateTypes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rateInterest, err := NewRateInterest(money.MustFromFloat64(tc.rate), Monthly, tc.typeRate)
+			rateInterest, err := NewRateInterest(decimal.MustFromFloat64(tc.rate), Monthly, tc.typeRate)
 			require.NoError(t, err)
 
-			period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+			period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
 			require.NoError(t, err)
 
 			present, err := money.New(100000, 2, money.USD)
@@ -285,10 +286,10 @@ func TestFutureWithDifferentRateTypes(t *testing.T) {
 }
 
 func createCompositeInterest(numberPeriod float64, periodF CompoundingFrequency, rateInterest float64, compounding CompoundingFrequency, typeRate TypeRate, present, future float64, tx *require.Assertions) CompositeInterest {
-	period, err := NewPeriod(money.MustFromFloat64(numberPeriod), periodF)
+	period, err := NewPeriod(decimal.MustFromFloat64(numberPeriod), periodF)
 	tx.NoError(err)
 
-	rate, err := NewRateInterest(money.MustFromFloat64(rateInterest), compounding, typeRate)
+	rate, err := NewRateInterest(decimal.MustFromFloat64(rateInterest), compounding, typeRate)
 	tx.NoError(err)
 
 	presentMoney, err := money.New(int64(present*100), 2, money.USD)

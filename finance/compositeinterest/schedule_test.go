@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -15,8 +16,8 @@ func TestBuildGrowthSchedule(t *testing.T) {
 	// period 2: interest = 10.10, balance = 1020.10
 	// period 3: interest = 10.20 (10.201 truncates to cents), balance = 1030.30
 	present := money.MustMoneyFromFloat64(1000, money.USD)
-	rate := money.MustFromFloat64(0.01)
-	nper := money.MustFromFloat64(3)
+	rate := decimal.MustFromFloat64(0.01)
+	nper := decimal.MustFromFloat64(3)
 
 	rows, err := BuildGrowthSchedule(present, rate, nper)
 	require.NoError(t, err)
@@ -47,11 +48,11 @@ func TestBuildGrowthSchedule(t *testing.T) {
 
 func TestBuildGrowthScheduleInvalidPeriods(t *testing.T) {
 	present := money.MustMoneyFromFloat64(1000, money.USD)
-	rate := money.MustFromFloat64(0.01)
+	rate := decimal.MustFromFloat64(0.01)
 
-	tests := []money.Decimal{
-		money.MustFromFloat64(0),
-		money.MustFromFloat64(-3),
+	tests := []decimal.Decimal{
+		decimal.MustFromFloat64(0),
+		decimal.MustFromFloat64(-3),
 	}
 
 	for _, nper := range tests {

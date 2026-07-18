@@ -3,46 +3,36 @@ package simpleinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/decimal"
 )
 
-func (s SimpleInterest) RateInterest() (money.Decimal, error) {
+func (s SimpleInterest) RateInterest() (decimal.Decimal, error) {
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if s.present.IsZero() || numberOfPeriods.IsZero() {
-		return money.Decimal{}, errors.New("invalid present or periods for operation")
+		return decimal.Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	rateInterest, err := s.interest.Div(s.present.Mul(numberOfPeriods.ToMoney()))
-	if err != nil {
-		return money.Decimal{}, err
-	}
-
-	return rateInterest.ToDecimal(), nil
+	return s.interest.ToDecimal().Div(s.present.ToDecimal().Mul(numberOfPeriods))
 }
 
-func (s SimpleInterest) RateInterestWithPresentAndFuture() (money.Decimal, error) {
+func (s SimpleInterest) RateInterestWithPresentAndFuture() (decimal.Decimal, error) {
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if s.present.IsZero() || numberOfPeriods.IsZero() {
-		return money.Decimal{}, errors.New("invalid present or periods for operation")
+		return decimal.Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	num, err := s.future.Div(s.present)
+	num, err := s.future.ToDecimal().Div(s.present.ToDecimal())
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	rateInterest, err := num.Sub(money.MoneyOne).Div(numberOfPeriods.ToMoney())
-	if err != nil {
-		return money.Decimal{}, err
-	}
-
-	return rateInterest.ToDecimal(), nil
+	return num.Sub(decimal.One).Div(numberOfPeriods)
 }

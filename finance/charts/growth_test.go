@@ -6,6 +6,7 @@ import (
 
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -15,7 +16,7 @@ func buildTestGrowthSchedule(t *testing.T, currency money.Currency, presentAmoun
 
 	present := money.MustMoneyFromFloat64(presentAmount, currency)
 
-	rows, err := compositeinterest.BuildGrowthSchedule(present, money.MustFromFloat64(0.01), money.MustFromFloat64(12))
+	rows, err := compositeinterest.BuildGrowthSchedule(present, decimal.MustFromFloat64(0.01), decimal.MustFromFloat64(12))
 	if err != nil {
 		t.Fatalf("failed to build test growth schedule: %v", err)
 	}

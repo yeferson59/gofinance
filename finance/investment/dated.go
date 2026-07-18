@@ -3,6 +3,7 @@ package investment
 import (
 	"time"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/daycount"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -20,7 +21,7 @@ type DatedCashFlow struct {
 // the Actual/365 Fixed convention — the same basis spreadsheet XNPV/XIRR use.
 // All dates must be on or after the base date and every amount must share one
 // currency.
-func datedFlows(flows []DatedCashFlow) (amounts, times []money.Decimal, currency money.Currency, err error) {
+func datedFlows(flows []DatedCashFlow) (amounts, times []decimal.Decimal, currency money.Currency, err error) {
 	if len(flows) == 0 {
 		return nil, nil, 0, ErrNoCashFlows
 	}
@@ -28,8 +29,8 @@ func datedFlows(flows []DatedCashFlow) (amounts, times []money.Decimal, currency
 	base := flows[0].Date
 	currency = flows[0].Amount.Currency()
 
-	amounts = make([]money.Decimal, len(flows))
-	times = make([]money.Decimal, len(flows))
+	amounts = make([]decimal.Decimal, len(flows))
+	times = make([]decimal.Decimal, len(flows))
 
 	for i, flow := range flows {
 		if flow.Amount.Currency() != currency {

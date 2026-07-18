@@ -5,14 +5,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 func TestGetCompoundingFrequencyDaily(t *testing.T) {
 	value, err := Daily.getCompoundingFrequency()
 	require.NoError(t, err)
 
-	expectedValue := money.MustFromFloat64(365.0)
+	expectedValue := decimal.MustFromFloat64(365.0)
 
 	assert.Equal(t, expectedValue, value)
 }
@@ -21,7 +21,7 @@ func TestGetCompoundingFrequencyMonthly(t *testing.T) {
 	value, err := Monthly.getCompoundingFrequency()
 	require.NoError(t, err)
 
-	expectedValue := money.MustFromFloat64(12.0)
+	expectedValue := decimal.MustFromFloat64(12.0)
 
 	assert.Equal(t, expectedValue, value)
 }
@@ -30,7 +30,7 @@ func TestGetCompoundingFrequencyBimonthly(t *testing.T) {
 	value, err := Bimonthly.getCompoundingFrequency()
 	require.NoError(t, err)
 
-	expectedValue := money.MustFromFloat64(6.0)
+	expectedValue := decimal.MustFromFloat64(6.0)
 
 	assert.Equal(t, expectedValue.InexactFloat64(), value.InexactFloat64())
 }
@@ -39,7 +39,7 @@ func TestGetCompoundingFrequencyQuarterlyOne(t *testing.T) {
 	value, err := QuarterlyOne.getCompoundingFrequency()
 	require.NoError(t, err)
 
-	expectedValue := money.MustFromFloat64(4.0)
+	expectedValue := decimal.MustFromFloat64(4.0)
 
 	assert.Equal(t, expectedValue, value)
 }
@@ -48,7 +48,7 @@ func TestGetCompoundingFrequencyQuarterlyTwo(t *testing.T) {
 	value, err := QuarterlyTwo.getCompoundingFrequency()
 	require.NoError(t, err)
 
-	expectedValue := money.MustFromFloat64(3.0)
+	expectedValue := decimal.MustFromFloat64(3.0)
 
 	assert.Equal(t, expectedValue, value)
 }
@@ -57,7 +57,7 @@ func TestGetCompoundingFrequencySemiAnnually(t *testing.T) {
 	value, err := SemiAnnually.getCompoundingFrequency()
 	require.NoError(t, err)
 
-	expectedValue := money.MustFromFloat64(2.0)
+	expectedValue := decimal.MustFromFloat64(2.0)
 
 	assert.Equal(t, expectedValue, value)
 }
@@ -66,7 +66,7 @@ func TestGetCompoundingFrequencyAnnually(t *testing.T) {
 	value, err := Annually.getCompoundingFrequency()
 	require.NoError(t, err)
 
-	expectedValue := money.MustFromFloat64(1.0)
+	expectedValue := decimal.MustFromFloat64(1.0)
 
 	assert.Equal(t, expectedValue, value)
 }
@@ -167,7 +167,7 @@ func TestGetCompoundingFrequencyMapValues(t *testing.T) {
 }
 
 func TestNewPeriodDaily(t *testing.T) {
-	period, err := NewPeriod(money.MustFromFloat64(365), Daily)
+	period, err := NewPeriod(decimal.MustFromFloat64(365), Daily)
 	require.NoError(t, err)
 
 	value, freq, err := period.getPeriod()
@@ -178,7 +178,7 @@ func TestNewPeriodDaily(t *testing.T) {
 }
 
 func TestNewPeriodMonthly(t *testing.T) {
-	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
 	value, freq, err := period.getPeriod()
@@ -189,7 +189,7 @@ func TestNewPeriodMonthly(t *testing.T) {
 }
 
 func TestNewPeriodQuarterly(t *testing.T) {
-	period, err := NewPeriod(money.MustFromFloat64(4), QuarterlyOne)
+	period, err := NewPeriod(decimal.MustFromFloat64(4), QuarterlyOne)
 	require.NoError(t, err)
 
 	value, freq, err := period.getPeriod()
@@ -200,7 +200,7 @@ func TestNewPeriodQuarterly(t *testing.T) {
 }
 
 func TestNewPeriodAnnually(t *testing.T) {
-	period, err := NewPeriod(money.MustFromFloat64(1), Annually)
+	period, err := NewPeriod(decimal.MustFromFloat64(1), Annually)
 	require.NoError(t, err)
 
 	value, freq, err := period.getPeriod()
@@ -212,7 +212,7 @@ func TestNewPeriodAnnually(t *testing.T) {
 
 func TestNewPeriodErrorWithInvalidFrequency(t *testing.T) {
 	invalidFreq := CompoundingFrequency("invalid")
-	_, err := NewPeriod(money.MustFromFloat64(12), invalidFreq)
+	_, err := NewPeriod(decimal.MustFromFloat64(12), invalidFreq)
 	assert.Error(t, err)
 	assert.EqualError(t, err, "invalid compounding frequency")
 }
@@ -224,7 +224,7 @@ func TestNewPeriodErrorWithEmptyPeriod(t *testing.T) {
 }
 
 func TestNewRateInterest(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	assert.Equal(t, 0.05, rateInterest.value.InexactFloat64())
@@ -249,7 +249,7 @@ func TestNewRateInterestWithDifferentTypes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rateInterest, err := NewRateInterest(money.MustFromFloat64(tc.value), tc.freq, tc.typeRate)
+			rateInterest, err := NewRateInterest(decimal.MustFromFloat64(tc.value), tc.freq, tc.typeRate)
 			require.NoError(t, err)
 			assert.Equal(t, tc.value, rateInterest.value.InexactFloat64())
 		})
@@ -269,14 +269,14 @@ func TestCompoundingFrequencyMapComplete(t *testing.T) {
 }
 
 func TestCompoundingFrequencyValues(t *testing.T) {
-	testCases := map[CompoundingFrequency]money.Decimal{
-		Daily:        money.MustFromFloat64(365.0),
-		Monthly:      money.MustFromFloat64(12.0),
-		Bimonthly:    money.MustFromFloat64(6.0),
-		QuarterlyOne: money.MustFromFloat64(4.0),
-		QuarterlyTwo: money.MustFromFloat64(3.0),
-		SemiAnnually: money.MustFromFloat64(2.0),
-		Annually:     money.MustFromFloat64(1.0),
+	testCases := map[CompoundingFrequency]decimal.Decimal{
+		Daily:        decimal.MustFromFloat64(365.0),
+		Monthly:      decimal.MustFromFloat64(12.0),
+		Bimonthly:    decimal.MustFromFloat64(6.0),
+		QuarterlyOne: decimal.MustFromFloat64(4.0),
+		QuarterlyTwo: decimal.MustFromFloat64(3.0),
+		SemiAnnually: decimal.MustFromFloat64(2.0),
+		Annually:     decimal.MustFromFloat64(1.0),
 	}
 
 	for freq, expectedValue := range testCases {

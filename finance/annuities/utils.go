@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -14,7 +15,7 @@ import (
 var ErrInvalidPeriods = errors.New("annuities: number of periods must be positive")
 
 type Schedule struct {
-	Period      money.Decimal
+	Period      decimal.Decimal
 	Balance     money.Money
 	Payment     money.Money
 	Interest    money.Money
@@ -29,7 +30,7 @@ type Schedule struct {
 // It returns ErrCurrencyMismatch if pv and payment aren't in the same
 // currency, ErrInvalidPeriods if nper isn't a positive whole number, and
 // wraps any error from parsing nper as an integer.
-func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper money.Decimal) ([]Schedule, error) {
+func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, nper decimal.Decimal) ([]Schedule, error) {
 	if pv.Currency() != payment.Currency() {
 		return nil, money.ErrCurrencyMismatch
 	}
@@ -49,7 +50,7 @@ func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper
 	sumInterest := zero
 
 	rows = append(rows, Schedule{
-		Period:      money.Zero,
+		Period:      decimal.Zero,
 		Balance:     pv,
 		Payment:     zero,
 		Interest:    zero,
@@ -58,13 +59,13 @@ func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper
 	})
 
 	for p := 1; p <= int(until); p++ {
-		interest := balance.Mul(rate.ToMoney(currency))
+		interest := balance.MulDecimal(rate)
 		principal := payment.Sub(interest)
 		balance = balance.Sub(principal)
 		sumInterest = sumInterest.Add(interest)
 
 		rows = append(rows, Schedule{
-			Period:      money.MustFromInt64(int64(p), 0),
+			Period:      decimal.MustFromInt64(int64(p), 0),
 			Balance:     balance,
 			Payment:     payment,
 			Interest:    interest,

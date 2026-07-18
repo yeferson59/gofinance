@@ -1,6 +1,7 @@
 package simpleinterest
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -18,9 +19,9 @@ func (s SimpleInterest) FutureWithRateInterest() (money.Money, error) {
 
 	periodRate := numberOfPeriods.Mul(s.rateInterest)
 
-	onePlusRate := periodRate.Add(money.One)
+	onePlusRate := periodRate.Add(decimal.One)
 
-	future := s.present.Mul(onePlusRate.ToMoney(s.present.Currency()))
+	future := s.present.MulDecimal(onePlusRate)
 
 	return future, nil
 }

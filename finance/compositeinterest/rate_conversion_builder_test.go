@@ -4,10 +4,10 @@ import (
 	"math"
 	"testing"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/decimal"
 )
 
-func assertRate(t *testing.T, got money.Decimal, err error, expected float64) {
+func assertRate(t *testing.T, got decimal.Decimal, err error, expected float64) {
 	t.Helper()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -115,7 +115,7 @@ func TestRateConversionBuild(t *testing.T) {
 }
 
 func TestRateConversionConfigSetters(t *testing.T) {
-	rate := money.MustFromFloat64(0.03)
+	rate := decimal.MustFromFloat64(0.03)
 
 	config := NewRateConversion().
 		RateDecimal(rate).

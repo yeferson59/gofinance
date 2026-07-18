@@ -18,10 +18,10 @@
 // positive and money you pay out is negative, so a solved payment or future
 // value typically carries the opposite sign of the present value.
 //
-// Everything runs on the decimal engine through the money package, so the
-// closed-form solves are exact to money's precision and the iterative rate
-// solve converges against exact residuals. Values are money.Decimal; the
-// fluent builder accepts float64 for convenience.
+// Everything runs on the decimal engine, so the closed-form solves are exact
+// to the engine's precision and the iterative rate solve converges against
+// exact residuals. Values are decimal.Decimal; the fluent builder accepts
+// float64 for convenience.
 //
 // Example — monthly payment on a $300,000 loan at 6%/yr over 30 years:
 //
@@ -36,7 +36,7 @@ package tvm
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 var (
@@ -59,11 +59,11 @@ var (
 // with NewTVM, set the four you know, then call the Solve* method for the
 // fifth.
 type Config struct {
-	n    money.Decimal
-	rate money.Decimal
-	pv   money.Decimal
-	pmt  money.Decimal
-	fv   money.Decimal
+	n    decimal.Decimal
+	rate decimal.Decimal
+	pv   decimal.Decimal
+	pmt  decimal.Decimal
+	fv   decimal.Decimal
 	due  bool
 }
 
@@ -71,42 +71,42 @@ type Config struct {
 // ordinary-annuity (end-of-period) payment timing.
 func NewTVM() Config {
 	return Config{
-		n:    money.Zero,
-		rate: money.Zero,
-		pv:   money.Zero,
-		pmt:  money.Zero,
-		fv:   money.Zero,
+		n:    decimal.Zero,
+		rate: decimal.Zero,
+		pv:   decimal.Zero,
+		pmt:  decimal.Zero,
+		fv:   decimal.Zero,
 	}
 }
 
 // N sets the number of periods.
 func (t Config) N(n float64) Config {
-	t.n = money.MustFromFloat64(n)
+	t.n = decimal.MustFromFloat64(n)
 	return t
 }
 
 // Rate sets the interest rate per period as a fraction (e.g. 0.005 for
 // 0.5% per period).
 func (t Config) Rate(rate float64) Config {
-	t.rate = money.MustFromFloat64(rate)
+	t.rate = decimal.MustFromFloat64(rate)
 	return t
 }
 
 // PV sets the present value.
 func (t Config) PV(pv float64) Config {
-	t.pv = money.MustFromFloat64(pv)
+	t.pv = decimal.MustFromFloat64(pv)
 	return t
 }
 
 // PMT sets the payment made each period.
 func (t Config) PMT(pmt float64) Config {
-	t.pmt = money.MustFromFloat64(pmt)
+	t.pmt = decimal.MustFromFloat64(pmt)
 	return t
 }
 
 // FV sets the future value.
 func (t Config) FV(fv float64) Config {
-	t.fv = money.MustFromFloat64(fv)
+	t.fv = decimal.MustFromFloat64(fv)
 	return t
 }
 

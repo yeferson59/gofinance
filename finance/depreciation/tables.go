@@ -1,20 +1,20 @@
 package depreciation
 
-import "github.com/yeferson59/gofinance/money"
+import "github.com/yeferson59/gofinance/decimal"
 
 // macrsTable returns the MACRS GDS half-year-convention depreciation rates (as
 // fractions of the original cost) for the given recovery period, and whether a
 // table exists for it. The rates are the IRS-published percentages; the final
 // year is adjusted by MACRS so the schedule fully recovers the cost.
-func macrsTable(recovery int) ([]money.Decimal, bool) {
+func macrsTable(recovery int) ([]decimal.Decimal, bool) {
 	strs, ok := macrsPercents[recovery]
 	if !ok {
 		return nil, false
 	}
 
-	rates := make([]money.Decimal, len(strs))
+	rates := make([]decimal.Decimal, len(strs))
 	for i, s := range strs {
-		rates[i] = money.MustFromString(s)
+		rates[i] = decimal.MustFromString(s)
 	}
 
 	return rates, true

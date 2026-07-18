@@ -3,6 +3,7 @@ package bonds
 import (
 	"time"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/daycount"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -33,10 +34,10 @@ func AccruedInterest(couponPerPeriod money.Money, lastCoupon, settlement, nextCo
 		return money.Money{}, ErrInvalidPeriods
 	}
 
-	fraction, err := money.MustFromInt64(int64(accruedDays), 0).Div(money.MustFromInt64(int64(periodDays), 0))
+	fraction, err := decimal.MustFromInt64(int64(accruedDays), 0).Div(decimal.MustFromInt64(int64(periodDays), 0))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return couponPerPeriod.ToDecimal().Mul(fraction).ToMoney(couponPerPeriod.Currency()), nil
+	return money.FromDecimal(couponPerPeriod.ToDecimal().Mul(fraction), couponPerPeriod.Currency()), nil
 }

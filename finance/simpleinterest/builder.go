@@ -1,6 +1,7 @@
 package simpleinterest
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -25,7 +26,7 @@ type SimpleConfig struct {
 	present    money.Money
 	future     money.Money
 	interest   money.Money
-	rate       money.Decimal
+	rate       decimal.Decimal
 	periods    int
 	periodType Periods
 }
@@ -109,7 +110,7 @@ func (s SimpleConfig) Interest(amount float64, currency money.Currency) SimpleCo
 //
 //	.NewSimple().Rate(0.01)  // 1% monthly rate
 func (s SimpleConfig) Rate(r float64) SimpleConfig {
-	s.rate = money.MustFromFloat64(r)
+	s.rate = decimal.MustFromFloat64(r)
 	return s
 }
 
@@ -140,7 +141,7 @@ func (s SimpleConfig) AnnualRate(r float64) SimpleConfig {
 	case Years:
 		divisor = 1.0
 	}
-	s.rate = money.MustFromFloat64(r / divisor)
+	s.rate = decimal.MustFromFloat64(r / divisor)
 	return s
 }
 
@@ -230,7 +231,7 @@ func (s SimpleConfig) Weeks() SimpleConfig {
 //
 //	future, _ := si.Future()
 func (s SimpleConfig) Build() SimpleInterest {
-	period := NewPeriod(money.MustFromFloat64(float64(s.periods)), s.periodType)
+	period := NewPeriod(decimal.MustFromFloat64(float64(s.periods)), s.periodType)
 	return New(s.future, s.present, s.interest, s.rate, period)
 }
 

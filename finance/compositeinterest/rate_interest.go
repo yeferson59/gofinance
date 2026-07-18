@@ -1,8 +1,6 @@
 package compositeinterest
 
-import (
-	"github.com/yeferson59/gofinance/money"
-)
+import "github.com/yeferson59/gofinance/decimal"
 
 // Interest calculates the periodic interest rate given present value, future value, and number of periods.
 // This method derives the interest rate from the compound interest formula.
@@ -28,34 +26,34 @@ import (
 //	)
 //	rate, _ := ci.Interest()
 //	// rate contains the calculated periodic interest rate
-func (c CompositeInterest) Interest() (money.Decimal, error) {
+func (c CompositeInterest) Interest() (decimal.Decimal, error) {
 	if !c.rateInterest.value.IsZero() {
 		return c.rateInterest.value, nil
 	}
 
 	numberOfPeriods, _, err := c.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if c.future.IsZero() || c.present.IsZero() || numberOfPeriods.IsZero() {
-		return money.Decimal{}, ErrInvalidOperation
+		return decimal.Decimal{}, ErrInvalidOperation
 	}
 
 	futureToPresent, err := c.future.Div(c.present)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	reciprocalPeriods, err := money.One.Div(numberOfPeriods)
+	reciprocalPeriods, err := decimal.One.Div(numberOfPeriods)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	growthFactor, err := futureToPresent.ToDecimal().Pow(reciprocalPeriods)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	return growthFactor.Sub(money.One), nil
+	return growthFactor.Sub(decimal.One), nil
 }

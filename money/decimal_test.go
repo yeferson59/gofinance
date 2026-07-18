@@ -62,19 +62,19 @@ func TestMoneyJSON(t *testing.T) {
 	}
 }
 
-func TestDecimalToMoney(t *testing.T) {
+func TestFromDecimal(t *testing.T) {
 	d := MustFromString("100.50")
 
-	withoutCurrency := d.ToMoney()
-	if withoutCurrency.Currency() != USD {
-		t.Errorf("expected USD (default currency) when omitted, got %v", withoutCurrency.Currency())
+	usd := FromDecimal(d, USD)
+	if usd.Currency() != USD {
+		t.Errorf("expected USD, got %v", usd.Currency())
 	}
-	if withoutCurrency.String() != "100.5" {
-		t.Errorf("expected 100.5, got %s", withoutCurrency.String())
+	if usd.String() != "100.5" {
+		t.Errorf("expected 100.5, got %s", usd.String())
 	}
 
-	withCurrency := d.ToMoney(EUR)
-	if withCurrency.Currency() != EUR {
-		t.Errorf("expected EUR, got %v", withCurrency.Currency())
+	eur := FromDecimal(d, EUR)
+	if eur.Currency() != EUR {
+		t.Errorf("expected EUR, got %v", eur.Currency())
 	}
 }

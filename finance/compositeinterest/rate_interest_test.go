@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -15,10 +16,10 @@ import (
 func newInterestCase(t *testing.T, present, future int64, freq CompoundingFrequency, typeRate TypeRate, periods float64) CompositeInterest {
 	t.Helper()
 
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0), freq, typeRate)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0), freq, typeRate)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(periods), freq)
+	period, err := NewPeriod(decimal.MustFromFloat64(periods), freq)
 	require.NoError(t, err)
 
 	presentMoney, err := money.New(present, 2, money.USD)
@@ -34,10 +35,10 @@ func newInterestCase(t *testing.T, present, future int64, freq CompoundingFreque
 func TestInterestReturnsConfiguredRate(t *testing.T) {
 	// When a non-zero rate is configured, Interest() returns its raw value
 	// directly without deriving anything from present/future/periods.
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
 	presentMoney, err := money.New(100000, 2, money.USD)
@@ -280,10 +281,10 @@ func TestInterestErrorsWhenPresentIsZero(t *testing.T) {
 func TestInterestPropagatesOverflowFromRatio(t *testing.T) {
 	// future/present computed at an extreme magnitude mismatch overflows
 	// decimal128's 128-bit coefficient.
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(money.MustFromFloat64(12), Monthly)
+	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
 	require.NoError(t, err)
 
 	present, err := money.New(1, 19, money.USD)

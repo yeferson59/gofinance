@@ -76,7 +76,7 @@ func MustMoneyFromString(s string, currency Currency) Money {
 }
 
 func (m Money) ToDecimal() Decimal {
-	return Decimal{m.value}
+	return m.value
 }
 
 func (m Money) Add(other Money) Money {
@@ -189,6 +189,40 @@ func (m Money) MulInt64(n int64) Money {
 		value:    m.value.Mul(factor),
 		currency: m.currency,
 	}
+}
+
+// MulDecimal multiplies m by a currency-less factor, such as a rate or a
+// growth factor, keeping m's currency. Prefer this over Mul when the factor
+// is not itself an amount of money.
+func (m Money) MulDecimal(d Decimal) Money {
+	return Money{
+		value:    m.value.Mul(d),
+		currency: m.currency,
+	}
+}
+
+// DivDecimal divides m by a currency-less divisor, such as a rate or a
+// number of periods, keeping m's currency.
+func (m Money) DivDecimal(d Decimal) (Money, error) {
+	v, err := m.value.Div(d)
+	if err != nil {
+		return Money{}, err
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}, nil
+}
+
+// MustDivDecimal is like DivDecimal but panics on error.
+func (m Money) MustDivDecimal(d Decimal) Money {
+	v, err := m.DivDecimal(d)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
 }
 
 // DivInt64 divides m by a plain integer divisor.

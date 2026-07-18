@@ -3,6 +3,7 @@ package benchmarks
 import (
 	"testing"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -22,7 +23,7 @@ func BenchmarkPeriod(b *testing.B) {
 		b.StartTimer()
 		b.ReportAllocs()
 		for b.Loop() {
-			_, _ = compositeinterest.NewPeriod(money.MustFromFloat64(value), compositeinterest.Monthly)
+			_, _ = compositeinterest.NewPeriod(decimal.MustFromFloat64(value), compositeinterest.Monthly)
 		}
 	}
 }
@@ -59,14 +60,14 @@ func BenchmarkNewRateInterest(b *testing.B) {
 		b.StartTimer()
 		b.ReportAllocs()
 		for b.Loop() {
-			_, _ = compositeinterest.NewRateInterest(money.MustFromFloat64(testcase.value), testcase.compoundingFrequency, testcase.typeRate)
+			_, _ = compositeinterest.NewRateInterest(decimal.MustFromFloat64(testcase.value), testcase.compoundingFrequency, testcase.typeRate)
 		}
 	}
 }
 
 func BenchmarkRateInterest(b *testing.B) {
-	rate, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(0.25), compositeinterest.Bimonthly, compositeinterest.RateEffectyAnnually)
-	rateTwo, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(0.18), compositeinterest.Monthly, compositeinterest.RateEffectyAnnually)
+	rate, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0.25), compositeinterest.Bimonthly, compositeinterest.RateEffectyAnnually)
+	rateTwo, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0.18), compositeinterest.Monthly, compositeinterest.RateEffectyAnnually)
 
 	testcases := []compositeinterest.RateInterest{
 		rate,
@@ -225,8 +226,8 @@ func BenchmarkNewCompositeInterest(b *testing.B) {
 		b.ReportAllocs()
 		b.StartTimer()
 		for b.Loop() {
-			period, _ := compositeinterest.NewPeriod(money.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
-			rate, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
+			period, _ := compositeinterest.NewPeriod(decimal.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
+			rate, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
 			presentMoney, _ := money.New(int64(testcase.present*100), 2, money.USD)
 			futureMoney, _ := money.New(int64(testcase.future*100), 2, money.USD)
 			_, _ = compositeinterest.New(presentMoney, futureMoney, rate, period)
@@ -266,8 +267,8 @@ func BenchmarkCompositeInterest(b *testing.B) {
 			b.ReportAllocs()
 			b.StartTimer()
 			for b.Loop() {
-				period, _ := compositeinterest.NewPeriod(money.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
-				rate, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
+				period, _ := compositeinterest.NewPeriod(decimal.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
+				rate, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
 				presentMoney, _ := money.New(int64(testcase.present*100), 2, money.USD)
 				futureMoney, _ := money.New(int64(testcase.future*100), 2, money.USD)
 				ci, _ := compositeinterest.New(presentMoney, futureMoney, rate, period)
@@ -282,8 +283,8 @@ func BenchmarkCompositeInterest(b *testing.B) {
 			b.ReportAllocs()
 			b.StartTimer()
 			for b.Loop() {
-				period, _ := compositeinterest.NewPeriod(money.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
-				rate, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
+				period, _ := compositeinterest.NewPeriod(decimal.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
+				rate, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
 				presentMoney, _ := money.New(int64(testcase.present*100), 2, money.USD)
 				futureMoney, _ := money.New(int64(testcase.future*100), 2, money.USD)
 				ci, _ := compositeinterest.New(presentMoney, futureMoney, rate, period)
@@ -298,8 +299,8 @@ func BenchmarkCompositeInterest(b *testing.B) {
 			b.ReportAllocs()
 			b.StartTimer()
 			for b.Loop() {
-				period, _ := compositeinterest.NewPeriod(money.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
-				rate, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
+				period, _ := compositeinterest.NewPeriod(decimal.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
+				rate, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
 				presentMoney, _ := money.New(int64(testcase.present*100), 2, money.USD)
 				futureMoney, _ := money.New(int64(testcase.future*100), 2, money.USD)
 				ci, _ := compositeinterest.New(presentMoney, futureMoney, rate, period)
@@ -314,8 +315,8 @@ func BenchmarkCompositeInterest(b *testing.B) {
 			b.ReportAllocs()
 			b.StartTimer()
 			for b.Loop() {
-				period, _ := compositeinterest.NewPeriod(money.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
-				rate, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
+				period, _ := compositeinterest.NewPeriod(decimal.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
+				rate, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
 				presentMoney, _ := money.New(int64(testcase.present*100), 2, money.USD)
 				futureMoney, _ := money.New(int64(testcase.future*100), 2, money.USD)
 				ci, _ := compositeinterest.New(presentMoney, futureMoney, rate, period)
@@ -330,8 +331,8 @@ func BenchmarkCompositeInterest(b *testing.B) {
 			b.ReportAllocs()
 			b.StartTimer()
 			for b.Loop() {
-				period, _ := compositeinterest.NewPeriod(money.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
-				rate, _ := compositeinterest.NewRateInterest(money.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
+				period, _ := compositeinterest.NewPeriod(decimal.MustFromFloat64(testcase.numberPeriod), testcase.compoundingFrequency)
+				rate, _ := compositeinterest.NewRateInterest(decimal.MustFromFloat64(testcase.valueInterest), testcase.compoundingFrequency, testcase.typeRate)
 				presentMoney, _ := money.New(int64(testcase.present*100), 2, money.USD)
 				futureMoney, _ := money.New(int64(testcase.future*100), 2, money.USD)
 				ci, _ := compositeinterest.New(presentMoney, futureMoney, rate, period)

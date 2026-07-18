@@ -1,6 +1,9 @@
 package returns
 
-import "github.com/yeferson59/gofinance/money"
+import (
+	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/money"
+)
 
 // RealValue converts a nominal amount into its real (inflation-adjusted) value
 // after the given number of periods, i.e. its purchasing power in today's
@@ -12,7 +15,7 @@ import "github.com/yeferson59/gofinance/money"
 // than −1. The result carries the nominal amount's currency.
 //
 // It returns ErrInvalidInflationRate if 1+inflation is not positive.
-func RealValue(nominal money.Money, inflation, periods money.Decimal) (money.Money, error) {
+func RealValue(nominal money.Money, inflation, periods decimal.Decimal) (money.Money, error) {
 	factor, err := priceLevelFactor(inflation, periods)
 	if err != nil {
 		return money.Money{}, err
@@ -23,11 +26,11 @@ func RealValue(nominal money.Money, inflation, periods money.Decimal) (money.Mon
 		return money.Money{}, err
 	}
 
-	return realAmount.ToMoney(nominal.Currency()), nil
+	return money.FromDecimal(realAmount, nominal.Currency()), nil
 }
 
 // MustRealValue is like RealValue but panics on error.
-func MustRealValue(nominal money.Money, inflation, periods money.Decimal) money.Money {
+func MustRealValue(nominal money.Money, inflation, periods decimal.Decimal) money.Money {
 	m, err := RealValue(nominal, inflation, periods)
 	if err != nil {
 		panic(err)
@@ -45,17 +48,17 @@ func MustRealValue(nominal money.Money, inflation, periods money.Decimal) money.
 // than −1. The result carries the real amount's currency.
 //
 // It returns ErrInvalidInflationRate if 1+inflation is not positive.
-func NominalValue(realAmount money.Money, inflation, periods money.Decimal) (money.Money, error) {
+func NominalValue(realAmount money.Money, inflation, periods decimal.Decimal) (money.Money, error) {
 	factor, err := priceLevelFactor(inflation, periods)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return realAmount.ToDecimal().Mul(factor).ToMoney(realAmount.Currency()), nil
+	return money.FromDecimal(realAmount.ToDecimal().Mul(factor), realAmount.Currency()), nil
 }
 
 // MustNominalValue is like NominalValue but panics on error.
-func MustNominalValue(realAmount money.Money, inflation, periods money.Decimal) money.Money {
+func MustNominalValue(realAmount money.Money, inflation, periods decimal.Decimal) money.Money {
 	m, err := NominalValue(realAmount, inflation, periods)
 	if err != nil {
 		panic(err)
@@ -70,25 +73,25 @@ func MustNominalValue(realAmount money.Money, inflation, periods money.Decimal) 
 //	real = (1 + nominal) / (1 + inflation) − 1
 //
 // Both rates are fractions per the same period; inflation must be greater than
-// −1. The result is a money.Decimal fraction.
+// −1. The result is a decimal.Decimal fraction.
 //
 // It returns ErrInvalidInflationRate if 1+inflation is not positive.
-func RealRate(nominalRate, inflation money.Decimal) (money.Decimal, error) {
-	onePlusInflation := money.One.Add(inflation)
+func RealRate(nominalRate, inflation decimal.Decimal) (decimal.Decimal, error) {
+	onePlusInflation := decimal.One.Add(inflation)
 	if !onePlusInflation.IsPos() {
-		return money.Decimal{}, ErrInvalidInflationRate
+		return decimal.Decimal{}, ErrInvalidInflationRate
 	}
 
-	ratio, err := money.One.Add(nominalRate).Div(onePlusInflation)
+	ratio, err := decimal.One.Add(nominalRate).Div(onePlusInflation)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	return ratio.Sub(money.One), nil
+	return ratio.Sub(decimal.One), nil
 }
 
 // MustRealRate is like RealRate but panics on error.
-func MustRealRate(nominalRate, inflation money.Decimal) money.Decimal {
+func MustRealRate(nominalRate, inflation decimal.Decimal) decimal.Decimal {
 	d, err := RealRate(nominalRate, inflation)
 	if err != nil {
 		panic(err)
@@ -100,10 +103,10 @@ func MustRealRate(nominalRate, inflation money.Decimal) money.Decimal {
 // priceLevelFactor returns (1 + inflation)^periods, the cumulative price-level
 // growth used to convert between nominal and real values. It returns
 // ErrInvalidInflationRate if 1+inflation is not positive.
-func priceLevelFactor(inflation, periods money.Decimal) (money.Decimal, error) {
-	base := money.One.Add(inflation)
+func priceLevelFactor(inflation, periods decimal.Decimal) (decimal.Decimal, error) {
+	base := decimal.One.Add(inflation)
 	if !base.IsPos() {
-		return money.Decimal{}, ErrInvalidInflationRate
+		return decimal.Decimal{}, ErrInvalidInflationRate
 	}
 
 	return base.Pow(periods)

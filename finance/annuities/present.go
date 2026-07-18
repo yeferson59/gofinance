@@ -1,6 +1,7 @@
 package annuities
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -10,17 +11,17 @@ func (a Annuity) Present() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthPower, err := rateInterest.Add(money.One).Pow(periods)
+	growthPower, err := rateInterest.Add(decimal.One).Pow(periods)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	quotient, err := growthPower.Sub(money.One).Div(rateInterest.Mul(growthPower))
+	quotient, err := growthPower.Sub(decimal.One).Div(rateInterest.Mul(growthPower))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return a.value.ToDecimal().Mul(quotient).ToMoney(a.value.Currency()), nil
+	return money.FromDecimal(a.value.ToDecimal().Mul(quotient), a.value.Currency()), nil
 }
 
 func (a Annuity) AnticipatePresent() (money.Money, error) {
@@ -29,15 +30,15 @@ func (a Annuity) AnticipatePresent() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthPower, err := rateInterest.Add(money.One).Pow(periods.Sub(money.One))
+	growthPower, err := rateInterest.Add(decimal.One).Pow(periods.Sub(decimal.One))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	quotient, err := growthPower.Sub(money.One).Div(rateInterest.Mul(growthPower))
+	quotient, err := growthPower.Sub(decimal.One).Div(rateInterest.Mul(growthPower))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return a.value.ToDecimal().Mul(money.One.Add(quotient)).ToMoney(a.value.Currency()), nil
+	return money.FromDecimal(a.value.ToDecimal().Mul(decimal.One.Add(quotient)), a.value.Currency()), nil
 }

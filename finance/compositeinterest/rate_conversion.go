@@ -1,8 +1,6 @@
 package compositeinterest
 
-import (
-	"github.com/yeferson59/gofinance/money"
-)
+import "github.com/yeferson59/gofinance/decimal"
 
 // RatePeriodic converts the current interest rate to a periodic (per-period) rate.
 // This is useful when you have a nominal or effective annual rate and need the actual
@@ -16,45 +14,45 @@ import (
 //
 //	rate, _ := NewRateInterest(0.12, Monthly, RateEffectyNominal)
 //	periodicRate, _ := rate.RatePeriodic()  // Converts 12% nominal to ~1% monthly
-func (rt RateInterest) RatePeriodic() (money.Decimal, error) {
+func (rt RateInterest) RatePeriodic() (decimal.Decimal, error) {
 	if rt.typeRate == RateEffectyPeriodic {
 		return rt.value, nil
 	}
 
 	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if rt.typeRate == RateEffectyNominal {
 		periodicRate, err := rt.value.Div(compoundingPeriodsPerYear)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		return periodicRate, nil
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		div, err := money.One.Div(compoundingPeriodsPerYear)
+		div, err := decimal.One.Div(compoundingPeriodsPerYear)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
-		pow, err := rt.value.Add(money.One).Pow(div)
+		pow, err := rt.value.Add(decimal.One).Pow(div)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
-		periodicRate, err := compoundingPeriodsPerYear.Mul(pow.Sub(money.One)).Div(compoundingPeriodsPerYear)
+		periodicRate, err := compoundingPeriodsPerYear.Mul(pow.Sub(decimal.One)).Div(compoundingPeriodsPerYear)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		return periodicRate, nil
 	}
 
-	return money.Decimal{}, nil
+	return decimal.Decimal{}, nil
 }
 
 // RateNominal converts the current interest rate to a nominal rate.
@@ -63,21 +61,21 @@ func (rt RateInterest) RatePeriodic() (money.Decimal, error) {
 // Returns:
 //   - The nominal interest rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) RateNominal() (money.Decimal, error) {
+func (rt RateInterest) RateNominal() (decimal.Decimal, error) {
 	if rt.typeRate == RateEffectyNominal {
 		return rt.value, nil
 	}
 
 	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	var nominalRate money.Decimal
+	var nominalRate decimal.Decimal
 
 	if rt.typeRate == RateEffectyAnnually {
-		pow := rt.value.Add(money.One).MustPow(money.One.MustDiv(compoundingPeriodsPerYear))
-		nominalRate = compoundingPeriodsPerYear.Mul(pow.Sub(money.One))
+		pow := rt.value.Add(decimal.One).MustPow(decimal.One.MustDiv(compoundingPeriodsPerYear))
+		nominalRate = compoundingPeriodsPerYear.Mul(pow.Sub(decimal.One))
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {
@@ -93,25 +91,25 @@ func (rt RateInterest) RateNominal() (money.Decimal, error) {
 // Returns:
 //   - The effective annual interest rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) RateEffectyAnnually() (money.Decimal, error) {
+func (rt RateInterest) RateEffectyAnnually() (decimal.Decimal, error) {
 	if rt.typeRate == RateEffectyAnnually {
 		return rt.value, nil
 	}
 
 	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	var effectiveAnnualRate money.Decimal
+	var effectiveAnnualRate decimal.Decimal
 
 	if rt.typeRate == RateEffectyNominal {
 		periodicRate := rt.value.MustDiv(compoundingPeriodsPerYear)
-		effectiveAnnualRate = periodicRate.Add(money.One).MustPow(compoundingPeriodsPerYear).Sub(money.One)
+		effectiveAnnualRate = periodicRate.Add(decimal.One).MustPow(compoundingPeriodsPerYear).Sub(decimal.One)
 	}
 
 	if rt.typeRate == RateEffectyPeriodic {
-		effectiveAnnualRate = rt.value.Add(money.One).MustPow(compoundingPeriodsPerYear).Sub(money.One)
+		effectiveAnnualRate = rt.value.Add(decimal.One).MustPow(compoundingPeriodsPerYear).Sub(decimal.One)
 	}
 
 	return effectiveAnnualRate, nil
@@ -131,25 +129,25 @@ func (rt RateInterest) RateEffectyAnnually() (money.Decimal, error) {
 //
 //	rate, _ := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
 //	quarterlyRate, _ := rate.RatePeriodicToPeriodic(QuarterlyOne)
-func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (money.Decimal, error) {
+func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (decimal.Decimal, error) {
 	currentPeriodicRate, err := rt.RatePeriodic()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	newPeriodsPerYear, err := newCompoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	currentPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	exponent := money.One.MustDiv(newPeriodsPerYear).Mul(currentPeriodsPerYear)
+	exponent := decimal.One.MustDiv(newPeriodsPerYear).Mul(currentPeriodsPerYear)
 
-	newPeriodicRate := currentPeriodicRate.Add(money.One).MustPow(exponent).Sub(money.One)
+	newPeriodicRate := currentPeriodicRate.Add(decimal.One).MustPow(exponent).Sub(decimal.One)
 
 	return newPeriodicRate, nil
 }
@@ -163,15 +161,15 @@ func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundin
 // Returns:
 //   - The converted nominal rate for the new frequency as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingFrequency) (money.Decimal, error) {
+func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingFrequency) (decimal.Decimal, error) {
 	newPeriodicRate, err := rt.RatePeriodicToPeriodic(newCompoundingFrequency)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	newRateInterest, err := NewRateInterest(newPeriodicRate, newCompoundingFrequency, RateEffectyPeriodic)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return newRateInterest.RateNominal()
@@ -183,25 +181,25 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
 // Returns:
 //   - The effective annual rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) RateAnticipateEffectyAnnually() (money.Decimal, error) {
+func (rt RateInterest) RateAnticipateEffectyAnnually() (decimal.Decimal, error) {
 	if rt.typeRate == RateEffectyAnnually {
 		return rt.value, nil
 	}
 
 	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	var effectiveAnnualRate money.Decimal
+	var effectiveAnnualRate decimal.Decimal
 
 	if rt.typeRate == RateAnticipateEffectyNominal {
 		periodicRate := rt.value.MustDiv(compoundingPeriodsPerYear)
-		effectiveAnnualRate = money.One.Sub(periodicRate).MustPow(money.One.Neg().Mul(compoundingPeriodsPerYear)).Sub(money.One)
+		effectiveAnnualRate = decimal.One.Sub(periodicRate).MustPow(decimal.One.Neg().Mul(compoundingPeriodsPerYear)).Sub(decimal.One)
 	}
 
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
-		effectiveAnnualRate = money.One.Sub(rt.value).MustPow(money.One.Neg().Mul(compoundingPeriodsPerYear)).Sub(money.One)
+		effectiveAnnualRate = decimal.One.Sub(rt.value).MustPow(decimal.One.Neg().Mul(compoundingPeriodsPerYear)).Sub(decimal.One)
 	}
 
 	return effectiveAnnualRate, nil
@@ -212,26 +210,26 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (money.Decimal, error) {
 // Returns:
 //   - The anticipated nominal rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) RateAnticipateNominal() (money.Decimal, error) {
+func (rt RateInterest) RateAnticipateNominal() (decimal.Decimal, error) {
 	if rt.typeRate == RateAnticipateEffectyNominal {
 		return rt.value, nil
 	}
 
 	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	var nominalRate money.Decimal
+	var nominalRate decimal.Decimal
 
 	if rt.typeRate == RateEffectyAnnually {
 		effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
-		pow := effectiveAnnualRate.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear))
-		nominalRate = compoundingPeriodsPerYear.Mul(money.One.Sub(pow))
+		pow := effectiveAnnualRate.Add(decimal.One).MustPow(decimal.One.Neg().MustDiv(compoundingPeriodsPerYear))
+		nominalRate = compoundingPeriodsPerYear.Mul(decimal.One.Sub(pow))
 	}
 
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
@@ -246,25 +244,25 @@ func (rt RateInterest) RateAnticipateNominal() (money.Decimal, error) {
 // Returns:
 //   - The anticipated periodic rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) RateAnticipatePeriodic() (money.Decimal, error) {
+func (rt RateInterest) RateAnticipatePeriodic() (decimal.Decimal, error) {
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
 		return rt.value, nil
 	}
 
 	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	var periodicRate money.Decimal
+	var periodicRate decimal.Decimal
 
 	if rt.typeRate == RateAnticipateEffectyNominal {
 		periodicRate = rt.value.MustDiv(compoundingPeriodsPerYear)
 	}
 
 	if rt.typeRate == RateEffectyAnnually {
-		pow := rt.value.Add(money.One).MustPow(money.One.Neg().MustDiv(compoundingPeriodsPerYear))
-		periodicRate = money.One.Sub(pow)
+		pow := rt.value.Add(decimal.One).MustPow(decimal.One.Neg().MustDiv(compoundingPeriodsPerYear))
+		periodicRate = decimal.One.Sub(pow)
 	}
 
 	return periodicRate, nil
@@ -276,15 +274,15 @@ func (rt RateInterest) RateAnticipatePeriodic() (money.Decimal, error) {
 // Returns:
 //   - The anticipated nominal rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToAnticipateNominal() (money.Decimal, error) {
+func (rt RateInterest) ToAnticipateNominal() (decimal.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateEffectyAnnually()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	newRateInterest, err := NewRateInterest(effectiveAnnualRate, rt.compoundingFrequency, RateEffectyAnnually)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return newRateInterest.RateAnticipateNominal()
@@ -295,15 +293,15 @@ func (rt RateInterest) ToAnticipateNominal() (money.Decimal, error) {
 // Returns:
 //   - The anticipated periodic rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToAnticipatePeriodic() (money.Decimal, error) {
+func (rt RateInterest) ToAnticipatePeriodic() (decimal.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateEffectyAnnually()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	newRateInterest, err := NewRateInterest(effectiveAnnualRate, rt.compoundingFrequency, RateEffectyAnnually)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return newRateInterest.RateAnticipatePeriodic()
@@ -314,15 +312,15 @@ func (rt RateInterest) ToAnticipatePeriodic() (money.Decimal, error) {
 // Returns:
 //   - The nominal rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToNominal() (money.Decimal, error) {
+func (rt RateInterest) ToNominal() (decimal.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	newRateInterest, err := NewRateInterest(effectiveAnnualRate, rt.compoundingFrequency, RateEffectyAnnually)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return newRateInterest.RateNominal()
@@ -333,15 +331,15 @@ func (rt RateInterest) ToNominal() (money.Decimal, error) {
 // Returns:
 //   - The periodic rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToPeriodic() (money.Decimal, error) {
+func (rt RateInterest) ToPeriodic() (decimal.Decimal, error) {
 	effectiveAnnualRate, err := rt.RateAnticipateEffectyAnnually()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	newRateInterest, err := NewRateInterest(effectiveAnnualRate, rt.compoundingFrequency, RateEffectyAnnually)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return newRateInterest.RatePeriodic()

@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 func TestRatePeriodicFromNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.RatePeriodic()
@@ -19,7 +19,7 @@ func TestRatePeriodicFromNominal(t *testing.T) {
 }
 
 func TestRatePeriodicFromAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.RatePeriodic()
@@ -30,7 +30,7 @@ func TestRatePeriodicFromAnnually(t *testing.T) {
 }
 
 func TestRatePeriodicAlreadyPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.RatePeriodic()
@@ -40,7 +40,7 @@ func TestRatePeriodicAlreadyPeriodic(t *testing.T) {
 }
 
 func TestRateNominalFromAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateNominal()
@@ -51,7 +51,7 @@ func TestRateNominalFromAnnually(t *testing.T) {
 }
 
 func TestRateNominalFromPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateNominal()
@@ -61,7 +61,7 @@ func TestRateNominalFromPeriodic(t *testing.T) {
 }
 
 func TestRateNominalAlreadyNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateNominal()
@@ -71,7 +71,7 @@ func TestRateNominalAlreadyNominal(t *testing.T) {
 }
 
 func TestRateEffectyAnnuallyFromPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateEffectyAnnually()
@@ -82,7 +82,7 @@ func TestRateEffectyAnnuallyFromPeriodic(t *testing.T) {
 }
 
 func TestRateEffectyAnnuallyFromNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateEffectyAnnually()
@@ -93,7 +93,7 @@ func TestRateEffectyAnnuallyFromNominal(t *testing.T) {
 }
 
 func TestRateEffectyAnnuallyAlreadyAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateEffectyAnnually()
@@ -103,7 +103,7 @@ func TestRateEffectyAnnuallyAlreadyAnnually(t *testing.T) {
 }
 
 func TestRatePeriodicToPeriodicMonthlyToQuarterly(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	newRatePeriodic, err := rateInterest.RatePeriodicToPeriodic(QuarterlyOne)
@@ -114,7 +114,7 @@ func TestRatePeriodicToPeriodicMonthlyToQuarterly(t *testing.T) {
 }
 
 func TestRatePeriodicToPeriodicMonthlyToDaily(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	newRatePeriodic, err := rateInterest.RatePeriodicToPeriodic(Daily)
@@ -125,7 +125,7 @@ func TestRatePeriodicToPeriodicMonthlyToDaily(t *testing.T) {
 }
 
 func TestRatePeriodicToPeriodicSameFrequency(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	newRatePeriodic, err := rateInterest.RatePeriodicToPeriodic(Monthly)
@@ -135,7 +135,7 @@ func TestRatePeriodicToPeriodicSameFrequency(t *testing.T) {
 }
 
 func TestRateNominalToNominalMonthlyToQuarterly(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	newRateNominal, err := rateInterest.RateNominalToNominal(QuarterlyOne)
@@ -146,7 +146,7 @@ func TestRateNominalToNominalMonthlyToQuarterly(t *testing.T) {
 }
 
 func TestRateNominalToNominalSameFrequency(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	newRateNominal, err := rateInterest.RateNominalToNominal(Monthly)
@@ -156,7 +156,7 @@ func TestRateNominalToNominalSameFrequency(t *testing.T) {
 }
 
 func TestRateAnticipateEffectyAnnuallyFromNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateAnticipateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateAnticipateEffectyNominal)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateAnticipateEffectyAnnually()
@@ -167,7 +167,7 @@ func TestRateAnticipateEffectyAnnuallyFromNominal(t *testing.T) {
 }
 
 func TestRateAnticipateEffectyAnnuallyFromPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateAnticipateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateAnticipateEffectyPeriodic)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateAnticipateEffectyAnnually()
@@ -178,7 +178,7 @@ func TestRateAnticipateEffectyAnnuallyFromPeriodic(t *testing.T) {
 }
 
 func TestRateAnticipateEffectyAnnuallyAlreadyAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateAnticipateEffectyAnnually()
@@ -188,7 +188,7 @@ func TestRateAnticipateEffectyAnnuallyAlreadyAnnually(t *testing.T) {
 }
 
 func TestRateAnticipateNominalFromAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateAnticipateNominal()
@@ -199,7 +199,7 @@ func TestRateAnticipateNominalFromAnnually(t *testing.T) {
 }
 
 func TestRateAnticipateNominalFromPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateAnticipateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateAnticipateEffectyPeriodic)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateAnticipateNominal()
@@ -210,7 +210,7 @@ func TestRateAnticipateNominalFromPeriodic(t *testing.T) {
 }
 
 func TestRateAnticipateNominalAlreadyNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateAnticipateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateAnticipateEffectyNominal)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateAnticipateNominal()
@@ -220,7 +220,7 @@ func TestRateAnticipateNominalAlreadyNominal(t *testing.T) {
 }
 
 func TestRateAnticipatePeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateAnticipateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateAnticipateEffectyNominal)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.RateAnticipatePeriodic()
@@ -231,7 +231,7 @@ func TestRateAnticipatePeriodic(t *testing.T) {
 }
 
 func TestRateAnticipatePeriodicAlreadyPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateAnticipateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateAnticipateEffectyPeriodic)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.RateAnticipatePeriodic()
@@ -241,7 +241,7 @@ func TestRateAnticipatePeriodicAlreadyPeriodic(t *testing.T) {
 }
 
 func TestConversionChainPeriodicToNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.RateNominal()
@@ -251,7 +251,7 @@ func TestConversionChainPeriodicToNominal(t *testing.T) {
 }
 
 func TestConversionChainNominalToAnnually(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateEffectyAnnually()
@@ -262,7 +262,7 @@ func TestConversionChainNominalToAnnually(t *testing.T) {
 }
 
 func TestToAnticipateNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.ToAnticipateNominal()
@@ -273,7 +273,7 @@ func TestToAnticipateNominal(t *testing.T) {
 }
 
 func TestToAnticipatePeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.ToAnticipatePeriodic()
@@ -284,7 +284,7 @@ func TestToAnticipatePeriodic(t *testing.T) {
 }
 
 func TestToNominal(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	rateNominal, err := rateInterest.ToNominal()
@@ -295,7 +295,7 @@ func TestToNominal(t *testing.T) {
 }
 
 func TestToPeriodic(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Monthly, RateEffectyAnnually)
 	require.NoError(t, err)
 
 	ratePeriodic, err := rateInterest.ToPeriodic()
@@ -324,7 +324,7 @@ func TestRateConversionWithDifferentFrequencies(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rateInterest, err := NewRateInterest(money.MustFromFloat64(tc.rate), tc.freq, tc.typeRate)
+			rateInterest, err := NewRateInterest(decimal.MustFromFloat64(tc.rate), tc.freq, tc.typeRate)
 			require.NoError(t, err)
 
 			newRate, err := rateInterest.RatePeriodicToPeriodic(tc.targetFreq)
@@ -336,7 +336,7 @@ func TestRateConversionWithDifferentFrequencies(t *testing.T) {
 }
 
 func TestRateConversionPreservesValue(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	rateAnnually, err := rateInterest.RateEffectyAnnually()
@@ -352,7 +352,7 @@ func TestRateConversionPreservesValue(t *testing.T) {
 }
 
 func TestRateConversionConsistency(t *testing.T) {
-	rateInterest, err := NewRateInterest(money.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	rateQuarterly, err := rateInterest.RateNominalToNominal(QuarterlyOne)

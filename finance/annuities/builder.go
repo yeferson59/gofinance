@@ -1,6 +1,7 @@
 package annuities
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -281,7 +282,7 @@ func (a AnnuityConfig) Quarterly() AnnuityConfig {
 //	    Build()
 func (a AnnuityConfig) Build() (Annuity, error) {
 	rate, err := compositeinterest.NewRateInterest(
-		money.MustFromFloat64(a.rate),
+		decimal.MustFromFloat64(a.rate),
 		a.frequency,
 		a.rateType,
 	)
@@ -290,7 +291,7 @@ func (a AnnuityConfig) Build() (Annuity, error) {
 	}
 
 	period, err := compositeinterest.NewPeriod(
-		money.MustFromFloat64(float64(a.periods)),
+		decimal.MustFromFloat64(float64(a.periods)),
 		a.frequency,
 	)
 	if err != nil {

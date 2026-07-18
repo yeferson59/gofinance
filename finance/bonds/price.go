@@ -1,36 +1,39 @@
 package bonds
 
-import "github.com/yeferson59/gofinance/money"
+import (
+	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/money"
+)
 
 // cashflowSums discounts the bond's coupon and redemption cash flows at the
 // per-period yield y and returns, in one pass, the present value (the bond's
 // price) together with Σ t·PV(cashflowₜ) and Σ t(t+1)·PV(cashflowₜ). The latter
 // two feed the duration and convexity measures. It validates the frequency and
 // period count and returns ErrInvalidYield when 1+y is not positive.
-func (b Config) cashflowSums(y money.Decimal) (price, sumT, sumTT money.Decimal, err error) {
+func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Decimal, err error) {
 	if b.freq < 1 {
-		return money.Decimal{}, money.Decimal{}, money.Decimal{}, ErrInvalidFrequency
+		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, ErrInvalidFrequency
 	}
 
 	if b.periods < 1 {
-		return money.Decimal{}, money.Decimal{}, money.Decimal{}, ErrInvalidPeriods
+		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, ErrInvalidPeriods
 	}
 
-	onePlus := money.One.Add(y)
+	onePlus := decimal.One.Add(y)
 	if !onePlus.IsPos() {
-		return money.Decimal{}, money.Decimal{}, money.Decimal{}, ErrInvalidYield
+		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, ErrInvalidYield
 	}
 
-	coupon, err := b.face.ToDecimal().Mul(b.couponRate).Div(money.MustFromInt64(int64(b.freq), 0))
+	coupon, err := b.face.ToDecimal().Mul(b.couponRate).Div(decimal.MustFromInt64(int64(b.freq), 0))
 	if err != nil {
-		return money.Decimal{}, money.Decimal{}, money.Decimal{}, err
+		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
 	}
 
 	face := b.face.ToDecimal()
 
-	price = money.Zero
-	sumT = money.Zero
-	sumTT = money.Zero
+	price = decimal.Zero
+	sumT = decimal.Zero
+	sumTT = decimal.Zero
 	factor := onePlus // (1+y)^t for the current t, starting at t = 1
 
 	for t := 1; t <= b.periods; t++ {
@@ -41,14 +44,14 @@ func (b Config) cashflowSums(y money.Decimal) (price, sumT, sumTT money.Decimal,
 
 		pv, err := cashflow.Div(factor)
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		tDec := money.MustFromInt64(int64(t), 0)
+		tDec := decimal.MustFromInt64(int64(t), 0)
 
 		price = price.Add(pv)
 		sumT = sumT.Add(pv.Mul(tDec))
-		sumTT = sumTT.Add(pv.Mul(tDec.Mul(tDec.Add(money.One))))
+		sumTT = sumTT.Add(pv.Mul(tDec.Mul(tDec.Add(decimal.One))))
 
 		factor = factor.Mul(onePlus)
 	}
@@ -57,12 +60,12 @@ func (b Config) cashflowSums(y money.Decimal) (price, sumT, sumTT money.Decimal,
 }
 
 // periodicYield returns the per-period yield, yield / frequency.
-func (b Config) periodicYield() (money.Decimal, error) {
+func (b Config) periodicYield() (decimal.Decimal, error) {
 	if b.freq < 1 {
-		return money.Decimal{}, ErrInvalidFrequency
+		return decimal.Decimal{}, ErrInvalidFrequency
 	}
 
-	return b.yield.Div(money.MustFromInt64(int64(b.freq), 0))
+	return b.yield.Div(decimal.MustFromInt64(int64(b.freq), 0))
 }
 
 // Price returns the bond's clean price: the present value of its coupons and
@@ -81,7 +84,7 @@ func (b Config) Price() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return price.ToMoney(b.face.Currency()), nil
+	return money.FromDecimal(price, b.face.Currency()), nil
 }
 
 // MustPrice is like Price but panics on error.

@@ -1,6 +1,7 @@
 package compositeinterest
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -42,11 +43,11 @@ func (c CompositeInterest) Future() (money.Money, error) {
 		return money.Money{}, ErrInvalidOperation
 	}
 
-	growthFactor := periodicRate.Add(money.One)
+	growthFactor := periodicRate.Add(decimal.One)
 	compoundGrowth, err := growthFactor.Pow(numberOfPeriods)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return c.present.ToDecimal().Mul(compoundGrowth).ToMoney(c.present.Currency()), nil
+	return money.FromDecimal(c.present.ToDecimal().Mul(compoundGrowth), c.present.Currency()), nil
 }

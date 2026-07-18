@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -17,8 +18,8 @@ func TestBuildInvestmentSchedule(t *testing.T) {
 	// period 3: interest = 2.01, balance = 303.01, change% = 0.507512
 	principal := money.MustMoneyFromFloat64(0, money.USD)
 	contribution := money.MustMoneyFromFloat64(100, money.USD)
-	rate := money.MustFromFloat64(0.01)
-	nper := money.MustFromFloat64(3)
+	rate := decimal.MustFromFloat64(0.01)
+	nper := decimal.MustFromFloat64(3)
 
 	rows, err := BuildInvestmentSchedule(principal, contribution, rate, nper)
 	require.NoError(t, err)
@@ -53,8 +54,8 @@ func TestBuildAnticipateInvestmentSchedule(t *testing.T) {
 	// period 3: balance = 306.0401
 	principal := money.MustMoneyFromFloat64(0, money.USD)
 	contribution := money.MustMoneyFromFloat64(100, money.USD)
-	rate := money.MustFromFloat64(0.01)
-	nper := money.MustFromFloat64(3)
+	rate := decimal.MustFromFloat64(0.01)
+	nper := decimal.MustFromFloat64(3)
 
 	rows, err := BuildAnticipateInvestmentSchedule(principal, contribution, rate, nper)
 	require.NoError(t, err)
@@ -78,8 +79,8 @@ func TestBuildInvestmentScheduleWithPrincipal(t *testing.T) {
 	// the schedule's final balance matches FutureWithContributions.
 	principal := money.MustMoneyFromFloat64(1000, money.USD)
 	contribution := money.MustMoneyFromFloat64(100, money.USD)
-	rate := money.MustFromFloat64(0.01)
-	nper := money.MustFromFloat64(2)
+	rate := decimal.MustFromFloat64(0.01)
+	nper := decimal.MustFromFloat64(2)
 
 	rows, err := BuildInvestmentSchedule(principal, contribution, rate, nper)
 	require.NoError(t, err)
@@ -100,7 +101,7 @@ func TestBuildInvestmentScheduleCurrencyMismatch(t *testing.T) {
 	principal := money.MustMoneyFromFloat64(1000, money.USD)
 	contribution := money.MustMoneyFromFloat64(100, money.EUR)
 
-	_, err := BuildInvestmentSchedule(principal, contribution, money.MustFromFloat64(0.01), money.MustFromFloat64(12))
+	_, err := BuildInvestmentSchedule(principal, contribution, decimal.MustFromFloat64(0.01), decimal.MustFromFloat64(12))
 	assert.True(t, errors.Is(err, money.ErrCurrencyMismatch))
 }
 
@@ -108,13 +109,13 @@ func TestBuildInvestmentScheduleInvalidPeriods(t *testing.T) {
 	principal := money.MustMoneyFromFloat64(1000, money.USD)
 	contribution := money.MustMoneyFromFloat64(100, money.USD)
 
-	tests := []money.Decimal{
-		money.MustFromFloat64(0),
-		money.MustFromFloat64(-3),
+	tests := []decimal.Decimal{
+		decimal.MustFromFloat64(0),
+		decimal.MustFromFloat64(-3),
 	}
 
 	for _, nper := range tests {
-		_, err := BuildInvestmentSchedule(principal, contribution, money.MustFromFloat64(0.01), nper)
+		_, err := BuildInvestmentSchedule(principal, contribution, decimal.MustFromFloat64(0.01), nper)
 		assert.True(t, errors.Is(err, ErrInvalidPeriods))
 	}
 }

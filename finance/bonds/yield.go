@@ -1,12 +1,12 @@
 package bonds
 
-import "github.com/yeferson59/gofinance/money"
+import "github.com/yeferson59/gofinance/decimal"
 
 const maxYieldBisectIter = 200
 
 var (
-	yieldBracketTol = money.MustFromString("0.0000000001") // 1e-10
-	yieldHalf       = money.MustFromFloat64(0.5)
+	yieldBracketTol = decimal.MustFromString("0.0000000001") // 1e-10
+	yieldHalf       = decimal.MustFromFloat64(0.5)
 )
 
 // YTM returns the annual yield to maturity implied by the configured clean
@@ -17,9 +17,9 @@ var (
 // It returns ErrNonPositivePrice if the price is not positive,
 // ErrInvalidFrequency or ErrInvalidPeriods on invalid terms, and
 // ErrNoConvergence if no yield reproduces the price.
-func (b Config) YTM() (money.Decimal, error) {
+func (b Config) YTM() (decimal.Decimal, error) {
 	if !b.price.IsPos() {
-		return money.Decimal{}, ErrNonPositivePrice
+		return decimal.Decimal{}, ErrNonPositivePrice
 	}
 
 	candidates := yieldCandidates()
@@ -28,7 +28,7 @@ func (b Config) YTM() (money.Decimal, error) {
 
 	prevDiff, err := b.priceDiff(prevYield)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	for i := 1; i < len(candidates); i++ {
@@ -36,7 +36,7 @@ func (b Config) YTM() (money.Decimal, error) {
 
 		curDiff, err := b.priceDiff(curYield)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		if prevDiff.IsZero() {
@@ -54,11 +54,11 @@ func (b Config) YTM() (money.Decimal, error) {
 		prevYield, prevDiff = curYield, curDiff
 	}
 
-	return money.Decimal{}, ErrNoConvergence
+	return decimal.Decimal{}, ErrNoConvergence
 }
 
 // MustYTM is like YTM but panics on error.
-func (b Config) MustYTM() money.Decimal {
+func (b Config) MustYTM() decimal.Decimal {
 	d, err := b.YTM()
 	if err != nil {
 		panic(err)
@@ -69,15 +69,15 @@ func (b Config) MustYTM() money.Decimal {
 
 // priceDiff returns the bond's price at the given annual yield minus the target
 // price. Its root is the yield to maturity.
-func (b Config) priceDiff(annualYield money.Decimal) (money.Decimal, error) {
-	y, err := annualYield.Div(money.MustFromInt64(int64(b.freq), 0))
+func (b Config) priceDiff(annualYield decimal.Decimal) (decimal.Decimal, error) {
+	y, err := annualYield.Div(decimal.MustFromInt64(int64(b.freq), 0))
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	price, _, _, err := b.cashflowSums(y)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return price.Sub(b.price), nil
@@ -86,7 +86,7 @@ func (b Config) priceDiff(annualYield money.Decimal) (money.Decimal, error) {
 // bisectYield narrows the bracket [lo, hi], across which the price difference
 // changes sign, until it is tighter than the tolerance. loDiff is the price
 // difference at lo.
-func (b Config) bisectYield(lo, hi, loDiff money.Decimal) (money.Decimal, error) {
+func (b Config) bisectYield(lo, hi, loDiff decimal.Decimal) (decimal.Decimal, error) {
 	mid := lo.Add(hi).Mul(yieldHalf)
 
 	for i := 0; i < maxYieldBisectIter; i++ {
@@ -94,7 +94,7 @@ func (b Config) bisectYield(lo, hi, loDiff money.Decimal) (money.Decimal, error)
 
 		midDiff, err := b.priceDiff(mid)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		if midDiff.IsZero() || hi.Sub(lo).Abs().LessThan(yieldBracketTol) {
@@ -115,17 +115,17 @@ func (b Config) bisectYield(lo, hi, loDiff money.Decimal) (money.Decimal, error)
 // a sign change: a fine sweep across −99%…100% then a coarse sweep up to
 // 10000%. Values come from exact integer ratios to stay at a representable
 // precision.
-func yieldCandidates() []money.Decimal {
-	hundred := money.MustFromInt64(100, 0)
+func yieldCandidates() []decimal.Decimal {
+	hundred := decimal.MustFromInt64(100, 0)
 
-	candidates := make([]money.Decimal, 0, 300)
+	candidates := make([]decimal.Decimal, 0, 300)
 
 	for k := int64(-99); k <= 100; k++ {
-		candidates = append(candidates, money.MustFromInt64(k, 0).MustDiv(hundred))
+		candidates = append(candidates, decimal.MustFromInt64(k, 0).MustDiv(hundred))
 	}
 
 	for x := int64(2); x <= 100; x++ {
-		candidates = append(candidates, money.MustFromInt64(x, 0))
+		candidates = append(candidates, decimal.MustFromInt64(x, 0))
 	}
 
 	return candidates

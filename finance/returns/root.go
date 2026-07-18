@@ -3,17 +3,16 @@
 // holding-period return, and annualization of a total return over a number
 // of periods.
 //
-// Every calculation runs on the decimal engine through the money package,
-// so results keep money's full fixed-point precision instead of drifting
-// through float64. Monetary inputs are money.Money (currency-checked where
-// two amounts are compared); rates and ratios are returned as money.Decimal
+// Every calculation runs on the decimal engine, so results keep full
+// fixed-point precision instead of drifting through float64. Monetary inputs are money.Money (currency-checked where
+// two amounts are compared); rates and ratios are returned as decimal.Decimal
 // expressed as fractions (e.g. 0.12 for 12%).
 //
 // Basic usage:
 //
 //	begin := money.MustMoneyFromFloat64(1000, money.USD)
 //	end := money.MustMoneyFromFloat64(2000, money.USD)
-//	cagr, _ := returns.CAGR(begin, end, money.MustFromFloat64(5))
+//	cagr, _ := returns.CAGR(begin, end, decimal.MustFromFloat64(5))
 //	// cagr ≈ 0.1487 (14.87% per year)
 package returns
 

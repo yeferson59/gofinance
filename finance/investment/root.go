@@ -7,8 +7,8 @@
 // flow one period later, and so on. By convention an outflow (an investment)
 // is negative and an inflow (a return) is positive.
 //
-// All discounting runs on the decimal engine through the money package, so
-// results keep full fixed-point precision. Rates are money.Decimal fractions
+// All discounting runs on the decimal engine, so results keep full
+// fixed-point precision. Rates are decimal.Decimal fractions
 // per period (e.g. 0.01 for 1% per period).
 //
 // Basic usage:
@@ -19,13 +19,14 @@
 //	    money.MustMoneyFromFloat64(400, money.USD),
 //	    money.MustMoneyFromFloat64(400, money.USD),
 //	}
-//	npv, _ := investment.NPV(money.MustFromFloat64(0.10), flows)
+//	npv, _ := investment.NPV(decimal.MustFromFloat64(0.10), flows)
 //	irr, _ := investment.IRR(flows)
 package investment
 
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -61,13 +62,13 @@ var (
 
 // decimalFlows validates that cashFlows is non-empty and single-currency, and
 // returns the amounts as decimals alongside their shared currency.
-func decimalFlows(cashFlows []money.Money) ([]money.Decimal, money.Currency, error) {
+func decimalFlows(cashFlows []money.Money) ([]decimal.Decimal, money.Currency, error) {
 	if len(cashFlows) == 0 {
 		return nil, 0, ErrNoCashFlows
 	}
 
 	currency := cashFlows[0].Currency()
-	amounts := make([]money.Decimal, len(cashFlows))
+	amounts := make([]decimal.Decimal, len(cashFlows))
 
 	for i, cf := range cashFlows {
 		if cf.Currency() != currency {

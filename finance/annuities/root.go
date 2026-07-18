@@ -2,6 +2,7 @@
 package annuities
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -34,15 +35,15 @@ func (a Annuity) PaymentFromPresentValue() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthFactor := rateInterest.Add(money.One)
+	growthFactor := rateInterest.Add(decimal.One)
 
 	growthPower := growthFactor.MustPow(periods)
 
 	numerator := rateInterest.Mul(growthPower)
 
-	denominator := growthPower.Sub(money.One)
+	denominator := growthPower.Sub(decimal.One)
 
-	annuity := present.Mul(numerator.MustDiv(denominator).ToMoney(present.Currency()))
+	annuity := present.MulDecimal(numerator.MustDiv(denominator))
 
 	return annuity, nil
 }
@@ -58,13 +59,13 @@ func (a Annuity) PaymentFromFutureValue() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthFactor := rateInterest.Add(money.One)
+	growthFactor := rateInterest.Add(decimal.One)
 
 	growthPower := growthFactor.MustPow(periods)
 
-	denominator := growthPower.Sub(money.One)
+	denominator := growthPower.Sub(decimal.One)
 
-	annuity := future.Mul(rateInterest.MustDiv(denominator).ToMoney(future.Currency()))
+	annuity := future.MulDecimal(rateInterest.MustDiv(denominator))
 
 	return annuity, nil
 }
@@ -87,15 +88,15 @@ func (a Annuity) AnticipatePaymentFromPresentValue() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthFactor := rateInterest.Add(money.One)
+	growthFactor := rateInterest.Add(decimal.One)
 
 	growthPower := growthFactor.MustPow(periods)
 
 	numerator := rateInterest.Mul(growthPower)
 
-	denominator := growthPower.Sub(money.One).Mul(growthFactor)
+	denominator := growthPower.Sub(decimal.One).Mul(growthFactor)
 
-	annuity := present.Mul(numerator.MustDiv(denominator).ToMoney(present.Currency()))
+	annuity := present.MulDecimal(numerator.MustDiv(denominator))
 
 	return annuity, nil
 }
@@ -117,13 +118,13 @@ func (a Annuity) AnticipatePaymentFromFutureValue() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthFactor := rateInterest.Add(money.One)
+	growthFactor := rateInterest.Add(decimal.One)
 
 	growthPower := growthFactor.MustPow(periods)
 
-	denominator := growthPower.Sub(money.One).Mul(growthFactor)
+	denominator := growthPower.Sub(decimal.One).Mul(growthFactor)
 
-	annuity := future.Mul(rateInterest.MustDiv(denominator).ToMoney(future.Currency()))
+	annuity := future.MulDecimal(rateInterest.MustDiv(denominator))
 
 	return annuity, nil
 }

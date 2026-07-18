@@ -3,7 +3,7 @@ package compositeinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/decimal"
 )
 
 // getCompoundingFrequency gets the compounding factor for a given frequency.
@@ -20,10 +20,10 @@ import (
 //
 //	factor, err := getCompoundingFrequency(Monthly)
 //	// factor is 12 (12 months in a year)
-func (cf CompoundingFrequency) getCompoundingFrequency() (money.Decimal, error) {
+func (cf CompoundingFrequency) getCompoundingFrequency() (decimal.Decimal, error) {
 	periodsPerYear, ok := countCompoundingFrequency[cf]
 	if !ok {
-		return money.Decimal{}, errors.New("invalid value compounding frequency")
+		return decimal.Decimal{}, errors.New("invalid value compounding frequency")
 	}
 
 	return periodsPerYear, nil
@@ -40,10 +40,10 @@ func (cf CompoundingFrequency) getCompoundingFrequency() (money.Decimal, error) 
 //
 //	months, _ := getCompoundingFrequencytoMonths(QuarterlyOne)
 //	// months is 3 (3 months per quarter)
-func (cf CompoundingFrequency) getCompoundingFrequencytoMonths() (money.Decimal, error) {
+func (cf CompoundingFrequency) getCompoundingFrequencytoMonths() (decimal.Decimal, error) {
 	monthsPerPeriod, ok := countCompoundingFrequencyMonths[cf]
 	if !ok {
-		return money.Decimal{}, errors.New("invalid value compounding frequency")
+		return decimal.Decimal{}, errors.New("invalid value compounding frequency")
 	}
 
 	return monthsPerPeriod, nil
@@ -55,10 +55,10 @@ func (cf CompoundingFrequency) getCompoundingFrequencytoMonths() (money.Decimal,
 // Returns:
 //   - The order weight as a Decimal
 //   - An error if the frequency is invalid
-func (cf CompoundingFrequency) getOrderTime() (money.Decimal, error) {
+func (cf CompoundingFrequency) getOrderTime() (decimal.Decimal, error) {
 	orderWeight, ok := orderTime[cf]
 	if !ok {
-		return money.Decimal{}, errors.New("invalid value compounding frequency")
+		return decimal.Decimal{}, errors.New("invalid value compounding frequency")
 	}
 
 	return orderWeight, nil

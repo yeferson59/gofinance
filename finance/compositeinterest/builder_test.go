@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -32,7 +33,7 @@ func TestBuilderChainedBuildDefaultsToPeriodicRate(t *testing.T) {
 func TestCompositeConfigMoneySetters(t *testing.T) {
 	present := money.MustMoneyFromFloat64(1000, money.USD)
 	future := money.MustMoneyFromFloat64(1500, money.USD)
-	rate := money.MustFromFloat64(0.05)
+	rate := decimal.MustFromFloat64(0.05)
 
 	config := NewComposite().
 		PresentMoney(present).

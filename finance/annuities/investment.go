@@ -1,6 +1,7 @@
 package annuities
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -9,11 +10,11 @@ import (
 // period (in absolute and percentage terms), and the contributions/interest
 // accumulated so far.
 type InvestmentSchedule struct {
-	Period           money.Decimal
+	Period           decimal.Decimal
 	Balance          money.Money
 	Contribution     money.Money
 	Change           money.Money
-	ChangePercent    money.Decimal
+	ChangePercent    decimal.Decimal
 	SumContributions money.Money
 	SumInterest      money.Money
 }
@@ -34,7 +35,7 @@ type InvestmentSchedule struct {
 // a single final value.
 //
 // It returns ErrInvalidPeriods if nper isn't a positive whole number.
-func BuildInvestmentSchedule(principal, contribution money.Money, rate money.Decimal, nper money.Decimal) ([]InvestmentSchedule, error) {
+func BuildInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal) ([]InvestmentSchedule, error) {
 	return buildInvestmentSchedule(principal, contribution, rate, nper, false)
 }
 
@@ -42,11 +43,11 @@ func BuildInvestmentSchedule(principal, contribution money.Money, rate money.Dec
 // assumes each contribution is made at the beginning of its period (annuity
 // due) instead of the end, so it also earns interest during its own first
 // period: Balance[p] = (Balance[p-1] + contribution) × (1+rate).
-func BuildAnticipateInvestmentSchedule(principal, contribution money.Money, rate money.Decimal, nper money.Decimal) ([]InvestmentSchedule, error) {
+func BuildAnticipateInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal) ([]InvestmentSchedule, error) {
 	return buildInvestmentSchedule(principal, contribution, rate, nper, true)
 }
 
-func buildInvestmentSchedule(principal, contribution money.Money, rate money.Decimal, nper money.Decimal, anticipated bool) ([]InvestmentSchedule, error) {
+func buildInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal, anticipated bool) ([]InvestmentSchedule, error) {
 	if principal.Currency() != contribution.Currency() {
 		return nil, money.ErrCurrencyMismatch
 	}
@@ -62,18 +63,18 @@ func buildInvestmentSchedule(principal, contribution money.Money, rate money.Dec
 
 	currency := principal.Currency()
 	zero := money.MustMoneyFromFloat64(0, currency)
-	rateMoney := rate.ToMoney(currency)
+	rateMoney := money.FromDecimal(rate, currency)
 
 	balance := principal
 	sumContributions, sumInterest := zero, zero
 	rows := make([]InvestmentSchedule, 0, until+1)
 
 	rows = append(rows, InvestmentSchedule{
-		Period:           money.Zero,
+		Period:           decimal.Zero,
 		Balance:          principal,
 		Contribution:     zero,
 		Change:           zero,
-		ChangePercent:    money.Zero,
+		ChangePercent:    decimal.Zero,
 		SumContributions: zero,
 		SumInterest:      zero,
 	})
@@ -94,7 +95,7 @@ func buildInvestmentSchedule(principal, contribution money.Money, rate money.Dec
 		sumContributions = sumContributions.Add(contribution)
 		sumInterest = sumInterest.Add(interest)
 
-		changePercent := money.Zero
+		changePercent := decimal.Zero
 		if !previous.IsZero() {
 			changePercent, err = balance.Sub(previous).ToDecimal().Div(previous.ToDecimal())
 			if err != nil {
@@ -103,7 +104,7 @@ func buildInvestmentSchedule(principal, contribution money.Money, rate money.Dec
 		}
 
 		rows = append(rows, InvestmentSchedule{
-			Period:           money.MustFromInt64(int64(p), 0),
+			Period:           decimal.MustFromInt64(int64(p), 0),
 			Balance:          balance,
 			Contribution:     contribution,
 			Change:           balance.Sub(previous),

@@ -3,6 +3,7 @@ package annuities
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -26,17 +27,17 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	growthPower, err := money.One.Add(rateInterest).Pow(periods)
+	growthPower, err := decimal.One.Add(rateInterest).Pow(periods)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	result, err := growthPower.Sub(money.One).Div(rateInterest)
+	result, err := growthPower.Sub(decimal.One).Div(rateInterest)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return a.value.ToDecimal().Mul(result).ToMoney(a.value.Currency()), nil
+	return money.FromDecimal(a.value.ToDecimal().Mul(result), a.value.Currency()), nil
 }
 
 func (a Annuity) AnticipateFuture() (money.Money, error) {
@@ -61,7 +62,7 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return ordinary.ToDecimal().Mul(money.One.Add(rateInterest)).ToMoney(ordinary.Currency()), nil
+	return money.FromDecimal(ordinary.ToDecimal().Mul(decimal.One.Add(rateInterest)), ordinary.Currency()), nil
 }
 
 // principalFuture returns the future value of the initial principal (Present),

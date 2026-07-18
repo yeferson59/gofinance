@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -14,10 +15,10 @@ import (
 func TestAnnuityRateWithPresent(t *testing.T) {
 	// PMT = 1000, PV = 11255.0775, n = 12 => the periodic rate that
 	// reproduces this present value is i = 0.01 (12% nominal monthly).
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -35,10 +36,10 @@ func TestAnnuityRateWithPresent(t *testing.T) {
 
 func TestAnnuityRateWithFuture(t *testing.T) {
 	// PMT = 1000, FV = 12682.5030, n = 12 => i = 0.01
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -57,10 +58,10 @@ func TestAnnuityRateWithFuture(t *testing.T) {
 func TestAnnuityAnticipateRateWithPresent(t *testing.T) {
 	// PMT = 1000, PV_due = PV_ordinary × (1+i) = 11255.0775 × 1.01 =
 	// 11367.6283, n = 12 => i = 0.01
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -79,10 +80,10 @@ func TestAnnuityAnticipateRateWithPresent(t *testing.T) {
 func TestAnnuityAnticipateRateWithFuture(t *testing.T) {
 	// PMT = 1000, FV_due = FV_ordinary × (1+i) = 12682.5030 × 1.01 =
 	// 12809.3280, n = 12 => i = 0.01
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -117,10 +118,10 @@ func TestAnnuityRateWithPresentAcrossFrequencies(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), tc.frequency)
+			period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), tc.frequency)
 			require.NoError(t, err)
 
-			rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), tc.frequency, compositeinterest.RateEffectyPeriodic)
+			rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), tc.frequency, compositeinterest.RateEffectyPeriodic)
 			require.NoError(t, err)
 
 			value, err := money.New(100000, 2, money.USD)
@@ -146,10 +147,10 @@ func TestAnnuityRateWithPresentLongTerm(t *testing.T) {
 	n := 360.0
 	pv := 1000.0 * (1 - math.Pow(1+i, -n)) / i
 
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(n), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(n), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -173,10 +174,10 @@ func TestAnnuityRateWithPresentLongTerm(t *testing.T) {
 // counterparts) must report ErrRateNotFound instead of guessing.
 
 func TestAnnuityRateWithPresentNotFound(t *testing.T) {
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -192,10 +193,10 @@ func TestAnnuityRateWithPresentNotFound(t *testing.T) {
 }
 
 func TestAnnuityRateWithFutureNotFound(t *testing.T) {
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -211,10 +212,10 @@ func TestAnnuityRateWithFutureNotFound(t *testing.T) {
 }
 
 func TestAnnuityAnticipateRateWithPresentNotFound(t *testing.T) {
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -230,10 +231,10 @@ func TestAnnuityAnticipateRateWithPresentNotFound(t *testing.T) {
 }
 
 func TestAnnuityAnticipateRateWithFutureNotFound(t *testing.T) {
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(money.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)

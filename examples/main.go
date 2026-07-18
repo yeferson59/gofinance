@@ -8,6 +8,7 @@ import (
 
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/types"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/annuities"
 	"github.com/yeferson59/gofinance/finance/bonds"
 	"github.com/yeferson59/gofinance/finance/charts"
@@ -65,7 +66,7 @@ func xirrExample() {
 		{Date: time.Date(2009, 4, 1, 0, 0, 0, 0, time.UTC), Amount: money.MustMoneyFromFloat64(2750, money.USD)},
 	}
 
-	xnpv := dcf.MustXNPV(money.MustFromFloat64(0.09), flows)
+	xnpv := dcf.MustXNPV(decimal.MustFromFloat64(0.09), flows)
 	xirr := dcf.MustXIRR(flows)
 
 	fmt.Println("XNPV @ 9%:", xnpv.RoundBankString(2))
@@ -76,8 +77,8 @@ func xirrExample() {
 func perpetuityExample() {
 	fmt.Println("\n=== Perpetuities ===")
 
-	level := dcf.MustPerpetuity(money.MustMoneyFromFloat64(100, money.USD), money.MustFromFloat64(0.05))
-	growing := dcf.MustGrowingPerpetuity(money.MustMoneyFromFloat64(100, money.USD), money.MustFromFloat64(0.08), money.MustFromFloat64(0.03))
+	level := dcf.MustPerpetuity(money.MustMoneyFromFloat64(100, money.USD), decimal.MustFromFloat64(0.05))
+	growing := dcf.MustGrowingPerpetuity(money.MustMoneyFromFloat64(100, money.USD), decimal.MustFromFloat64(0.08), decimal.MustFromFloat64(0.03))
 
 	fmt.Println("$100/yr at 5%:", level.RoundBankString(2))
 	fmt.Println("$100/yr, 8% discount, 3% growth:", growing.RoundBankString(2))
@@ -87,8 +88,8 @@ func perpetuityExample() {
 func inflationExample() {
 	fmt.Println("\n=== Inflation ===")
 
-	realAmount := returns.MustRealValue(money.MustMoneyFromFloat64(1000, money.USD), money.MustFromFloat64(0.03), money.MustFromFloat64(10))
-	realRate := returns.MustRealRate(money.MustFromFloat64(0.08), money.MustFromFloat64(0.03))
+	realAmount := returns.MustRealValue(money.MustMoneyFromFloat64(1000, money.USD), decimal.MustFromFloat64(0.03), decimal.MustFromFloat64(10))
+	realRate := returns.MustRealRate(decimal.MustFromFloat64(0.08), decimal.MustFromFloat64(0.03))
 
 	fmt.Println("$1,000 in 10 years at 3% inflation (today's money):", realAmount.RoundBankString(2))
 	fmt.Println("Real rate (8% nominal, 3% inflation):", realRate.RoundBank(6).StringFixed(6))
@@ -140,7 +141,7 @@ func returnsExample() {
 	begin := money.MustMoneyFromFloat64(1000, money.USD)
 	end := money.MustMoneyFromFloat64(2000, money.USD)
 
-	cagr := returns.MustCAGR(begin, end, money.MustFromFloat64(5))
+	cagr := returns.MustCAGR(begin, end, decimal.MustFromFloat64(5))
 	roi := returns.MustROI(begin, end)
 
 	fmt.Println("$1,000 → $2,000 over 5 years")
@@ -160,7 +161,7 @@ func dcfExample() {
 		money.MustMoneyFromFloat64(400, money.USD),
 	}
 
-	npv := dcf.MustNPV(money.MustFromFloat64(0.10), flows)
+	npv := dcf.MustNPV(decimal.MustFromFloat64(0.10), flows)
 	irr := dcf.MustIRR(flows)
 
 	fmt.Println("Cash flows: -1000, 400, 400, 400")
@@ -245,9 +246,9 @@ func annuityExample() {
 
 	schedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(300000, money.USD),
-		money.MustFromFloat64(periodicRate),
+		decimal.MustFromFloat64(periodicRate),
 		payment,
-		money.MustFromFloat64(periods),
+		decimal.MustFromFloat64(periods),
 	)
 	if err != nil {
 		fmt.Println("schedule error:", err)
@@ -299,9 +300,9 @@ func chartsExample() {
 
 	schedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(300000, money.USD),
-		money.MustFromFloat64(chartPeriodicRate),
+		decimal.MustFromFloat64(chartPeriodicRate),
 		payment,
-		money.MustFromFloat64(chartPeriods),
+		decimal.MustFromFloat64(chartPeriods),
 	)
 	if err != nil {
 		fmt.Println("schedule error:", err)
@@ -365,9 +366,9 @@ func chartsExample() {
 		MustPayment()
 	jpySchedule, err := annuities.BuildSchedule(
 		money.MustMoneyFromFloat64(3000000, money.JPY),
-		money.MustFromFloat64(jpyPeriodicRate),
+		decimal.MustFromFloat64(jpyPeriodicRate),
 		jpyPayment,
-		money.MustFromFloat64(jpyPeriods),
+		decimal.MustFromFloat64(jpyPeriods),
 	)
 	if err != nil {
 		fmt.Println("JPY schedule error:", err)
@@ -396,8 +397,8 @@ func growthExample() {
 	}
 
 	present := money.MustMoneyFromFloat64(10000, money.USD)
-	rate := money.MustFromFloat64(0.01)
-	periods := money.MustFromFloat64(24)
+	rate := decimal.MustFromFloat64(0.01)
+	periods := decimal.MustFromFloat64(24)
 
 	schedule, err := compositeinterest.BuildGrowthSchedule(present, rate, periods)
 	if err != nil {
@@ -452,8 +453,8 @@ func investmentExample() {
 
 	principal := money.MustMoneyFromFloat64(1000, money.USD)
 	contribution := money.MustMoneyFromFloat64(100, money.USD)
-	rate := money.MustFromFloat64(0.01)
-	periods := money.MustFromFloat64(24)
+	rate := decimal.MustFromFloat64(0.01)
+	periods := decimal.MustFromFloat64(24)
 
 	total := annuities.NewAnnuity().
 		Present(1000, money.USD).

@@ -3,6 +3,7 @@ package compositeinterest
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -15,10 +16,10 @@ var ErrInvalidPeriods = errors.New("compositeinterest: number of periods must be
 // period (in absolute and percentage terms), and the interest accumulated
 // so far.
 type GrowthSchedule struct {
-	Period        money.Decimal
+	Period        decimal.Decimal
 	Balance       money.Money
 	Change        money.Money
-	ChangePercent money.Decimal
+	ChangePercent decimal.Decimal
 	SumInterest   money.Money
 }
 
@@ -34,7 +35,7 @@ type GrowthSchedule struct {
 // single final value.
 //
 // It returns ErrInvalidPeriods if nper isn't a positive whole number.
-func BuildGrowthSchedule(present money.Money, rate money.Decimal, nper money.Decimal) ([]GrowthSchedule, error) {
+func BuildGrowthSchedule(present money.Money, rate decimal.Decimal, nper decimal.Decimal) ([]GrowthSchedule, error) {
 	until, err := nper.Int64()
 	if err != nil {
 		return nil, err
@@ -51,16 +52,16 @@ func BuildGrowthSchedule(present money.Money, rate money.Decimal, nper money.Dec
 	rows := make([]GrowthSchedule, 0, until+1)
 
 	rows = append(rows, GrowthSchedule{
-		Period:        money.Zero,
+		Period:        decimal.Zero,
 		Balance:       present,
 		Change:        zero,
-		ChangePercent: money.Zero,
+		ChangePercent: decimal.Zero,
 		SumInterest:   zero,
 	})
 
 	for p := 1; p <= int(until); p++ {
 		previous := balance
-		interest := balance.Mul(rate.ToMoney(currency))
+		interest := balance.MulDecimal(rate)
 		balance = balance.Add(interest)
 		sumInterest = sumInterest.Add(interest)
 
@@ -70,7 +71,7 @@ func BuildGrowthSchedule(present money.Money, rate money.Decimal, nper money.Dec
 		}
 
 		rows = append(rows, GrowthSchedule{
-			Period:        money.MustFromInt64(int64(p), 0),
+			Period:        decimal.MustFromInt64(int64(p), 0),
 			Balance:       balance,
 			Change:        interest,
 			ChangePercent: changePercent,

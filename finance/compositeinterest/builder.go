@@ -1,6 +1,7 @@
 package compositeinterest
 
 import (
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -21,7 +22,7 @@ import (
 type CompositeConfig struct {
 	present   money.Money
 	future    money.Money
-	rate      money.Decimal
+	rate      decimal.Decimal
 	periods   int
 	frequency CompoundingFrequency
 	rateType  TypeRate
@@ -100,7 +101,7 @@ func (c CompositeConfig) FutureMoney(m money.Money) CompositeConfig {
 //
 //	.NewComposite().Rate(0.05)  // 5% interest rate
 func (c CompositeConfig) Rate(rate float64) CompositeConfig {
-	c.rate = money.MustFromFloat64(rate)
+	c.rate = decimal.MustFromFloat64(rate)
 	return c
 }
 
@@ -109,7 +110,7 @@ func (c CompositeConfig) Rate(rate float64) CompositeConfig {
 //
 // Parameters:
 //   - r: An existing Decimal instance representing the interest rate
-func (c CompositeConfig) RateMoney(r money.Decimal) CompositeConfig {
+func (c CompositeConfig) RateMoney(r decimal.Decimal) CompositeConfig {
 	c.rate = r
 	return c
 }
@@ -222,7 +223,7 @@ func (c CompositeConfig) Daily() CompositeConfig {
 //	    Monthly().
 //	    Build()
 func (c CompositeConfig) Build() (CompositeInterest, error) {
-	period, err := NewPeriod(money.MustFromFloat64(float64(c.periods)), c.frequency)
+	period, err := NewPeriod(decimal.MustFromFloat64(float64(c.periods)), c.frequency)
 	if err != nil {
 		return CompositeInterest{}, err
 	}

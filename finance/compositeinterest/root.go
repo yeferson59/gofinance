@@ -36,6 +36,7 @@ package compositeinterest
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -53,7 +54,7 @@ type TypeRate string
 // Period represents the number of compounding periods for a compound interest calculation.
 // It stores a single period value along with its compounding frequency.
 type Period struct {
-	value     money.Decimal
+	value     decimal.Decimal
 	frequency CompoundingFrequency
 }
 
@@ -73,7 +74,7 @@ type Period struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func NewPeriod(value money.Decimal, compoundingFrequency CompoundingFrequency) (Period, error) {
+func NewPeriod(value decimal.Decimal, compoundingFrequency CompoundingFrequency) (Period, error) {
 	if value.IsNeg() {
 		return Period{}, errors.New("value periods must be greater or equal to zero")
 	}
@@ -95,13 +96,13 @@ func NewPeriod(value money.Decimal, compoundingFrequency CompoundingFrequency) (
 //   - The numeric value of the period
 //   - The corresponding compounding frequency
 //   - An error if the frequency is invalid or uninitialized
-func (p *Period) getPeriod() (money.Decimal, CompoundingFrequency, error) {
+func (p *Period) getPeriod() (decimal.Decimal, CompoundingFrequency, error) {
 	// Direct lookup via frequency field
 	switch p.frequency {
 	case Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually:
 		return p.value, p.frequency, nil
 	default:
-		return money.Decimal{}, "", errors.New("failed to get valid periods")
+		return decimal.Decimal{}, "", errors.New("failed to get valid periods")
 	}
 }
 
@@ -111,7 +112,7 @@ func (p *Period) getPeriod() (money.Decimal, CompoundingFrequency, error) {
 //   - compoundingFrequency: The frequency with which interest is compounded
 //   - typeRate: The type of rate (periodic, nominal, effective annual, etc.)
 type RateInterest struct {
-	value                money.Decimal
+	value                decimal.Decimal
 	compoundingFrequency CompoundingFrequency
 	typeRate             TypeRate
 }
@@ -133,7 +134,7 @@ type RateInterest struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func NewRateInterest(value money.Decimal, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (RateInterest, error) {
+func NewRateInterest(value decimal.Decimal, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (RateInterest, error) {
 	if value.IsNeg() {
 		return RateInterest{}, errors.New("invalid value for rate interest must be greater or equal to zero")
 	}
@@ -199,10 +200,10 @@ func New(present, future money.Money, rateInterest RateInterest, periods Period)
 //   - The adjusted number of periods
 //   - The equivalent periodic rate
 //   - An error if valid values cannot be obtained
-func (c CompositeInterest) GetEqualsRateInterestPeriods() (money.Decimal, money.Decimal, error) {
+func (c CompositeInterest) GetEqualsRateInterestPeriods() (decimal.Decimal, decimal.Decimal, error) {
 	periodValue, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
-		return money.Decimal{}, money.Decimal{}, err
+		return decimal.Decimal{}, decimal.Decimal{}, err
 	}
 
 	periodicRate := c.rateInterest.value
@@ -210,39 +211,39 @@ func (c CompositeInterest) GetEqualsRateInterestPeriods() (money.Decimal, money.
 	if c.rateInterest.typeRate != RateEffectyPeriodic {
 		periodicRate, err = c.rateInterest.RatePeriodic()
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 	}
 
 	if compoundingFrequency != c.rateInterest.compoundingFrequency {
 		periodsInMonths, err := compoundingFrequency.getCompoundingFrequencytoMonths()
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		rateFrequencyInMonths, err := c.rateInterest.compoundingFrequency.getCompoundingFrequencytoMonths()
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		periodWeight, err := compoundingFrequency.getOrderTime()
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		rateWeight, err := c.rateInterest.compoundingFrequency.getOrderTime()
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		if rateWeight.GreaterThan(periodWeight) {
-			if periodsInMonths.LessThan(money.One) {
+			if periodsInMonths.LessThan(decimal.One) {
 				return periodsInMonths.Mul(periodValue), periodicRate, nil
 			}
 
 			div, err := periodValue.Div(rateFrequencyInMonths)
 			if err != nil {
-				return money.Decimal{}, money.Decimal{}, err
+				return decimal.Decimal{}, decimal.Decimal{}, err
 			}
 
 			return div, periodicRate, nil

@@ -13,7 +13,7 @@ func (s SimpleInterest) Interest() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	interest := s.present.Mul(numberOfPeriods.ToMoney()).Mul(s.rateInterest.ToMoney())
+	interest := s.present.MulDecimal(numberOfPeriods).MulDecimal(s.rateInterest)
 
 	return interest, nil
 }

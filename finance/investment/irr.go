@@ -1,6 +1,9 @@
 package investment
 
-import "github.com/yeferson59/gofinance/money"
+import (
+	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/money"
+)
 
 const (
 	maxNewtonIter = 100
@@ -8,14 +11,14 @@ const (
 )
 
 var (
-	irrRateTol    = money.MustFromString("0.0000000001") // 1e-10
-	irrBracketTol = money.MustFromString("0.0000000001") // 1e-10
-	irrHalf       = money.MustFromFloat64(0.5)
-	irrMinusOne   = money.One.Neg()
+	irrRateTol    = decimal.MustFromString("0.0000000001") // 1e-10
+	irrBracketTol = decimal.MustFromString("0.0000000001") // 1e-10
+	irrHalf       = decimal.MustFromFloat64(0.5)
+	irrMinusOne   = decimal.One.Neg()
 )
 
 // IRR returns the internal rate of return of cashFlows: the periodic rate at
-// which the net present value is zero. The returned value is a money.Decimal
+// which the net present value is zero. The returned value is a decimal.Decimal
 // fraction per period (e.g. 0.08 for 8% per period).
 //
 // cashFlows must be non-empty, all in the same currency, and contain at least
@@ -27,18 +30,18 @@ var (
 // It returns ErrNoCashFlows for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, ErrNoSignChange when no sign change is present, and
 // ErrNoConvergence if no root can be located.
-func IRR(cashFlows []money.Money) (money.Decimal, error) {
+func IRR(cashFlows []money.Money) (decimal.Decimal, error) {
 	amounts, _, err := decimalFlows(cashFlows)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if !hasSignChange(amounts) {
-		return money.Decimal{}, ErrNoSignChange
+		return decimal.Decimal{}, ErrNoSignChange
 	}
 
 	// Newton–Raphson from a 10% guess.
-	rate := money.MustFromFloat64(0.1)
+	rate := decimal.MustFromFloat64(0.1)
 
 	for i := 0; i < maxNewtonIter; i++ {
 		f, fPrime, err := npvAndDerivative(rate, amounts)
@@ -70,7 +73,7 @@ func IRR(cashFlows []money.Money) (money.Decimal, error) {
 }
 
 // MustIRR is like IRR but panics on error.
-func MustIRR(cashFlows []money.Money) money.Decimal {
+func MustIRR(cashFlows []money.Money) decimal.Decimal {
 	d, err := IRR(cashFlows)
 	if err != nil {
 		panic(err)
@@ -81,7 +84,7 @@ func MustIRR(cashFlows []money.Money) money.Decimal {
 
 // hasSignChange reports whether the non-zero amounts change sign at least
 // once, a necessary condition for an internal rate of return to exist.
-func hasSignChange(amounts []money.Decimal) bool {
+func hasSignChange(amounts []decimal.Decimal) bool {
 	lastSign := 0
 
 	for _, a := range amounts {
@@ -103,33 +106,33 @@ func hasSignChange(amounts []money.Decimal) bool {
 // npvAndDerivative returns the NPV of amounts at rate and its first derivative
 // with respect to rate, computed together in a single pass for the Newton
 // step.
-func npvAndDerivative(rate money.Decimal, amounts []money.Decimal) (money.Decimal, money.Decimal, error) {
-	onePlus := money.One.Add(rate)
+func npvAndDerivative(rate decimal.Decimal, amounts []decimal.Decimal) (decimal.Decimal, decimal.Decimal, error) {
+	onePlus := decimal.One.Add(rate)
 	if !onePlus.IsPos() {
-		return money.Decimal{}, money.Decimal{}, ErrInvalidRate
+		return decimal.Decimal{}, decimal.Decimal{}, ErrInvalidRate
 	}
 
 	f := amounts[0]
-	fPrime := money.Zero
+	fPrime := decimal.Zero
 	factor := onePlus // (1+rate)^t for the current t, starting at t = 1
 
 	for t := 1; t < len(amounts); t++ {
 		discounted, err := amounts[t].Div(factor)
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		f = f.Add(discounted)
 
 		// d/dr [ CFₜ (1+r)^-t ] = −t · CFₜ (1+r)^-(t+1) = −t · discounted / (1+r)
-		tDec, err := money.NewFromInt64(int64(t), 0)
+		tDec, err := decimal.NewFromInt64(int64(t), 0)
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		dTerm, err := discounted.Mul(tDec).Div(onePlus)
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		fPrime = fPrime.Sub(dTerm)
@@ -141,14 +144,14 @@ func npvAndDerivative(rate money.Decimal, amounts []money.Decimal) (money.Decima
 
 // irrBisection scans a range of candidate rates for a change in the sign of
 // NPV and, once one is bracketed, bisects to locate the root.
-func irrBisection(amounts []money.Decimal) (money.Decimal, error) {
+func irrBisection(amounts []decimal.Decimal) (decimal.Decimal, error) {
 	candidates := irrCandidates()
 
 	prevRate := candidates[0]
 
 	prevNPV, err := npvDecimal(prevRate, amounts)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	for i := 1; i < len(candidates); i++ {
@@ -174,13 +177,13 @@ func irrBisection(amounts []money.Decimal) (money.Decimal, error) {
 		prevRate, prevNPV = curRate, curNPV
 	}
 
-	return money.Decimal{}, ErrNoConvergence
+	return decimal.Decimal{}, ErrNoConvergence
 }
 
 // bisect narrows the bracket [lo, hi], on which NPV changes sign, until it is
 // tighter than the tolerance, and returns the enclosed root. loNPV is the NPV
 // at lo, used to decide which half to keep.
-func bisect(lo, hi, loNPV money.Decimal, amounts []money.Decimal) (money.Decimal, error) {
+func bisect(lo, hi, loNPV decimal.Decimal, amounts []decimal.Decimal) (decimal.Decimal, error) {
 	mid := lo.Add(hi).Mul(irrHalf)
 
 	for i := 0; i < maxBisectIter; i++ {
@@ -188,7 +191,7 @@ func bisect(lo, hi, loNPV money.Decimal, amounts []money.Decimal) (money.Decimal
 
 		midNPV, err := npvDecimal(mid, amounts)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		if midNPV.IsZero() || hi.Sub(lo).Abs().LessThan(irrBracketTol) {
@@ -209,17 +212,17 @@ func bisect(lo, hi, loNPV money.Decimal, amounts []money.Decimal) (money.Decimal
 // scans for a sign change: a point just above −1, a fine sweep across the
 // common −99%…100% range, then a coarse sweep up to 10000%. Rates are built
 // from exact integer ratios to keep them at a representable precision.
-func irrCandidates() []money.Decimal {
-	hundred := money.MustFromInt64(100, 0)
+func irrCandidates() []decimal.Decimal {
+	hundred := decimal.MustFromInt64(100, 0)
 
-	candidates := []money.Decimal{money.MustFromString("-0.9999")}
+	candidates := []decimal.Decimal{decimal.MustFromString("-0.9999")}
 
 	for k := int64(-99); k <= 100; k++ {
-		candidates = append(candidates, money.MustFromInt64(k, 0).MustDiv(hundred))
+		candidates = append(candidates, decimal.MustFromInt64(k, 0).MustDiv(hundred))
 	}
 
 	for x := int64(2); x <= 100; x++ {
-		candidates = append(candidates, money.MustFromInt64(x, 0))
+		candidates = append(candidates, decimal.MustFromInt64(x, 0))
 	}
 
 	return candidates

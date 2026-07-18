@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -21,31 +22,31 @@ func TestXNPVExactYear(t *testing.T) {
 		{Date: day(2010, 1, 1), Amount: usd(1100)},
 	}
 
-	npv, err := XNPV(money.MustFromFloat64(0.10), fs)
+	npv, err := XNPV(decimal.MustFromFloat64(0.10), fs)
 	require.NoError(t, err)
 	assert.InDelta(t, 0.0, npv.InexactFloat64(), 1e-6)
 	assert.Equal(t, money.USD, npv.Currency())
 }
 
 func TestXNPVErrors(t *testing.T) {
-	_, err := XNPV(money.MustFromFloat64(0.1), nil)
+	_, err := XNPV(decimal.MustFromFloat64(0.1), nil)
 	assert.ErrorIs(t, err, ErrNoCashFlows)
 
-	_, err = XNPV(money.MustFromFloat64(-1), []DatedCashFlow{{Date: day(2020, 1, 1), Amount: usd(10)}})
+	_, err = XNPV(decimal.MustFromFloat64(-1), []DatedCashFlow{{Date: day(2020, 1, 1), Amount: usd(10)}})
 	assert.ErrorIs(t, err, ErrInvalidRate)
 
 	before := []DatedCashFlow{
 		{Date: day(2010, 1, 1), Amount: usd(-1000)},
 		{Date: day(2009, 1, 1), Amount: usd(1100)},
 	}
-	_, err = XNPV(money.MustFromFloat64(0.1), before)
+	_, err = XNPV(decimal.MustFromFloat64(0.1), before)
 	assert.ErrorIs(t, err, ErrDatesBeforeBase)
 
 	mixed := []DatedCashFlow{
 		{Date: day(2010, 1, 1), Amount: usd(-1000)},
 		{Date: day(2011, 1, 1), Amount: money.MustMoneyFromFloat64(1100, money.EUR)},
 	}
-	_, err = XNPV(money.MustFromFloat64(0.1), mixed)
+	_, err = XNPV(decimal.MustFromFloat64(0.1), mixed)
 	assert.ErrorIs(t, err, money.ErrCurrencyMismatch)
 }
 
@@ -87,5 +88,5 @@ func TestMustXHelpers(t *testing.T) {
 		{Date: day(2010, 1, 1), Amount: usd(1100)},
 	}
 	assert.InDelta(t, 0.10, MustXIRR(fs).InexactFloat64(), 1e-6)
-	assert.Panics(t, func() { MustXNPV(money.MustFromFloat64(0.1), nil) })
+	assert.Panics(t, func() { MustXNPV(decimal.MustFromFloat64(0.1), nil) })
 }

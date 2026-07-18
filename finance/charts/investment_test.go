@@ -6,6 +6,7 @@ import (
 
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/annuities"
 	"github.com/yeferson59/gofinance/money"
 )
@@ -16,7 +17,7 @@ func buildTestInvestmentSchedule(t *testing.T, currency money.Currency, principa
 	principal := money.MustMoneyFromFloat64(principalAmount, currency)
 	contribution := money.MustMoneyFromFloat64(contributionAmount, currency)
 
-	rows, err := annuities.BuildInvestmentSchedule(principal, contribution, money.MustFromFloat64(0.01), money.MustFromFloat64(12))
+	rows, err := annuities.BuildInvestmentSchedule(principal, contribution, decimal.MustFromFloat64(0.01), decimal.MustFromFloat64(12))
 	if err != nil {
 		t.Fatalf("failed to build test investment schedule: %v", err)
 	}

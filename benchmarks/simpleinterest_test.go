@@ -3,12 +3,13 @@ package benchmarks
 import (
 	"testing"
 
+	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/simpleinterest"
 	"github.com/yeferson59/gofinance/money"
 )
 
-func mustDecimal(f float64) money.Decimal {
-	d, _ := money.NewFromFloat64(f)
+func mustDecimal(f float64) decimal.Decimal {
+	d, _ := decimal.NewFromFloat64(f)
 	return d
 }
 
@@ -19,7 +20,7 @@ func mustMoney(value int64, precision uint8, currency money.Currency) money.Mone
 
 func BenchmarkNewPeriod(b *testing.B) {
 	testcases := []struct {
-		value money.Decimal
+		value decimal.Decimal
 		time  simpleinterest.Periods
 	}{
 		{

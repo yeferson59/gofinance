@@ -1,21 +1,21 @@
 package tvm
 
-import "github.com/yeferson59/gofinance/money"
+import "github.com/yeferson59/gofinance/decimal"
 
 const maxRateBisectIter = 200
 
 var (
-	rateBracketTol = money.MustFromString("0.0000000001") // 1e-10
-	rateHalf       = money.MustFromFloat64(0.5)
+	rateBracketTol = decimal.MustFromString("0.0000000001") // 1e-10
+	rateHalf       = decimal.MustFromFloat64(0.5)
 )
 
 // residual evaluates the left-hand side of the TVM equation,
 // PV·(1+i)ᴺ + PMT·coef + FV, at the given rate. Its root is the rate that
 // balances the cash flows.
-func (t Config) residual(rate money.Decimal) (money.Decimal, error) {
+func (t Config) residual(rate decimal.Decimal) (decimal.Decimal, error) {
 	pow, pmtCoef, err := t.factors(rate)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return t.pv.Mul(pow).Add(t.pmt.Mul(pmtCoef)).Add(t.fv), nil
@@ -29,14 +29,14 @@ func (t Config) residual(rate money.Decimal) (money.Decimal, error) {
 //
 // It returns ErrNoConvergence when no rate in the searched range balances the
 // equation (which also happens when the cash flows never cross zero).
-func (t Config) SolveRate() (money.Decimal, error) {
+func (t Config) SolveRate() (decimal.Decimal, error) {
 	candidates := rateCandidates()
 
 	prevRate := candidates[0]
 
 	prevRes, err := t.residual(prevRate)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	for i := 1; i < len(candidates); i++ {
@@ -62,11 +62,11 @@ func (t Config) SolveRate() (money.Decimal, error) {
 		prevRate, prevRes = curRate, curRes
 	}
 
-	return money.Decimal{}, ErrNoConvergence
+	return decimal.Decimal{}, ErrNoConvergence
 }
 
 // MustSolveRate is like SolveRate but panics on error.
-func (t Config) MustSolveRate() money.Decimal {
+func (t Config) MustSolveRate() decimal.Decimal {
 	d, err := t.SolveRate()
 	if err != nil {
 		panic(err)
@@ -78,7 +78,7 @@ func (t Config) MustSolveRate() money.Decimal {
 // bisectRate narrows the bracket [lo, hi], across which the residual changes
 // sign, until it is tighter than the tolerance and returns the enclosed root.
 // loRes is the residual at lo.
-func (t Config) bisectRate(lo, hi, loRes money.Decimal) (money.Decimal, error) {
+func (t Config) bisectRate(lo, hi, loRes decimal.Decimal) (decimal.Decimal, error) {
 	mid := lo.Add(hi).Mul(rateHalf)
 
 	for i := 0; i < maxRateBisectIter; i++ {
@@ -86,7 +86,7 @@ func (t Config) bisectRate(lo, hi, loRes money.Decimal) (money.Decimal, error) {
 
 		midRes, err := t.residual(mid)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		if midRes.IsZero() || hi.Sub(lo).Abs().LessThan(rateBracketTol) {
@@ -107,17 +107,17 @@ func (t Config) bisectRate(lo, hi, loRes money.Decimal) (money.Decimal, error) {
 // point just above −1, a fine sweep across −99%…100% per period, then a coarse
 // sweep up to 10000% per period. Rates are built from exact integer ratios to
 // keep them at a representable precision.
-func rateCandidates() []money.Decimal {
-	hundred := money.MustFromInt64(100, 0)
+func rateCandidates() []decimal.Decimal {
+	hundred := decimal.MustFromInt64(100, 0)
 
-	candidates := []money.Decimal{money.MustFromString("-0.9999")}
+	candidates := []decimal.Decimal{decimal.MustFromString("-0.9999")}
 
 	for k := int64(-99); k <= 100; k++ {
-		candidates = append(candidates, money.MustFromInt64(k, 0).MustDiv(hundred))
+		candidates = append(candidates, decimal.MustFromInt64(k, 0).MustDiv(hundred))
 	}
 
 	for x := int64(2); x <= 100; x++ {
-		candidates = append(candidates, money.MustFromInt64(x, 0))
+		candidates = append(candidates, decimal.MustFromInt64(x, 0))
 	}
 
 	return candidates

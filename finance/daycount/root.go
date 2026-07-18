@@ -18,7 +18,7 @@
 //     period at year boundaries so days in a leap year count over 366 and days
 //     in a common year over 365.
 //
-// Year fractions are returned as money.Decimal so they compose with the rest
+// Year fractions are returned as decimal.Decimal so they compose with the rest
 // of the library at full fixed-point precision.
 //
 // Basic usage:
