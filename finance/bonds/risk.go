@@ -1,6 +1,6 @@
 package bonds
 
-import "github.com/yeferson59/gofinance/money"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // MacaulayDuration returns the Macaulay duration in years: the present-value
 // weighted average time to the bond's cash flows, discounted at the configured
@@ -10,27 +10,27 @@ import "github.com/yeferson59/gofinance/money"
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, or ErrInvalidYield on
 // invalid terms.
-func (b Config) MacaulayDuration() (money.Decimal, error) {
+func (b Config) MacaulayDuration() (decimal.Decimal, error) {
 	y, err := b.periodicYield()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	price, sumT, _, err := b.cashflowSums(y)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	weightedPeriods, err := sumT.Div(price)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	return weightedPeriods.Div(money.MustFromInt64(int64(b.freq), 0))
+	return weightedPeriods.Div(decimal.MustFromInt64(int64(b.freq), 0))
 }
 
 // MustMacaulayDuration is like MacaulayDuration but panics on error.
-func (b Config) MustMacaulayDuration() money.Decimal {
+func (b Config) MustMacaulayDuration() decimal.Decimal {
 	d, err := b.MacaulayDuration()
 	if err != nil {
 		panic(err)
@@ -45,22 +45,22 @@ func (b Config) MustMacaulayDuration() money.Decimal {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, or ErrInvalidYield on
 // invalid terms.
-func (b Config) ModifiedDuration() (money.Decimal, error) {
+func (b Config) ModifiedDuration() (decimal.Decimal, error) {
 	macaulay, err := b.MacaulayDuration()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	y, err := b.periodicYield()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	return macaulay.Div(money.One.Add(y))
+	return macaulay.Div(decimal.One.Add(y))
 }
 
 // MustModifiedDuration is like ModifiedDuration but panics on error.
-func (b Config) MustModifiedDuration() money.Decimal {
+func (b Config) MustModifiedDuration() decimal.Decimal {
 	d, err := b.ModifiedDuration()
 	if err != nil {
 		panic(err)
@@ -78,36 +78,36 @@ func (b Config) MustModifiedDuration() money.Decimal {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, or ErrInvalidYield on
 // invalid terms.
-func (b Config) Convexity() (money.Decimal, error) {
+func (b Config) Convexity() (decimal.Decimal, error) {
 	y, err := b.periodicYield()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	price, _, sumTT, err := b.cashflowSums(y)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	weighted, err := sumTT.Div(price)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	onePlusSquared := money.One.Add(y).Mul(money.One.Add(y))
+	onePlusSquared := decimal.One.Add(y).Mul(decimal.One.Add(y))
 
 	perPeriod, err := weighted.Div(onePlusSquared)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	freqSquared := money.MustFromInt64(int64(b.freq*b.freq), 0)
+	freqSquared := decimal.MustFromInt64(int64(b.freq*b.freq), 0)
 
 	return perPeriod.Div(freqSquared)
 }
 
 // MustConvexity is like Convexity but panics on error.
-func (b Config) MustConvexity() money.Decimal {
+func (b Config) MustConvexity() decimal.Decimal {
 	d, err := b.Convexity()
 	if err != nil {
 		panic(err)

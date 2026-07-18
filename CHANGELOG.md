@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+This release is breaking; it should be tagged **v2.0.0** (root module) and **charts/v1.0.0** (charts module).
+
+### Changed
+- **Breaking**: the module path is now `github.com/yeferson59/gofinance/v2`; update imports of `decimal`, `money` and `finance/...` accordingly. The `charts` module keeps its `github.com/yeferson59/gofinance/charts` path and now requires the `/v2` library
+- **Breaking**: `Money.Add`/`Sub` now panic on a currency mismatch (as they already did on overflow), mirroring the decimal engine's `Add`/`TryAdd` split; the new `Money.TryAdd`/`TrySub` return `ErrCurrencyMismatch` (or the overflow error) instead. `SafeAdd`/`SafeSub` remain as deprecated aliases of the `Try` variants
+- The investment contribution schedules (`BuildInvestmentSchedule`, `BuildAnticipateInvestmentSchedule`) compute interest with `MulDecimal` instead of the deprecated `Money.Mul` with a currency-attached rate
+- **Breaking**: `annuities.Future`/`AnticipateFuture` now always return the payments' (ordinary / annuity-due) future value. Previously, when a principal (`Present`) or pre-set future value was configured they silently short-circuited to the compounded principal, making the plain annuity value unreachable. The principal's growth is available through the new exported `PrincipalFuture`; principal + payments remains `FutureWithContributions`/`AnticipateFutureWithContributions`
+- **Breaking**: `finance/compositeinterest` renamed to `finance/compoundinterest` ("composite interest" is a non-standard term); `CompositeInterest`/`CompositeConfig`/`NewComposite` are now `CompoundInterest`/`CompoundConfig`/`NewCompound`
+- `simpleinterest.Periods` and `compoundinterest.CompoundingFrequency` are now aliases of the shared `term.Unit` and `term.Frequency` types; `QuarterlyOne`/`QuarterlyTwo` renamed to `Quarterly` (4×/yr) and `FourMonthly` (3×/yr) with the old names kept as deprecated aliases. Invalid-frequency errors are the typed `term.ErrInvalidFrequency`
+- `Money.Mul`, `Money.Div` and `Money.MustDiv` (Money-by-Money) are deprecated: use `MulDecimal`/`DivDecimal` to scale an amount, or `ToDecimal` on both operands for a ratio. `Money.Add`/`Sub` now document that they don't currency-check (prefer `SafeAdd`/`SafeSub`)
+- **Breaking**: `money.Decimal` is now a type alias of `decimal.Decimal` instead of a wrapper type. The full arithmetic API comes directly from the `decimal` package; `money`'s `NewFrom*`/`MustFrom*` decimal constructors and `money.Zero`/`money.One` remain as deprecated forwarders. `Decimal.ToMoney` was removed — use the new `money.FromDecimal(d, currency)`
+- **Breaking**: the chart rendering package moved from `finance/charts` to the separate `charts` Go module (`github.com/yeferson59/gofinance/charts`); the root library module now has zero external runtime dependencies. `examples/` is also its own module
+- All `finance/*` packages now use `decimal.Decimal` directly for rates, factors and periods; `finance/tvm` and `finance/daycount` no longer depend on `money`
+- `Money.Scan` now defaults the currency to USD (matching `UnmarshalJSON`) instead of leaving it unset
+- Repository layering rules are documented in `ARCHITECTURE.md`
+
 ### Added
+- New `finance/term` package: the shared time vocabulary (`Unit`, `Frequency`, `PeriodsPerYear`, `MonthsPerPeriod`) used by the interest packages
+- `money.FromDecimal(d, currency)` to turn a computed decimal into a monetary amount
+- Dimensionally-correct `Money.MulDecimal`, `Money.DivDecimal` and `Money.MustDivDecimal` for amount×rate / amount÷rate math without attaching a placeholder currency
+- `annuities.WriteCSVTo(io.Writer, ...)` so schedule CSV export is destination-agnostic; `WriteCSV` remains as a file convenience wrapper
 - `finance/investment`: date-based `XNPV`/`XIRR` for irregular cash flows (`DatedCashFlow`, Actual/365 basis) and `Perpetuity`/`GrowingPerpetuity` (Gordon model), all with `Must*` variants and typed errors (`ErrDatesBeforeBase`, `ErrNonPositiveRate`, `ErrRateBelowGrowth`)
 - New `finance/bonds` package: fluent `NewBond()` builder with clean `Price` from yield, `YTM` from price (bracketed bisection), `MacaulayDuration`/`ModifiedDuration`/`Convexity`, `CouponPayment`, and `AccruedInterest` (reusing `finance/daycount`)
 - New `finance/depreciation` package: `StraightLine`, `DecliningBalance`, `DoubleDecliningBalance` (with straight-line switchover), `SumOfYearsDigits`, and `MACRS` (GDS half-year tables for 3/5/7/10/15/20-year recovery), each returning a year-by-year `Schedule`

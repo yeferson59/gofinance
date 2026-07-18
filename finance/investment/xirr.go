@@ -1,10 +1,10 @@
 package investment
 
-import "github.com/yeferson59/gofinance/money"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // XIRR returns the internal rate of return of cash flows that occur on specific
 // dates: the annual rate at which their date-based net present value (XNPV) is
-// zero. The returned value is a money.Decimal annual fraction (e.g. 0.12 for
+// zero. The returned value is a decimal.Decimal annual fraction (e.g. 0.12 for
 // 12%/yr).
 //
 // flows must be non-empty, all in the same currency, dated on or after the
@@ -15,17 +15,17 @@ import "github.com/yeferson59/gofinance/money"
 // mixed currencies, ErrDatesBeforeBase if a date precedes the first,
 // ErrNoSignChange when no sign change is present, and ErrNoConvergence if no
 // root can be located.
-func XIRR(flows []DatedCashFlow) (money.Decimal, error) {
+func XIRR(flows []DatedCashFlow) (decimal.Decimal, error) {
 	amounts, times, _, err := datedFlows(flows)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if !hasSignChange(amounts) {
-		return money.Decimal{}, ErrNoSignChange
+		return decimal.Decimal{}, ErrNoSignChange
 	}
 
-	rate := money.MustFromFloat64(0.1)
+	rate := decimal.MustFromFloat64(0.1)
 
 	for i := 0; i < maxNewtonIter; i++ {
 		f, fPrime, err := xnpvAndDerivative(rate, amounts, times)
@@ -54,7 +54,7 @@ func XIRR(flows []DatedCashFlow) (money.Decimal, error) {
 }
 
 // MustXIRR is like XIRR but panics on error.
-func MustXIRR(flows []DatedCashFlow) money.Decimal {
+func MustXIRR(flows []DatedCashFlow) decimal.Decimal {
 	d, err := XIRR(flows)
 	if err != nil {
 		panic(err)
@@ -65,14 +65,14 @@ func MustXIRR(flows []DatedCashFlow) money.Decimal {
 
 // xnpvAndDerivative returns the XNPV of the amounts at rate and its first
 // derivative with respect to rate, computed together for the Newton step.
-func xnpvAndDerivative(rate money.Decimal, amounts, times []money.Decimal) (money.Decimal, money.Decimal, error) {
-	onePlus := money.One.Add(rate)
+func xnpvAndDerivative(rate decimal.Decimal, amounts, times []decimal.Decimal) (decimal.Decimal, decimal.Decimal, error) {
+	onePlus := decimal.One.Add(rate)
 	if !onePlus.IsPos() {
-		return money.Decimal{}, money.Decimal{}, ErrInvalidRate
+		return decimal.Decimal{}, decimal.Decimal{}, ErrInvalidRate
 	}
 
-	f := money.Zero
-	fPrime := money.Zero
+	f := decimal.Zero
+	fPrime := decimal.Zero
 
 	for i, amount := range amounts {
 		if times[i].IsZero() {
@@ -82,12 +82,12 @@ func xnpvAndDerivative(rate money.Decimal, amounts, times []money.Decimal) (mone
 
 		factor, err := onePlus.Pow(times[i])
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		discounted, err := amount.Div(factor)
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		f = f.Add(discounted)
@@ -95,7 +95,7 @@ func xnpvAndDerivative(rate money.Decimal, amounts, times []money.Decimal) (mone
 		// d/dr [ a·(1+r)^-t ] = −t·a·(1+r)^-(t+1) = −t·discounted / (1+r)
 		dTerm, err := times[i].Mul(discounted).Div(onePlus)
 		if err != nil {
-			return money.Decimal{}, money.Decimal{}, err
+			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
 		fPrime = fPrime.Sub(dTerm)
@@ -106,14 +106,14 @@ func xnpvAndDerivative(rate money.Decimal, amounts, times []money.Decimal) (mone
 
 // xirrBisection scans the candidate annual rates for a sign change in XNPV and
 // bisects to the root once one is bracketed.
-func xirrBisection(amounts, times []money.Decimal) (money.Decimal, error) {
+func xirrBisection(amounts, times []decimal.Decimal) (decimal.Decimal, error) {
 	candidates := irrCandidates()
 
 	prevRate := candidates[0]
 
 	prevNPV, err := xnpvDecimal(prevRate, amounts, times)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	for i := 1; i < len(candidates); i++ {
@@ -139,12 +139,12 @@ func xirrBisection(amounts, times []money.Decimal) (money.Decimal, error) {
 		prevRate, prevNPV = curRate, curNPV
 	}
 
-	return money.Decimal{}, ErrNoConvergence
+	return decimal.Decimal{}, ErrNoConvergence
 }
 
 // xbisect narrows the bracket [lo, hi], across which XNPV changes sign, to the
 // root. loNPV is the XNPV at lo.
-func xbisect(lo, hi, loNPV money.Decimal, amounts, times []money.Decimal) (money.Decimal, error) {
+func xbisect(lo, hi, loNPV decimal.Decimal, amounts, times []decimal.Decimal) (decimal.Decimal, error) {
 	mid := lo.Add(hi).Mul(irrHalf)
 
 	for i := 0; i < maxBisectIter; i++ {
@@ -152,7 +152,7 @@ func xbisect(lo, hi, loNPV money.Decimal, amounts, times []money.Decimal) (money
 
 		midNPV, err := xnpvDecimal(mid, amounts, times)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		if midNPV.IsZero() || hi.Sub(lo).Abs().LessThan(irrBracketTol) {

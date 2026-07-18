@@ -6,7 +6,7 @@
 // coupon rate, a coupon frequency (coupons per year), and a number of coupon
 // periods to maturity. Given an annual yield to maturity the package prices the
 // bond; given a price it solves for the yield. All math runs on the decimal
-// engine through the money package.
+// engine; monetary amounts carry their currency via the money package.
 //
 // Example — a 5-year 5% semiannual bond priced at a 6% yield:
 //
@@ -23,7 +23,8 @@ package bonds
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 var (
@@ -52,21 +53,21 @@ var (
 // NewBond, set its terms, then call Price, YTM, or a risk measure.
 type Config struct {
 	face       money.Money
-	couponRate money.Decimal
+	couponRate decimal.Decimal
 	freq       int
 	periods    int
-	yield      money.Decimal
-	price      money.Decimal
+	yield      decimal.Decimal
+	price      decimal.Decimal
 }
 
 // NewBond returns a Config defaulting to semiannual coupons (frequency 2) with
 // every numeric term set to zero.
 func NewBond() Config {
 	return Config{
-		couponRate: money.Zero,
+		couponRate: decimal.Zero,
 		freq:       2,
-		yield:      money.Zero,
-		price:      money.Zero,
+		yield:      decimal.Zero,
+		price:      decimal.Zero,
 	}
 }
 
@@ -78,7 +79,7 @@ func (b Config) Face(amount float64, currency money.Currency) Config {
 
 // CouponRate sets the annual coupon rate as a fraction (e.g. 0.05 for 5%).
 func (b Config) CouponRate(rate float64) Config {
-	b.couponRate = money.MustFromFloat64(rate)
+	b.couponRate = decimal.MustFromFloat64(rate)
 	return b
 }
 
@@ -97,14 +98,14 @@ func (b Config) Periods(n int) Config {
 // Yield sets the annual yield to maturity as a fraction (e.g. 0.06 for 6%),
 // used by Price and the risk measures.
 func (b Config) Yield(y float64) Config {
-	b.yield = money.MustFromFloat64(y)
+	b.yield = decimal.MustFromFloat64(y)
 	return b
 }
 
 // MarketPrice sets the observed clean price, used by YTM to solve for the
 // yield.
 func (b Config) MarketPrice(p float64) Config {
-	b.price = money.MustFromFloat64(p)
+	b.price = decimal.MustFromFloat64(p)
 	return b
 }
 
@@ -117,10 +118,10 @@ func (b Config) CouponPayment() (money.Money, error) {
 		return money.Money{}, ErrInvalidFrequency
 	}
 
-	coupon, err := b.face.ToDecimal().Mul(b.couponRate).Div(money.MustFromInt64(int64(b.freq), 0))
+	coupon, err := b.face.ToDecimal().Mul(b.couponRate).Div(decimal.MustFromInt64(int64(b.freq), 0))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return coupon.ToMoney(b.face.Currency()), nil
+	return money.FromDecimal(coupon, b.face.Currency()), nil
 }

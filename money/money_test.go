@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 func TestSafeAddSameCurrency(t *testing.T) {
@@ -300,4 +300,66 @@ func TestCurrencyISOCodeRoundTrip(t *testing.T) {
 			t.Errorf("round trip mismatch for %s: expected %v, got %v", code, currency, parsed)
 		}
 	}
+}
+
+func TestTryAddCurrencyMismatch(t *testing.T) {
+	a := MustMoneyFromString("10", USD)
+	b := MustMoneyFromString("5", EUR)
+
+	if _, err := a.TryAdd(b); !errors.Is(err, ErrCurrencyMismatch) {
+		t.Errorf("expected ErrCurrencyMismatch, got %v", err)
+	}
+}
+
+func TestTrySubCurrencyMismatch(t *testing.T) {
+	a := MustMoneyFromString("10", USD)
+	b := MustMoneyFromString("5", EUR)
+
+	if _, err := a.TrySub(b); !errors.Is(err, ErrCurrencyMismatch) {
+		t.Errorf("expected ErrCurrencyMismatch, got %v", err)
+	}
+}
+
+func TestTryAddSameCurrency(t *testing.T) {
+	a := MustMoneyFromString("10.25", USD)
+	b := MustMoneyFromString("5.75", USD)
+
+	sum, err := a.TryAdd(b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if sum.String() != "16" || sum.Currency() != USD {
+		t.Errorf("expected 16 USD, got %s %v", sum.String(), sum.Currency())
+	}
+}
+
+func TestTrySubSameCurrency(t *testing.T) {
+	a := MustMoneyFromString("10.25", USD)
+	b := MustMoneyFromString("5.75", USD)
+
+	diff, err := a.TrySub(b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if diff.String() != "4.5" || diff.Currency() != USD {
+		t.Errorf("expected 4.5 USD, got %s %v", diff.String(), diff.Currency())
+	}
+}
+
+func TestAddCurrencyMismatchPanics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic on Add currency mismatch")
+		}
+	}()
+	MustMoneyFromString("10", USD).Add(MustMoneyFromString("5", EUR))
+}
+
+func TestSubCurrencyMismatchPanics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic on Sub currency mismatch")
+		}
+	}()
+	MustMoneyFromString("10", USD).Sub(MustMoneyFromString("5", EUR))
 }

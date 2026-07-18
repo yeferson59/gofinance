@@ -3,47 +3,52 @@ package annuities
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
+// Future returns the future value of the ordinary annuity: the periodic
+// payments (Value) alone, each made at the end of its period, grown to the
+// end of the term:
+//
+//	FV = PMT × ((1+i)ⁿ − 1) / i
+//
+// It never substitutes the principal's growth or a pre-set future value —
+// use PrincipalFuture for the compounded principal alone, or
+// FutureWithContributions for principal plus payments.
 func (a Annuity) Future() (money.Money, error) {
-	if future, err := a.compositeInterest.Future(); err == nil && !future.IsZero() {
-		return future, nil
-	}
-
 	return a.contributionsFuture()
 }
 
-// contributionsFuture returns the future value of the periodic contributions
+// contributionsFuture computes the future value of the periodic contributions
 // (the annuity's payment amount) alone, assuming each one is made at the end
-// of its period (ordinary annuity). Unlike Future, it never substitutes a
-// pre-set or principal-derived future value, so it can be combined with
-// principalFuture in FutureWithContributions.
+// of its period (ordinary annuity). It backs Future and is combined with
+// PrincipalFuture in FutureWithContributions.
 func (a Annuity) contributionsFuture() (money.Money, error) {
-	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	growthPower, err := money.One.Add(rateInterest).Pow(periods)
+	growthPower, err := decimal.One.Add(rateInterest).Pow(periods)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	result, err := growthPower.Sub(money.One).Div(rateInterest)
+	result, err := growthPower.Sub(decimal.One).Div(rateInterest)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return a.value.ToDecimal().Mul(result).ToMoney(a.value.Currency()), nil
+	return money.FromDecimal(a.value.ToDecimal().Mul(result), a.value.Currency()), nil
 }
 
+// AnticipateFuture is like Future, but assumes each payment is made at the
+// beginning of its period (annuity due), so it also earns interest during its
+// own first period: FV_due = FV_ordinary × (1+i). Like Future, it never
+// substitutes the principal's growth or a pre-set future value.
 func (a Annuity) AnticipateFuture() (money.Money, error) {
-	if future, err := a.compositeInterest.Future(); err == nil && !future.IsZero() {
-		return future, nil
-	}
-
 	return a.contributionsAnticipateFuture()
 }
 
@@ -56,21 +61,26 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return ordinary.ToDecimal().Mul(money.One.Add(rateInterest)).ToMoney(ordinary.Currency()), nil
+	return money.FromDecimal(ordinary.ToDecimal().Mul(decimal.One.Add(rateInterest)), ordinary.Currency()), nil
 }
 
-// principalFuture returns the future value of the initial principal (Present),
-// compounded over the annuity's periods and rate: PV × (1+i)^n. If no
-// principal was configured, it returns zero instead of an error, so it can be
-// added freely to contributionsFuture/contributionsAnticipateFuture.
-func (a Annuity) principalFuture() (money.Money, error) {
-	principal, err := a.compositeInterest.Future()
-	if errors.Is(err, compositeinterest.ErrInvalidOperation) {
+// PrincipalFuture returns the future value of the initial principal (Present)
+// alone, compounded over the annuity's periods and rate — or the pre-set
+// future value if one was configured:
+//
+//	FV = PV × (1+i)ⁿ
+//
+// If no principal was configured, it returns zero instead of an error, so it
+// can be added freely to the payments' future value (which is exactly what
+// FutureWithContributions does).
+func (a Annuity) PrincipalFuture() (money.Money, error) {
+	principal, err := a.compoundInterest.Future()
+	if errors.Is(err, compoundinterest.ErrInvalidOperation) {
 		return money.MustMoneyFromFloat64(0, a.value.Currency()), nil
 	}
 	if err != nil {
@@ -106,7 +116,7 @@ func (a Annuity) FutureWithContributions() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	principal, err := a.principalFuture()
+	principal, err := a.PrincipalFuture()
 	if err != nil {
 		return money.Money{}, err
 	}
@@ -123,7 +133,7 @@ func (a Annuity) AnticipateFutureWithContributions() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	principal, err := a.principalFuture()
+	principal, err := a.PrincipalFuture()
 	if err != nil {
 		return money.Money{}, err
 	}

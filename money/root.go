@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // ErrCurrencyMismatch is returned by operations that require both operands
@@ -76,26 +76,54 @@ func MustMoneyFromString(s string, currency Currency) Money {
 }
 
 func (m Money) ToDecimal() Decimal {
-	return Decimal{m.value}
+	return m.value
 }
 
-func (m Money) Add(other Money) Money {
-	return Money{
-		value:    m.value.Add(other.value),
-		currency: m.currency,
-	}
-}
-
-// SafeAdd returns the sum of m and other.
-// It returns ErrCurrencyMismatch if the operands have different currencies.
-func (m Money) SafeAdd(other Money) (Money, error) {
+// TryAdd returns the sum of m and other, keeping the currency. It returns
+// ErrCurrencyMismatch if the operands' currencies differ, or the decimal
+// engine's error on overflow.
+func (m Money) TryAdd(other Money) (Money, error) {
 	if m.currency != other.currency {
 		return Money{}, ErrCurrencyMismatch
 	}
 
-	return m.Add(other), nil
+	v, err := m.value.TryAdd(other.value)
+	if err != nil {
+		return Money{}, err
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}, nil
 }
 
+// Add returns the sum of m and other. Like the decimal engine's Add, it
+// panics instead of returning an error — on a currency mismatch or on
+// overflow. Use TryAdd for the error-returning form.
+func (m Money) Add(other Money) Money {
+	v, err := m.TryAdd(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// SafeAdd returns the sum of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+//
+// Deprecated: use TryAdd, which has the same behavior.
+func (m Money) SafeAdd(other Money) (Money, error) {
+	return m.TryAdd(other)
+}
+
+// Mul multiplies the numeric values of m and other, ignoring other's
+// currency.
+//
+// Deprecated: multiplying two monetary amounts is dimensionally meaningless
+// (money × money = money²). Use MulDecimal to scale an amount by a rate or
+// factor, or MulInt64 for a quantity.
 func (m Money) Mul(other Money) Money {
 	return Money{
 		value:    m.value.Mul(other.value),
@@ -103,21 +131,43 @@ func (m Money) Mul(other Money) Money {
 	}
 }
 
-func (m Money) Sub(other Money) Money {
-	return Money{
-		value:    m.value.Sub(other.value),
-		currency: m.currency,
-	}
-}
-
-// SafeSub returns the difference of m and other.
-// It returns ErrCurrencyMismatch if the operands have different currencies.
-func (m Money) SafeSub(other Money) (Money, error) {
+// TrySub returns the difference of m and other, keeping the currency. It
+// returns ErrCurrencyMismatch if the operands' currencies differ, or the
+// decimal engine's error on overflow.
+func (m Money) TrySub(other Money) (Money, error) {
 	if m.currency != other.currency {
 		return Money{}, ErrCurrencyMismatch
 	}
 
-	return m.Sub(other), nil
+	v, err := m.value.TrySub(other.value)
+	if err != nil {
+		return Money{}, err
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}, nil
+}
+
+// Sub returns the difference of m and other. Like the decimal engine's Sub,
+// it panics instead of returning an error — on a currency mismatch or on
+// overflow. Use TrySub for the error-returning form.
+func (m Money) Sub(other Money) Money {
+	v, err := m.TrySub(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// SafeSub returns the difference of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+//
+// Deprecated: use TrySub, which has the same behavior.
+func (m Money) SafeSub(other Money) (Money, error) {
+	return m.TrySub(other)
 }
 
 func (m Money) Currency() Currency {
@@ -191,6 +241,40 @@ func (m Money) MulInt64(n int64) Money {
 	}
 }
 
+// MulDecimal multiplies m by a currency-less factor, such as a rate or a
+// growth factor, keeping m's currency. Prefer this over Mul when the factor
+// is not itself an amount of money.
+func (m Money) MulDecimal(d Decimal) Money {
+	return Money{
+		value:    m.value.Mul(d),
+		currency: m.currency,
+	}
+}
+
+// DivDecimal divides m by a currency-less divisor, such as a rate or a
+// number of periods, keeping m's currency.
+func (m Money) DivDecimal(d Decimal) (Money, error) {
+	v, err := m.value.Div(d)
+	if err != nil {
+		return Money{}, err
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}, nil
+}
+
+// MustDivDecimal is like DivDecimal but panics on error.
+func (m Money) MustDivDecimal(d Decimal) Money {
+	v, err := m.DivDecimal(d)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
 // DivInt64 divides m by a plain integer divisor.
 func (m Money) DivInt64(n int64) (Money, error) {
 	divisor, err := decimal.NewFromInt64(n, 0)
@@ -247,6 +331,11 @@ func (m Money) Max(other Money) (Money, error) {
 	return other, nil
 }
 
+// Div divides the numeric values of m and other, ignoring other's currency.
+//
+// Deprecated: dividing two monetary amounts yields a currency-less ratio,
+// not an amount. Use ToDecimal on both operands and decimal.Decimal.Div for
+// a ratio, or DivDecimal/DivInt64 to divide an amount by a factor.
 func (m Money) Div(other Money) (Money, error) {
 	div, err := m.value.Div(other.value)
 	if err != nil {
@@ -259,6 +348,9 @@ func (m Money) Div(other Money) (Money, error) {
 	}, nil
 }
 
+// MustDiv is like Div but panics on error.
+//
+// Deprecated: see Div.
 func (m Money) MustDiv(other Money) Money {
 	div, err := m.Div(other)
 	if err != nil {
@@ -419,6 +511,9 @@ func (m *Money) Scan(src any) error {
 	}
 
 	m.value = dec
+	// A plain SQL numeric carries no currency; default to USD, matching
+	// UnmarshalJSON's behavior for bare numbers.
+	m.currency = USD
 
 	return nil
 }

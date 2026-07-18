@@ -8,11 +8,15 @@ lint:
 
 tidy:
 	@go mod tidy
+	@cd charts && go mod tidy
+	@cd examples && go mod tidy
 
-PKGS := $(shell go list ./... | grep -v /examples)
+PKGS := $(shell go list ./...)
 
 test:
 	@go test -race -coverpkg=$(shell echo $(PKGS) | tr ' ' ',') -coverprofile=coverage.out -covermode=atomic $(PKGS)
+	@cd charts && go test -race ./...
+	@cd examples && go build ./...
 	@go tool cover -html=coverage.out
 
 fmt:

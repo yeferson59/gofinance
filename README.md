@@ -24,7 +24,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 - Precise monetary amounts built on the `decimal` engine
 - Multi-currency support with ISO 4217 codes, symbols, and per-currency precision
-- Currency-checked arithmetic (`SafeAdd`/`SafeSub` return `ErrCurrencyMismatch`)
+- Currency-checked arithmetic: `Add`/`Sub` panic on a currency mismatch (like the decimal engine does on overflow); `TryAdd`/`TrySub` return `ErrCurrencyMismatch` instead
 - Penny-exact allocation: split amounts by ratios or evenly without losing a cent (`Allocate`, `AllocateEvenly`)
 - Currency conversion with explicit exchange rates (`Convert`, `ConvertFloat64`)
 
@@ -33,7 +33,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 - Future value, present value, interest, rate, and period calculations
 - Fluent builder API with day/week/month/year time units
 
-### 🔄 **Compound Interest** (`finance/compositeinterest`)
+### 🔄 **Compound Interest** (`finance/compoundinterest`)
 
 - Future/present value and period calculations with flexible compounding frequencies (daily, monthly, bimonthly, quarterly, semi-annual, annual)
 - Rate conversions between periodic, nominal, effective annual, and anticipated rate types
@@ -42,7 +42,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 - Payment, present/future value, rate, and period calculations
 - Full amortization schedule generation (`BuildSchedule`)
-- Optional chart rendering of schedules via `finance/charts` (go-echarts)
+- Optional chart rendering of schedules via the separate `charts` module (go-echarts)
 
 ### 📊 **Returns** (`finance/returns`)
 
@@ -73,6 +73,10 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 - Year fractions and day counts under 30/360, Actual/360, Actual/365 (Fixed), and Actual/Actual (ISDA)
 
+### 🗓️ **Shared Time Vocabulary** (`finance/term`)
+
+- One set of types for time units (`term.Unit`) and compounding/payment cadences (`term.Frequency`, with `PeriodsPerYear` and `MonthsPerPeriod`), shared by the interest packages
+
 See [`FEATURES.md`](FEATURES.md) for the full roadmap of proposed and in-progress features.
 
 ---
@@ -86,7 +90,7 @@ See [`FEATURES.md`](FEATURES.md) for the full roadmap of proposed and in-progres
 ### Installation
 
 ```bash
-go get github.com/yeferson59/gofinance
+go get github.com/yeferson59/gofinance/v2
 ```
 
 ### Quick Example: Money Management
@@ -97,7 +101,7 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/money"
+    "github.com/yeferson59/gofinance/v2/money"
 )
 
 func main() {
@@ -131,7 +135,7 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/decimal"
+    "github.com/yeferson59/gofinance/v2/decimal"
 )
 
 func main() {
@@ -158,17 +162,17 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
-    "github.com/yeferson59/gofinance/money"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+    "github.com/yeferson59/gofinance/v2/money"
 )
 
 func main() {
-    ci := compositeinterest.NewComposite().
+    ci := compoundinterest.NewCompound().
         Present(1000, money.USD).
         Rate(0.05).
         Periods(12).
         Monthly().
-        RateType(compositeinterest.RateEffectyPeriodic).
+        RateType(compoundinterest.RateEffectyPeriodic).
         MustBuild()
 
     future, err := ci.Future()
@@ -187,8 +191,8 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/money"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/money"
 )
 
 func main() {
@@ -248,11 +252,11 @@ gofinance/
 │   ├── currency.go                # ISO 4217 currencies, symbols, precision
 │   ├── allocate.go                # Penny-exact allocation
 │   ├── convert.go                 # Currency conversion
-│   └── decimal.go                 # money.Decimal wrapper for rates/factors
+│   └── decimal.go                 # Deprecated aliases into decimal + FromDecimal
 │
 ├── finance/
 │   ├── simpleinterest/            # Simple interest (fluent builder)
-│   ├── compositeinterest/         # Compound interest and rate conversions
+│   ├── compoundinterest/         # Compound interest and rate conversions
 │   ├── annuities/                 # Annuities and amortization schedules
 │   ├── returns/                   # CAGR, ROI, returns & inflation adjustment
 │   ├── investment/                # NPV/IRR, XNPV/XIRR, perpetuities
@@ -260,13 +264,20 @@ gofinance/
 │   ├── depreciation/              # Straight-line, declining balance, MACRS
 │   ├── tvm/                       # General time-value-of-money solver
 │   ├── daycount/                  # Day-count conventions (30/360, Actual/*, …)
-│   └── charts/                    # Amortization chart rendering (go-echarts)
+│   └── term/                      # Shared time vocabulary (Unit, Frequency)
 │
+├── charts/                         # Separate module: chart rendering (go-echarts)
 ├── benchmarks/                     # Cross-package benchmark suites
-├── examples/                       # Runnable usage examples
+├── examples/                       # Separate module: runnable usage examples
+├── ARCHITECTURE.md                 # Layering rules and design decisions
 ├── Makefile                        # Development tasks
 └── .golangci.yaml                  # Linting configuration
 ```
+
+The repository hosts three Go modules: the root library module (zero
+runtime dependencies), `charts` (opt-in go-echarts rendering), and
+`examples` (a runnable showcase). See [`ARCHITECTURE.md`](ARCHITECTURE.md)
+for the layering rules between `decimal`, `money`, and `finance/*`.
 
 ---
 
@@ -354,9 +365,9 @@ An annuity is a series of equal payments made at regular intervals. Useful for l
 
 ## 📖 Dependencies
 
-The core packages (`decimal`, `money`, `finance/...`) depend only on the Go standard library.
+The library module (`decimal`, `money`, `finance/...`) depends only on the Go standard library at runtime.
 
-- **github.com/go-echarts/go-echarts/v2** — used exclusively by the optional `finance/charts` package
+- **github.com/go-echarts/go-echarts/v2** — used exclusively by the optional `charts` module
 - **github.com/stretchr/testify** — testing utilities (dev dependency)
 
 ---

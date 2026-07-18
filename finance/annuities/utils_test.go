@@ -7,13 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func TestBuildScheduleAmortizesToZero(t *testing.T) {
 	pv := money.MustMoneyFromFloat64(200000, money.USD)
-	rate := money.MustFromFloat64(0.005)
-	nper := money.MustFromFloat64(360)
+	rate := decimal.MustFromFloat64(0.005)
+	nper := decimal.MustFromFloat64(360)
 
 	payment := NewAnnuity().
 		Present(200000, money.USD).
@@ -50,7 +51,7 @@ func TestBuildScheduleCurrencyMismatch(t *testing.T) {
 	pv := money.MustMoneyFromFloat64(1000, money.USD)
 	payment := money.MustMoneyFromFloat64(100, money.EUR)
 
-	_, err := BuildSchedule(pv, money.MustFromFloat64(0.01), payment, money.MustFromFloat64(12))
+	_, err := BuildSchedule(pv, decimal.MustFromFloat64(0.01), payment, decimal.MustFromFloat64(12))
 	if !errors.Is(err, money.ErrCurrencyMismatch) {
 		t.Errorf("expected ErrCurrencyMismatch, got %v", err)
 	}
@@ -60,13 +61,13 @@ func TestBuildScheduleInvalidPeriods(t *testing.T) {
 	pv := money.MustMoneyFromFloat64(1000, money.USD)
 	payment := money.MustMoneyFromFloat64(100, money.USD)
 
-	tests := []money.Decimal{
-		money.MustFromFloat64(0),
-		money.MustFromFloat64(-12),
+	tests := []decimal.Decimal{
+		decimal.MustFromFloat64(0),
+		decimal.MustFromFloat64(-12),
 	}
 
 	for _, nper := range tests {
-		if _, err := BuildSchedule(pv, money.MustFromFloat64(0.01), payment, nper); !errors.Is(err, ErrInvalidPeriods) {
+		if _, err := BuildSchedule(pv, decimal.MustFromFloat64(0.01), payment, nper); !errors.Is(err, ErrInvalidPeriods) {
 			t.Errorf("expected ErrInvalidPeriods for nper=%s, got %v", nper.String(), err)
 		}
 	}
@@ -76,7 +77,7 @@ func TestBuildScheduleNonUSDCurrency(t *testing.T) {
 	pv := money.MustMoneyFromFloat64(1000, money.JPY)
 	payment := money.MustMoneyFromFloat64(90, money.JPY)
 
-	rows, err := BuildSchedule(pv, money.MustFromFloat64(0.01), payment, money.MustFromFloat64(12))
+	rows, err := BuildSchedule(pv, decimal.MustFromFloat64(0.01), payment, decimal.MustFromFloat64(12))
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -95,7 +96,7 @@ func TestWriteCSVRoundsToTargetCurrencyPrecision(t *testing.T) {
 	pv := money.MustMoneyFromFloat64(1000, money.JPY)
 	payment := money.MustMoneyFromFloat64(90, money.JPY)
 
-	rows, err := BuildSchedule(pv, money.MustFromFloat64(0.01), payment, money.MustFromFloat64(12))
+	rows, err := BuildSchedule(pv, decimal.MustFromFloat64(0.01), payment, decimal.MustFromFloat64(12))
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

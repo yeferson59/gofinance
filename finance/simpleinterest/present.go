@@ -3,7 +3,8 @@ package simpleinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // Present calculates the present value using interest, rate, and periods.
@@ -19,12 +20,7 @@ func (s SimpleInterest) Present() (money.Money, error) {
 		return money.Money{}, errors.New("invalid period or rate interest for operation")
 	}
 
-	present, err := s.interest.Div(numberOfPeriods.Mul(s.rateInterest).ToMoney())
-	if err != nil {
-		return money.Money{}, err
-	}
-
-	return present, nil
+	return s.interest.DivDecimal(numberOfPeriods.Mul(s.rateInterest))
 }
 
 // PresentWithFuture calculates the present value using future value, rate, and periods.
@@ -40,10 +36,5 @@ func (s SimpleInterest) PresentWithFuture() (money.Money, error) {
 		return money.Money{}, errors.New("invalid period or rate interest for operation")
 	}
 
-	present, err := s.future.Div(money.MoneyOne.Add(numberOfPeriods.Mul(s.rateInterest).ToMoney()))
-	if err != nil {
-		return money.Money{}, err
-	}
-
-	return present, nil
+	return s.future.DivDecimal(decimal.One.Add(numberOfPeriods.Mul(s.rateInterest)))
 }

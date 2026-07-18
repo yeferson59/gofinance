@@ -1,6 +1,9 @@
 package investment
 
-import "github.com/yeferson59/gofinance/money"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
+)
 
 // Perpetuity returns the present value of a level perpetuity — a fixed payment
 // received every period forever — discounted at the given periodic rate:
@@ -10,7 +13,7 @@ import "github.com/yeferson59/gofinance/money"
 // rate must be strictly positive. The result carries the payment's currency.
 //
 // It returns ErrNonPositiveRate if rate is not positive.
-func Perpetuity(payment money.Money, rate money.Decimal) (money.Money, error) {
+func Perpetuity(payment money.Money, rate decimal.Decimal) (money.Money, error) {
 	if !rate.IsPos() {
 		return money.Money{}, ErrNonPositiveRate
 	}
@@ -20,11 +23,11 @@ func Perpetuity(payment money.Money, rate money.Decimal) (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return value.ToMoney(payment.Currency()), nil
+	return money.FromDecimal(value, payment.Currency()), nil
 }
 
 // MustPerpetuity is like Perpetuity but panics on error.
-func MustPerpetuity(payment money.Money, rate money.Decimal) money.Money {
+func MustPerpetuity(payment money.Money, rate decimal.Decimal) money.Money {
 	m, err := Perpetuity(payment, rate)
 	if err != nil {
 		panic(err)
@@ -42,7 +45,7 @@ func MustPerpetuity(payment money.Money, rate money.Decimal) money.Money {
 // series to converge. The result carries the payment's currency.
 //
 // It returns ErrRateBelowGrowth if rate ≤ growth.
-func GrowingPerpetuity(payment money.Money, rate, growth money.Decimal) (money.Money, error) {
+func GrowingPerpetuity(payment money.Money, rate, growth decimal.Decimal) (money.Money, error) {
 	if rate.LessThanOrEqual(growth) {
 		return money.Money{}, ErrRateBelowGrowth
 	}
@@ -52,11 +55,11 @@ func GrowingPerpetuity(payment money.Money, rate, growth money.Decimal) (money.M
 		return money.Money{}, err
 	}
 
-	return value.ToMoney(payment.Currency()), nil
+	return money.FromDecimal(value, payment.Currency()), nil
 }
 
 // MustGrowingPerpetuity is like GrowingPerpetuity but panics on error.
-func MustGrowingPerpetuity(payment money.Money, rate, growth money.Decimal) money.Money {
+func MustGrowingPerpetuity(payment money.Money, rate, growth decimal.Decimal) money.Money {
 	m, err := GrowingPerpetuity(payment, rate, growth)
 	if err != nil {
 		panic(err)

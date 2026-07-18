@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"encoding/csv"
 	"errors"
+	"io"
 	"os"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // ErrInvalidPeriods is returned by BuildSchedule when nper doesn't
@@ -14,7 +16,7 @@ import (
 var ErrInvalidPeriods = errors.New("annuities: number of periods must be positive")
 
 type Schedule struct {
-	Period      money.Decimal
+	Period      decimal.Decimal
 	Balance     money.Money
 	Payment     money.Money
 	Interest    money.Money
@@ -29,7 +31,7 @@ type Schedule struct {
 // It returns ErrCurrencyMismatch if pv and payment aren't in the same
 // currency, ErrInvalidPeriods if nper isn't a positive whole number, and
 // wraps any error from parsing nper as an integer.
-func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper money.Decimal) ([]Schedule, error) {
+func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, nper decimal.Decimal) ([]Schedule, error) {
 	if pv.Currency() != payment.Currency() {
 		return nil, money.ErrCurrencyMismatch
 	}
@@ -49,7 +51,7 @@ func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper
 	sumInterest := zero
 
 	rows = append(rows, Schedule{
-		Period:      money.Zero,
+		Period:      decimal.Zero,
 		Balance:     pv,
 		Payment:     zero,
 		Interest:    zero,
@@ -58,13 +60,13 @@ func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper
 	})
 
 	for p := 1; p <= int(until); p++ {
-		interest := balance.Mul(rate.ToMoney(currency))
+		interest := balance.MulDecimal(rate)
 		principal := payment.Sub(interest)
 		balance = balance.Sub(principal)
 		sumInterest = sumInterest.Add(interest)
 
 		rows = append(rows, Schedule{
-			Period:      money.MustFromInt64(int64(p), 0),
+			Period:      decimal.MustFromInt64(int64(p), 0),
 			Balance:     balance,
 			Payment:     payment,
 			Interest:    interest,
@@ -76,9 +78,8 @@ func BuildSchedule(pv money.Money, rate money.Decimal, payment money.Money, nper
 	return rows, nil
 }
 
-// WriteCSV writes rows to filenamePath as CSV, rounding each monetary
-// column to its own currency's standard precision (e.g. 0 decimals for
-// JPY, 3 for BHD) rather than assuming two decimal places.
+// WriteCSV writes rows to filenamePath as CSV. It is a convenience wrapper
+// around WriteCSVTo for the common file-on-disk case.
 func WriteCSV(filenamePath string, headers []string, rows []Schedule) (err error) {
 	f, err := os.Create(filenamePath)
 	if err != nil {
@@ -90,7 +91,16 @@ func WriteCSV(filenamePath string, headers []string, rows []Schedule) (err error
 		}
 	}()
 
-	bw := bufio.NewWriterSize(f, 65536)
+	return WriteCSVTo(f, headers, rows)
+}
+
+// WriteCSVTo writes rows to out as CSV, rounding each monetary column to
+// its own currency's standard precision (e.g. 0 decimals for JPY, 3 for
+// BHD) rather than assuming two decimal places. Callers choose the
+// destination — a file, an HTTP response, a buffer — so the schedule
+// domain logic stays free of filesystem concerns.
+func WriteCSVTo(out io.Writer, headers []string, rows []Schedule) (err error) {
+	bw := bufio.NewWriterSize(out, 65536)
 	defer func() {
 		if ferr := bw.Flush(); err == nil {
 			err = ferr

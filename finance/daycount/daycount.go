@@ -3,7 +3,7 @@ package daycount
 import (
 	"time"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // normalize strips the clock time and time zone, reducing t to a UTC
@@ -33,16 +33,16 @@ func daysInYear(year int) int {
 	return 365
 }
 
-// fraction returns num/den as a money.Decimal.
-func fraction(num, den int) (money.Decimal, error) {
-	n, err := money.NewFromInt64(int64(num), 0)
+// fraction returns num/den as a decimal.Decimal.
+func fraction(num, den int) (decimal.Decimal, error) {
+	n, err := decimal.NewFromInt64(int64(num), 0)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	d, err := money.NewFromInt64(int64(den), 0)
+	d, err := decimal.NewFromInt64(int64(den), 0)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return n.Div(d)
@@ -91,17 +91,17 @@ func Days(start, end time.Time, conv Convention) (int, error) {
 }
 
 // YearFraction returns the fraction of a year between start and end under the
-// given convention, as a money.Decimal. The dates are reduced to UTC midnight
+// given convention, as a decimal.Decimal. The dates are reduced to UTC midnight
 // before measuring.
 //
 // It returns ErrEndBeforeStart if end precedes start and ErrInvalidConvention
 // for an unknown convention.
-func YearFraction(start, end time.Time, conv Convention) (money.Decimal, error) {
+func YearFraction(start, end time.Time, conv Convention) (decimal.Decimal, error) {
 	s := normalize(start)
 	e := normalize(end)
 
 	if e.Before(s) {
-		return money.Decimal{}, ErrEndBeforeStart
+		return decimal.Decimal{}, ErrEndBeforeStart
 	}
 
 	switch conv {
@@ -114,14 +114,14 @@ func YearFraction(start, end time.Time, conv Convention) (money.Decimal, error) 
 	case ActualActualISDA:
 		return actualActualISDA(s, e)
 	default:
-		return money.Decimal{}, ErrInvalidConvention
+		return decimal.Decimal{}, ErrInvalidConvention
 	}
 }
 
 // actualActualISDA computes the Actual/Actual (ISDA) year fraction, counting
 // days that fall in a leap year over 366 and days in a common year over 365,
 // splitting the period at calendar-year boundaries.
-func actualActualISDA(start, end time.Time) (money.Decimal, error) {
+func actualActualISDA(start, end time.Time) (decimal.Decimal, error) {
 	startYear := start.Year()
 	endYear := end.Year()
 
@@ -133,22 +133,22 @@ func actualActualISDA(start, end time.Time) (money.Decimal, error) {
 	nextYearStart := time.Date(startYear+1, 1, 1, 0, 0, 0, 0, time.UTC)
 	firstPart, err := fraction(actualDays(start, nextYearStart), daysInYear(startYear))
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	// Days from the first day of the end year up to end.
 	endYearStart := time.Date(endYear, 1, 1, 0, 0, 0, 0, time.UTC)
 	lastPart, err := fraction(actualDays(endYearStart, end), daysInYear(endYear))
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	total := firstPart.Add(lastPart)
 
 	if wholeYears := endYear - startYear - 1; wholeYears > 0 {
-		years, err := money.NewFromInt64(int64(wholeYears), 0)
+		years, err := decimal.NewFromInt64(int64(wholeYears), 0)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		total = total.Add(years)

@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func TestBuilderChainedBuild(t *testing.T) {

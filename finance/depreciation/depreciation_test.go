@@ -5,7 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func usd(amount float64) money.Money {
@@ -60,7 +61,7 @@ func TestDoubleDecliningBalance(t *testing.T) {
 }
 
 func TestDecliningBalanceNeverBelowSalvage(t *testing.T) {
-	rows, err := DecliningBalance(usd(10000), usd(1000), 5, money.MustFromFloat64(2))
+	rows, err := DecliningBalance(usd(10000), usd(1000), 5, decimal.MustFromFloat64(2))
 	require.NoError(t, err)
 
 	assert.InDelta(t, 4000.0, rows[0].Depreciation.InexactFloat64(), 1e-9)

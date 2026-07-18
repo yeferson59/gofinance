@@ -1,7 +1,7 @@
 package simpleinterest
 
 import (
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // Interest calculates the interest using present value, rate, and periods.
@@ -13,7 +13,7 @@ func (s SimpleInterest) Interest() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	interest := s.present.Mul(numberOfPeriods.ToMoney()).Mul(s.rateInterest.ToMoney())
+	interest := s.present.MulDecimal(numberOfPeriods).MulDecimal(s.rateInterest)
 
 	return interest, nil
 }

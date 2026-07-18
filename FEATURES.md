@@ -20,8 +20,8 @@ current architecture, so nothing gets reinvented.
 
 - Build on `decimal.Decimal` / `money.Money` — **never** an internal `float64`. This is
   the library's core differentiator (19 exact fractional digits).
-- Mirror the existing **fluent builder** style (`compositeinterest.NewComposite()`,
-  `annuities.NewAnnuity()`, `compositeinterest.NewRateConversion()`).
+- Mirror the existing **fluent builder** style (`compoundinterest.NewCompound()`,
+  `annuities.NewAnnuity()`, `compoundinterest.NewRateConversion()`).
 - Follow the **`Try*` (returns `error`) / `Must*` (panics)** convention already used
   across `decimal` and the finance packages.
 - Keep core packages **zero external dependencies** and **immutable / goroutine-safe**.
@@ -34,7 +34,7 @@ Proposed home: a new `finance/investment` package (plus `finance/bonds`).
 
 | # | Feature | What it does | Reuses | Priority | Effort |
 |---|---------|--------------|--------|----------|--------|
-| 1.1 | ✅ **NPV / VAN** | Net present value of a series of periodic cash flows at a discount rate | `decimal.Pow`, `decimal.Div`, discounting logic from `compositeinterest` | 🟢 High | S |
+| 1.1 | ✅ **NPV / VAN** | Net present value of a series of periodic cash flows at a discount rate | `decimal.Pow`, `decimal.Div`, discounting logic from `compoundinterest` | 🟢 High | S |
 | 1.2 | ✅ **IRR / TIR** | Internal rate of return — solve for the rate where NPV = 0 | Newton–Raphson / bisection over 1.1, the root-solver pattern in `finance/*/root.go` | 🟢 High | M |
 | 1.3 | ✅ **XNPV / XIRR** | NPV/IRR for *irregular, date-based* cash flows | 1.1, 1.2 + day-count conventions (§3.1) | 🟡 Medium | M |
 | 1.4 | ✅ **Perpetuities** | Present value of a level and a *growing* perpetuity (Gordon model) | `decimal.Div`, `money.Money` | 🟡 Medium | S |
@@ -53,7 +53,7 @@ Proposed home: extend `finance/annuities`; add `finance/depreciation`.
 | # | Feature | What it does | Reuses | Priority | Effort |
 |---|---------|--------------|--------|----------|--------|
 | 3.1 | ✅ **Day-count conventions** | 30/360, Actual/365, Actual/360, Actual/Actual — precise interest by calendar dates | shared utility → **unblocks** XIRR (1.3), bonds (1.5), date-based interest | 🟢 High | M |
-| 3.2 | **APR / effective annual rate** | Effective APR from a nominal rate plus fees/points | `compositeinterest` rate conversions (`NewRateConversion()`) | 🟡 Medium | S |
+| 3.2 | **APR / effective annual rate** | Effective APR from a nominal rate plus fees/points | `compoundinterest` rate conversions (`NewRateConversion()`) | 🟡 Medium | S |
 | 3.3 | **Extra payments / early payoff** | Interest saved and term shortened when overpaying a loan | extends `annuities.BuildSchedule` (`finance/annuities/utils.go`) | 🟡 Medium | M |
 | 3.4 | **Refinance comparator** | Break-even point between two loan offers | 3.2, 3.3, NPV (1.1) | ⚪ Low | S |
 | 3.5 | ✅ **Depreciation** | Straight-line, declining balance (single/double), sum-of-years'-digits, MACRS | `decimal` arithmetic → `finance/depreciation` | 🟡 Medium | M |
@@ -85,7 +85,7 @@ Proposed home: a new `finance/returns` package.
 
 | # | Feature | What it does | Reuses | Priority | Effort |
 |---|---------|--------------|--------|----------|--------|
-| 5.1 | ✅ **General TVM solver** | Solve any one of N, I/Y, PV, PMT, FV given the other four (HP-12C style) | unifies logic already split across `compositeinterest` and `annuities` | 🟢 High | M |
+| 5.1 | ✅ **General TVM solver** | Solve any one of N, I/Y, PV, PMT, FV given the other four (HP-12C style) | unifies logic already split across `compoundinterest` and `annuities` | 🟢 High | M |
 | 5.2 | **CLI (`cmd/gofinance`)** | Subcommands for NPV/IRR/payment/amortization with tabular and `--json` output | all finance packages; already on the README roadmap | 🟡 Medium | M |
 | 5.3 | **Schedule export API** | First-class CSV/JSON export of amortization/investment schedules | `annuities.BuildSchedule`; formalizes today's ad-hoc `amortizacion.csv` | ⚪ Low | S |
 | 5.4 | **More runnable examples** | Recipe-style examples per instrument in `examples/` | existing `examples/main.go` | ⚪ Low | S |
@@ -124,10 +124,10 @@ tooling items (CLI, schedule export).
   tolerance/max-iterations and return a typed error (e.g. `ErrNoConvergence`) rather
   than silently returning zero.
 - **Money vs Decimal:** cash amounts stay `money.Money` (currency-checked); rates,
-  factors, and ratios stay `money.Decimal` / `decimal.Decimal` — consistent with how
+  factors, and ratios stay `decimal.Decimal` — consistent with how
   `annuities.BuildSchedule` already separates them.
 - **Zero dependencies:** keep new core packages stdlib-only; anything needing
-  `go-echarts` or HTTP frameworks lives in optional packages (like `finance/charts`
+  `go-echarts` or HTTP frameworks lives in separate modules (like `charts`
   today).
 - **Changelog:** record each accepted feature under `[Unreleased]` in `CHANGELOG.md`,
   following the existing Keep a Changelog format.

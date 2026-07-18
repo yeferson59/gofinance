@@ -1,23 +1,23 @@
 package tvm
 
-import "github.com/yeferson59/gofinance/money"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // factors returns (1+rate)ᴺ and the coefficient that multiplies PMT in the
 // TVM equation, (1 + rate·type)·((1+rate)ᴺ − 1)/rate, using the annuity-timing
 // setting. At a zero rate the coefficient collapses to its limit, N. It
 // returns ErrInvalidRate when 1+rate is not positive.
-func (t Config) factors(rate money.Decimal) (pow, pmtCoef money.Decimal, err error) {
-	onePlus := money.One.Add(rate)
+func (t Config) factors(rate decimal.Decimal) (pow, pmtCoef decimal.Decimal, err error) {
+	onePlus := decimal.One.Add(rate)
 	if !onePlus.IsPos() {
-		return money.Decimal{}, money.Decimal{}, ErrInvalidRate
+		return decimal.Decimal{}, decimal.Decimal{}, ErrInvalidRate
 	}
 
 	pow, err = onePlus.Pow(t.n)
 	if err != nil {
-		return money.Decimal{}, money.Decimal{}, err
+		return decimal.Decimal{}, decimal.Decimal{}, err
 	}
 
-	typeFactor := money.One
+	typeFactor := decimal.One
 	if t.due {
 		typeFactor = onePlus
 	}
@@ -27,9 +27,9 @@ func (t Config) factors(rate money.Decimal) (pow, pmtCoef money.Decimal, err err
 		return pow, t.n.Mul(typeFactor), nil
 	}
 
-	annuity, err := pow.Sub(money.One).Div(rate)
+	annuity, err := pow.Sub(decimal.One).Div(rate)
 	if err != nil {
-		return money.Decimal{}, money.Decimal{}, err
+		return decimal.Decimal{}, decimal.Decimal{}, err
 	}
 
 	return pow, typeFactor.Mul(annuity), nil
@@ -38,17 +38,17 @@ func (t Config) factors(rate money.Decimal) (pow, pmtCoef money.Decimal, err err
 // SolveFV returns the future value implied by the other four variables:
 //
 //	FV = −(PV·(1+i)ᴺ + PMT·coef)
-func (t Config) SolveFV() (money.Decimal, error) {
+func (t Config) SolveFV() (decimal.Decimal, error) {
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return t.pv.Mul(pow).Add(t.pmt.Mul(pmtCoef)).Neg(), nil
 }
 
 // MustSolveFV is like SolveFV but panics on error.
-func (t Config) MustSolveFV() money.Decimal {
+func (t Config) MustSolveFV() decimal.Decimal {
 	d, err := t.SolveFV()
 	if err != nil {
 		panic(err)
@@ -60,10 +60,10 @@ func (t Config) MustSolveFV() money.Decimal {
 // SolvePV returns the present value implied by the other four variables:
 //
 //	PV = −(FV + PMT·coef) / (1+i)ᴺ
-func (t Config) SolvePV() (money.Decimal, error) {
+func (t Config) SolvePV() (decimal.Decimal, error) {
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	numerator := t.fv.Add(t.pmt.Mul(pmtCoef)).Neg()
@@ -72,7 +72,7 @@ func (t Config) SolvePV() (money.Decimal, error) {
 }
 
 // MustSolvePV is like SolvePV but panics on error.
-func (t Config) MustSolvePV() money.Decimal {
+func (t Config) MustSolvePV() decimal.Decimal {
 	d, err := t.SolvePV()
 	if err != nil {
 		panic(err)
@@ -87,14 +87,14 @@ func (t Config) MustSolvePV() money.Decimal {
 //
 // It returns ErrNoSolution when the payment coefficient is zero (for example
 // when N is zero).
-func (t Config) SolvePMT() (money.Decimal, error) {
+func (t Config) SolvePMT() (decimal.Decimal, error) {
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if pmtCoef.IsZero() {
-		return money.Decimal{}, ErrNoSolution
+		return decimal.Decimal{}, ErrNoSolution
 	}
 
 	numerator := t.pv.Mul(pow).Add(t.fv).Neg()
@@ -103,7 +103,7 @@ func (t Config) SolvePMT() (money.Decimal, error) {
 }
 
 // MustSolvePMT is like SolvePMT but panics on error.
-func (t Config) MustSolvePMT() money.Decimal {
+func (t Config) MustSolvePMT() decimal.Decimal {
 	d, err := t.SolvePMT()
 	if err != nil {
 		panic(err)
@@ -119,21 +119,21 @@ func (t Config) MustSolvePMT() money.Decimal {
 // It returns ErrInvalidRate if 1+rate is not positive and ErrNoSolution when
 // the inputs admit no finite, positive-argument logarithm (for example a zero
 // payment at a zero rate, or values that force a non-positive growth factor).
-func (t Config) SolveN() (money.Decimal, error) {
+func (t Config) SolveN() (decimal.Decimal, error) {
 	if t.rate.IsZero() {
 		if t.pmt.IsZero() {
-			return money.Decimal{}, ErrNoSolution
+			return decimal.Decimal{}, ErrNoSolution
 		}
 
 		return t.pv.Add(t.fv).Neg().Div(t.pmt)
 	}
 
-	onePlus := money.One.Add(t.rate)
+	onePlus := decimal.One.Add(t.rate)
 	if !onePlus.IsPos() {
-		return money.Decimal{}, ErrInvalidRate
+		return decimal.Decimal{}, ErrInvalidRate
 	}
 
-	typeFactor := money.One
+	typeFactor := decimal.One
 	if t.due {
 		typeFactor = onePlus
 	}
@@ -142,38 +142,38 @@ func (t Config) SolveN() (money.Decimal, error) {
 	// rearranges to (1+i)ᴺ = (k − FV)/(PV + k).
 	k, err := t.pmt.Mul(typeFactor).Div(t.rate)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	denominator := t.pv.Add(k)
 	if denominator.IsZero() {
-		return money.Decimal{}, ErrNoSolution
+		return decimal.Decimal{}, ErrNoSolution
 	}
 
 	pow, err := k.Sub(t.fv).Div(denominator)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	if !pow.IsPos() {
-		return money.Decimal{}, ErrNoSolution
+		return decimal.Decimal{}, ErrNoSolution
 	}
 
 	lnPow, err := pow.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	lnBase, err := onePlus.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return lnPow.Div(lnBase)
 }
 
 // MustSolveN is like SolveN but panics on error.
-func (t Config) MustSolveN() money.Decimal {
+func (t Config) MustSolveN() decimal.Decimal {
 	d, err := t.SolveN()
 	if err != nil {
 		panic(err)

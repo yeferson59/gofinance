@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 func TestConvertAppliesRateAndCurrency(t *testing.T) {

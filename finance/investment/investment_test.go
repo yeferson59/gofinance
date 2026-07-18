@@ -5,7 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func usd(amount float64) money.Money {
@@ -23,7 +24,7 @@ func flows(amounts ...float64) []money.Money {
 
 func TestNPV(t *testing.T) {
 	// -1000 + 400/1.1 + 400/1.21 + 400/1.331 ≈ -5.2592.
-	npv, err := NPV(money.MustFromFloat64(0.10), flows(-1000, 400, 400, 400))
+	npv, err := NPV(decimal.MustFromFloat64(0.10), flows(-1000, 400, 400, 400))
 	require.NoError(t, err)
 	assert.InDelta(t, -5.2592, npv.InexactFloat64(), 1e-3)
 	assert.Equal(t, money.USD, npv.Currency())
@@ -31,20 +32,20 @@ func TestNPV(t *testing.T) {
 
 func TestNPVZeroRate(t *testing.T) {
 	// At a 0% discount rate NPV is just the sum of the flows.
-	npv, err := NPV(money.Zero, flows(-1000, 400, 400, 400))
+	npv, err := NPV(decimal.Zero, flows(-1000, 400, 400, 400))
 	require.NoError(t, err)
 	assert.InDelta(t, 200.0, npv.InexactFloat64(), 1e-9)
 }
 
 func TestNPVErrors(t *testing.T) {
-	_, err := NPV(money.MustFromFloat64(0.1), nil)
+	_, err := NPV(decimal.MustFromFloat64(0.1), nil)
 	assert.ErrorIs(t, err, ErrNoCashFlows)
 
-	_, err = NPV(money.MustFromFloat64(-1), flows(-1000, 400))
+	_, err = NPV(decimal.MustFromFloat64(-1), flows(-1000, 400))
 	assert.ErrorIs(t, err, ErrInvalidRate)
 
 	mixed := []money.Money{usd(-1000), money.MustMoneyFromFloat64(400, money.EUR)}
-	_, err = NPV(money.MustFromFloat64(0.1), mixed)
+	_, err = NPV(decimal.MustFromFloat64(0.1), mixed)
 	assert.ErrorIs(t, err, money.ErrCurrencyMismatch)
 }
 
@@ -90,6 +91,6 @@ func TestIRRErrors(t *testing.T) {
 
 func TestMustHelpers(t *testing.T) {
 	assert.InDelta(t, 0.10, MustIRR(flows(-100, 110)).InexactFloat64(), 1e-9)
-	assert.InDelta(t, 200.0, MustNPV(money.Zero, flows(-1000, 400, 400, 400)).InexactFloat64(), 1e-9)
+	assert.InDelta(t, 200.0, MustNPV(decimal.Zero, flows(-1000, 400, 400, 400)).InexactFloat64(), 1e-9)
 	assert.Panics(t, func() { MustIRR(nil) })
 }

@@ -5,15 +5,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func TestPresent(t *testing.T) {
-	numPeriods, _ := money.NewFromInt64(2, 0)
+	numPeriods, _ := decimal.NewFromInt64(2, 0)
 	periods := NewPeriod(numPeriods, Days)
 
 	interest, _ := money.New(500, 0, money.COP)
-	rate, _ := money.NewFromFloat64(0.05)
+	rate, _ := decimal.NewFromFloat64(0.05)
 
 	simpleInterest := New(money.Money{}, money.Money{}, interest, rate, periods)
 	expectedPresent, _ := money.New(5000, 0, money.COP)
@@ -24,25 +25,25 @@ func TestPresent(t *testing.T) {
 	assert.Equal(t, expectedPresent.String(), present.String())
 
 	// Test error case: period=0
-	zeroPeriod, _ := money.NewFromInt64(0, 0)
+	zeroPeriod, _ := decimal.NewFromInt64(0, 0)
 	simpleInterest.periods = NewPeriod(zeroPeriod, Days)
 	_, err = simpleInterest.Present()
 	assert.Error(t, err)
 
 	// Test error case: rate=0
-	numPeriods2, _ := money.NewFromInt64(2, 0)
+	numPeriods2, _ := decimal.NewFromInt64(2, 0)
 	simpleInterest.periods = NewPeriod(numPeriods2, Days)
-	simpleInterest.rateInterest, _ = money.NewFromInt64(0, 0)
+	simpleInterest.rateInterest, _ = decimal.NewFromInt64(0, 0)
 	_, err = simpleInterest.Present()
 	assert.Error(t, err)
 }
 
 func TestPresentWithFuture(t *testing.T) {
-	numPeriods, _ := money.NewFromInt64(2, 0)
+	numPeriods, _ := decimal.NewFromInt64(2, 0)
 	periods := NewPeriod(numPeriods, Days)
 
 	future, _ := money.New(5500, 0, money.COP)
-	rate, _ := money.NewFromFloat64(0.05)
+	rate, _ := decimal.NewFromFloat64(0.05)
 
 	simpleInterest := New(future, money.Money{}, money.Money{}, rate, periods)
 	expectedPresent, _ := money.New(5000, 0, money.COP)
@@ -54,15 +55,15 @@ func TestPresentWithFuture(t *testing.T) {
 	assert.Equal(t, expectedPresent.String(), present.String())
 
 	// Test error case: period=0
-	zeroPeriod, _ := money.NewFromInt64(0, 0)
+	zeroPeriod, _ := decimal.NewFromInt64(0, 0)
 	simpleInterest.periods = NewPeriod(zeroPeriod, Days)
 	_, err = simpleInterest.PresentWithFuture()
 	assert.Error(t, err)
 
 	// Test error case: rate=0
-	numPeriods2, _ := money.NewFromInt64(2, 0)
+	numPeriods2, _ := decimal.NewFromInt64(2, 0)
 	simpleInterest.periods = NewPeriod(numPeriods2, Days)
-	simpleInterest.rateInterest, _ = money.NewFromInt64(0, 0)
+	simpleInterest.rateInterest, _ = decimal.NewFromInt64(0, 0)
 	_, err = simpleInterest.PresentWithFuture()
 	assert.Error(t, err)
 }

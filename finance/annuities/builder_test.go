@@ -4,14 +4,15 @@ import (
 	"math"
 	"testing"
 
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // withFrequency directly sets AnnuityConfig's private frequency field, since
-// (unlike CompositeConfig) AnnuityConfig has no public Frequency() setter —
+// (unlike CompoundConfig) AnnuityConfig has no public Frequency() setter —
 // only the Monthly/Quarterly/Annually convenience methods.
-func withFrequency(a AnnuityConfig, f compositeinterest.CompoundingFrequency) AnnuityConfig {
+func withFrequency(a AnnuityConfig, f compoundinterest.CompoundingFrequency) AnnuityConfig {
 	a.frequency = f
 	return a
 }
@@ -25,10 +26,10 @@ func TestYearsRespectsFrequency(t *testing.T) {
 		{"monthly", NewAnnuity().Monthly().Years(30), 360},
 		{"quarterly", NewAnnuity().Quarterly().Years(30), 120},
 		{"annually", NewAnnuity().Annually().Years(30), 30},
-		{"daily", withFrequency(NewAnnuity(), compositeinterest.Daily).Years(1), 365},
-		{"bimonthly", withFrequency(NewAnnuity(), compositeinterest.Bimonthly).Years(1), 6},
-		{"quarterlyTwo", withFrequency(NewAnnuity(), compositeinterest.QuarterlyTwo).Years(1), 3},
-		{"semiAnnually", withFrequency(NewAnnuity(), compositeinterest.SemiAnnually).Years(1), 2},
+		{"daily", withFrequency(NewAnnuity(), compoundinterest.Daily).Years(1), 365},
+		{"bimonthly", withFrequency(NewAnnuity(), compoundinterest.Bimonthly).Years(1), 6},
+		{"quarterlyTwo", withFrequency(NewAnnuity(), compoundinterest.FourMonthly).Years(1), 3},
+		{"semiAnnually", withFrequency(NewAnnuity(), compoundinterest.SemiAnnually).Years(1), 2},
 	}
 
 	for _, tt := range tests {
@@ -47,12 +48,12 @@ func TestAnnualRateRespectsFrequency(t *testing.T) {
 		expected float64
 	}{
 		{"monthly", NewAnnuity().Monthly().AnnualRate(0.12), 0.01},
-		{"daily", withFrequency(NewAnnuity(), compositeinterest.Daily).AnnualRate(0.365), 0.001},
-		{"bimonthly", withFrequency(NewAnnuity(), compositeinterest.Bimonthly).AnnualRate(0.06), 0.01},
-		{"quarterlyOne", withFrequency(NewAnnuity(), compositeinterest.QuarterlyOne).AnnualRate(0.04), 0.01},
-		{"quarterlyTwo", withFrequency(NewAnnuity(), compositeinterest.QuarterlyTwo).AnnualRate(0.03), 0.01},
-		{"semiAnnually", withFrequency(NewAnnuity(), compositeinterest.SemiAnnually).AnnualRate(0.02), 0.01},
-		{"annually", withFrequency(NewAnnuity(), compositeinterest.Annually).AnnualRate(0.01), 0.01},
+		{"daily", withFrequency(NewAnnuity(), compoundinterest.Daily).AnnualRate(0.365), 0.001},
+		{"bimonthly", withFrequency(NewAnnuity(), compoundinterest.Bimonthly).AnnualRate(0.06), 0.01},
+		{"quarterlyOne", withFrequency(NewAnnuity(), compoundinterest.Quarterly).AnnualRate(0.04), 0.01},
+		{"quarterlyTwo", withFrequency(NewAnnuity(), compoundinterest.FourMonthly).AnnualRate(0.03), 0.01},
+		{"semiAnnually", withFrequency(NewAnnuity(), compoundinterest.SemiAnnually).AnnualRate(0.02), 0.01},
+		{"annually", withFrequency(NewAnnuity(), compoundinterest.Annually).AnnualRate(0.01), 0.01},
 	}
 
 	for _, tt := range tests {
@@ -78,7 +79,7 @@ func TestAnnuityConfigFutureSetter(t *testing.T) {
 func TestAnnuityConfigEffectiveAnnualRate(t *testing.T) {
 	config := NewAnnuity().Monthly().EffectiveAnnualRate(0.2668)
 
-	if config.rateType != compositeinterest.RateEffectyAnnually {
+	if config.rateType != compoundinterest.RateEffectyAnnually {
 		t.Errorf("expected RateEffectyAnnually, got %v", config.rateType)
 	}
 	if config.rate != 0.2668 {
@@ -125,16 +126,16 @@ func TestAnnuityConfigMustBuildPanicsOnInvalidParams(t *testing.T) {
 }
 
 func TestFutureFromPaymentsOnly(t *testing.T) {
-	rate, err := compositeinterest.NewRateInterest(
-		money.MustFromFloat64(0.01),
-		compositeinterest.Monthly,
-		compositeinterest.RateEffectyPeriodic,
+	rate, err := compoundinterest.NewRateInterest(
+		decimal.MustFromFloat64(0.01),
+		compoundinterest.Monthly,
+		compoundinterest.RateEffectyPeriodic,
 	)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	period, err := compositeinterest.NewPeriod(money.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

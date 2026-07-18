@@ -1,6 +1,9 @@
 package investment
 
-import "github.com/yeferson59/gofinance/money"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
+)
 
 // XNPV returns the net present value of a series of cash flows that occur on
 // specific dates, discounted at the given annual rate:
@@ -15,7 +18,7 @@ import "github.com/yeferson59/gofinance/money"
 // It returns ErrNoCashFlows for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, ErrDatesBeforeBase if a date precedes the first, and
 // ErrInvalidRate if rate ≤ −1.
-func XNPV(rate money.Decimal, flows []DatedCashFlow) (money.Money, error) {
+func XNPV(rate decimal.Decimal, flows []DatedCashFlow) (money.Money, error) {
 	amounts, times, currency, err := datedFlows(flows)
 	if err != nil {
 		return money.Money{}, err
@@ -26,11 +29,11 @@ func XNPV(rate money.Decimal, flows []DatedCashFlow) (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return value.ToMoney(currency), nil
+	return money.FromDecimal(value, currency), nil
 }
 
 // MustXNPV is like XNPV but panics on error.
-func MustXNPV(rate money.Decimal, flows []DatedCashFlow) money.Money {
+func MustXNPV(rate decimal.Decimal, flows []DatedCashFlow) money.Money {
 	m, err := XNPV(rate, flows)
 	if err != nil {
 		panic(err)
@@ -42,13 +45,13 @@ func MustXNPV(rate money.Decimal, flows []DatedCashFlow) money.Money {
 // xnpvDecimal computes the date-based net present value of the amounts at the
 // given annual rate, using the precomputed year offsets in times. Each flow is
 // discounted by (1+rate) raised to its (possibly fractional) year offset.
-func xnpvDecimal(rate money.Decimal, amounts, times []money.Decimal) (money.Decimal, error) {
-	onePlus := money.One.Add(rate)
+func xnpvDecimal(rate decimal.Decimal, amounts, times []decimal.Decimal) (decimal.Decimal, error) {
+	onePlus := decimal.One.Add(rate)
 	if !onePlus.IsPos() {
-		return money.Decimal{}, ErrInvalidRate
+		return decimal.Decimal{}, ErrInvalidRate
 	}
 
-	sum := money.Zero
+	sum := decimal.Zero
 
 	for i, amount := range amounts {
 		if times[i].IsZero() {
@@ -58,12 +61,12 @@ func xnpvDecimal(rate money.Decimal, amounts, times []money.Decimal) (money.Deci
 
 		factor, err := onePlus.Pow(times[i])
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		discounted, err := amount.Div(factor)
 		if err != nil {
-			return money.Decimal{}, err
+			return decimal.Decimal{}, err
 		}
 
 		sum = sum.Add(discounted)

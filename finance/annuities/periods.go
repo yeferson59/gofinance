@@ -1,8 +1,6 @@
 package annuities
 
-import (
-	"github.com/yeferson59/gofinance/money"
-)
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // PeriodsWithPresent calculates the number of periods needed for periodic payments to reach
 // a specific present value using the formula:
@@ -16,7 +14,7 @@ import (
 // This is useful for determining how long it will take to pay off a loan.
 //
 // Returns:
-//   - The calculated number of periods as money.Decimal
+//   - The calculated number of periods as decimal.Decimal
 //   - An error if there are problems obtaining valid rate or period values
 //
 // Example:
@@ -24,35 +22,35 @@ import (
 //	ann, _ := New(500, 5000, 0, period, rate)
 //	periods, err := ann.PeriodsWithPresent()
 //	// periods is how many payment periods needed to pay off $5,000 with $500 payments
-func (a Annuity) PeriodsWithPresent() (money.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+func (a Annuity) PeriodsWithPresent() (decimal.Decimal, error) {
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	present, err := a.compositeInterest.Present()
+	present, err := a.compoundInterest.Present()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	ratio, err := a.value.ToDecimal().Div(a.value.ToDecimal().Sub(present.ToDecimal().Mul(rateInterest)))
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	logarithmRatio, err := ratio.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	logarithmGrowth, err := money.One.Add(rateInterest).Ln()
+	logarithmGrowth, err := decimal.One.Add(rateInterest).Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	periods, err := logarithmRatio.Div(logarithmGrowth)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return periods, nil
@@ -70,7 +68,7 @@ func (a Annuity) PeriodsWithPresent() (money.Decimal, error) {
 // This is useful for determining how long it will take to accumulate a target savings amount.
 //
 // Returns:
-//   - The calculated number of periods as money.Decimal
+//   - The calculated number of periods as decimal.Decimal
 //   - An error if there are problems obtaining valid rate or period values
 //
 // Example:
@@ -78,35 +76,35 @@ func (a Annuity) PeriodsWithPresent() (money.Decimal, error) {
 //	ann, _ := New(500, 0, 10000, period, rate)
 //	periods, err := ann.PeriodsWithFuture()
 //	// periods is how many payment periods needed to accumulate $10,000 with $500 payments
-func (a Annuity) PeriodsWithFuture() (money.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+func (a Annuity) PeriodsWithFuture() (decimal.Decimal, error) {
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	future, err := a.compositeInterest.Future()
+	future, err := a.compoundInterest.Future()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	ratio, err := future.ToDecimal().Mul(rateInterest).Add(a.value.ToDecimal()).Div(a.value.ToDecimal())
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	logarithmRatio, err := ratio.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	logarithmGrowth, err := money.One.Add(rateInterest).Ln()
+	logarithmGrowth, err := decimal.One.Add(rateInterest).Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	periods, err := logarithmRatio.Div(logarithmGrowth)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return periods, nil
@@ -119,42 +117,42 @@ func (a Annuity) PeriodsWithFuture() (money.Decimal, error) {
 // Since PV_due = PV_ordinary × (1+i) for the same payment and number of
 // periods, dividing the present value by (1+i) first reduces this to the
 // same ordinary formula: n = ln(PMT / (PMT - [PV/(1+i)] × i)) / ln(1+i)
-func (a Annuity) AnticipatePeriodsWithPresent() (money.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+func (a Annuity) AnticipatePeriodsWithPresent() (decimal.Decimal, error) {
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	present, err := a.compositeInterest.Present()
+	present, err := a.compoundInterest.Present()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	growthFactor := rateInterest.Add(money.One)
+	growthFactor := rateInterest.Add(decimal.One)
 
 	equivalentPresent, err := present.ToDecimal().Div(growthFactor)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	ratio, err := a.value.ToDecimal().Div(a.value.ToDecimal().Sub(equivalentPresent.Mul(rateInterest)))
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	logarithmRatio, err := ratio.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	logarithmGrowth, err := growthFactor.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	periods, err := logarithmRatio.Div(logarithmGrowth)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return periods, nil
@@ -167,42 +165,42 @@ func (a Annuity) AnticipatePeriodsWithPresent() (money.Decimal, error) {
 // Since FV_due = FV_ordinary × (1+i) for the same payment and number of
 // periods, dividing the future value by (1+i) first reduces this to the
 // same ordinary formula: n = ln(([FV/(1+i)] × i + PMT) / PMT) / ln(1+i)
-func (a Annuity) AnticipatePeriodsWithFuture() (money.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+func (a Annuity) AnticipatePeriodsWithFuture() (decimal.Decimal, error) {
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	future, err := a.compositeInterest.Future()
+	future, err := a.compoundInterest.Future()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
-	growthFactor := rateInterest.Add(money.One)
+	growthFactor := rateInterest.Add(decimal.One)
 
 	equivalentFuture, err := future.ToDecimal().Div(growthFactor)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	ratio, err := equivalentFuture.Mul(rateInterest).Add(a.value.ToDecimal()).Div(a.value.ToDecimal())
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	logarithmRatio, err := ratio.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	logarithmGrowth, err := growthFactor.Ln()
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	periods, err := logarithmRatio.Div(logarithmGrowth)
 	if err != nil {
-		return money.Decimal{}, err
+		return decimal.Decimal{}, err
 	}
 
 	return periods, nil
