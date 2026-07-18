@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Breaking**: `finance/compositeinterest` renamed to `finance/compoundinterest` ("composite interest" is a non-standard term); `CompositeInterest`/`CompositeConfig`/`NewComposite` are now `CompoundInterest`/`CompoundConfig`/`NewCompound`
+- `simpleinterest.Periods` and `compoundinterest.CompoundingFrequency` are now aliases of the shared `term.Unit` and `term.Frequency` types; `QuarterlyOne`/`QuarterlyTwo` renamed to `Quarterly` (4×/yr) and `FourMonthly` (3×/yr) with the old names kept as deprecated aliases. Invalid-frequency errors are the typed `term.ErrInvalidFrequency`
+- `Money.Mul`, `Money.Div` and `Money.MustDiv` (Money-by-Money) are deprecated: use `MulDecimal`/`DivDecimal` to scale an amount, or `ToDecimal` on both operands for a ratio. `Money.Add`/`Sub` now document that they don't currency-check (prefer `SafeAdd`/`SafeSub`)
 - **Breaking**: `money.Decimal` is now a type alias of `decimal.Decimal` instead of a wrapper type. The full arithmetic API comes directly from the `decimal` package; `money`'s `NewFrom*`/`MustFrom*` decimal constructors and `money.Zero`/`money.One` remain as deprecated forwarders. `Decimal.ToMoney` was removed — use the new `money.FromDecimal(d, currency)`
 - **Breaking**: the chart rendering package moved from `finance/charts` to the separate `charts` Go module (`github.com/yeferson59/gofinance/charts`); the root library module now has zero external runtime dependencies. `examples/` is also its own module
 - All `finance/*` packages now use `decimal.Decimal` directly for rates, factors and periods; `finance/tvm` and `finance/daycount` no longer depend on `money`
@@ -15,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repository layering rules are documented in `ARCHITECTURE.md`
 
 ### Added
+- New `finance/term` package: the shared time vocabulary (`Unit`, `Frequency`, `PeriodsPerYear`, `MonthsPerPeriod`) used by the interest packages
 - `money.FromDecimal(d, currency)` to turn a computed decimal into a monetary amount
 - Dimensionally-correct `Money.MulDecimal`, `Money.DivDecimal` and `Money.MustDivDecimal` for amount×rate / amount÷rate math without attaching a placeholder currency
 - `annuities.WriteCSVTo(io.Writer, ...)` so schedule CSV export is destination-agnostic; `WriteCSV` remains as a file convenience wrapper

@@ -188,8 +188,8 @@ Defines the frequency at which interest compounds:
 - `Daily`: Daily (365)
 - `Monthly`: Monthly (12)
 - `Bimonthly`: Bimonthly (6)
-- `QuarterlyOne`: Quarterly (4)
-- `QuarterlyTwo`: Quarterly (3)
+- `Quarterly`: Quarterly (4)
+- `FourMonthly`: Every four months (3)
 - `SemiAnnually`: Semi-annually (2)
 - `Annually`: Annually (1)
 
@@ -261,7 +261,7 @@ ci, err := New(1000, 1636.36, rate, period)
 ```go
 // Convert a monthly rate of 1% to its equivalent quarterly rate
 rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
-quarterly, _ := rate.RatePeriodicToPeriodic(compoundinterest.QuarterlyOne)
+quarterly, _ := rate.RatePeriodicToPeriodic(compoundinterest.Quarterly)
 fmt.Printf("Equivalent quarterly rate: %.4f\n", quarterly)
 ```
 

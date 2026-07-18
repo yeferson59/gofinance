@@ -73,6 +73,10 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 - Year fractions and day counts under 30/360, Actual/360, Actual/365 (Fixed), and Actual/Actual (ISDA)
 
+### 🗓️ **Shared Time Vocabulary** (`finance/term`)
+
+- One set of types for time units (`term.Unit`) and compounding/payment cadences (`term.Frequency`, with `PeriodsPerYear` and `MonthsPerPeriod`), shared by the interest packages
+
 See [`FEATURES.md`](FEATURES.md) for the full roadmap of proposed and in-progress features.
 
 ---
@@ -259,7 +263,8 @@ gofinance/
 │   ├── bonds/                     # Bond pricing, YTM, duration, convexity
 │   ├── depreciation/              # Straight-line, declining balance, MACRS
 │   ├── tvm/                       # General time-value-of-money solver
-│   └── daycount/                  # Day-count conventions (30/360, Actual/*, …)
+│   ├── daycount/                  # Day-count conventions (30/360, Actual/*, …)
+│   └── term/                      # Shared time vocabulary (Unit, Frequency)
 │
 ├── charts/                         # Separate module: chart rendering (go-echarts)
 ├── benchmarks/                     # Cross-package benchmark suites

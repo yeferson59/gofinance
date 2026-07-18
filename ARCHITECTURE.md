@@ -28,6 +28,7 @@ decimal        fixed-point numeric engine (stdlib only)
 money          Currency + Money (an amount bound to a currency)
    ▲
 finance/*      domain math: interest, annuities, bonds, TVM, …
+   │           (shared time vocabulary lives in finance/term)
    ▲
 charts         optional visualization (separate module)
 ```
@@ -70,24 +71,38 @@ The previous structure had four structural problems, all fixed in this pass:
 - `annuities` wrote CSV files directly to disk, and a generated
   `amortizacion.csv` was committed at the repo root.
 
-## Recommended follow-ups (not yet executed)
+## Executed follow-ups (second pass)
 
-- **Rename `finance/compositeinterest` → `finance/compoundinterest`.**
-  "Composite interest" is a non-standard term; the rename touches README,
-  examples, benchmarks and all import paths, so it should ride a major
-  version bump.
-- **Deprecate `Money.Mul(Money)` and `Money.Div(Money)`.** Multiplying two
-  monetary amounts is dimensionally meaningless (money²); the surviving
-  cases are ratios, better expressed via `ToDecimal()` or
-  `MulDecimal`/`DivDecimal`. Same for `Money.Add`/`Sub` silently ignoring a
-  currency mismatch — consider making the checked (`Safe*`) behavior the
-  default in a major release.
-- **Unify time/frequency vocabulary.** `simpleinterest.Periods`,
-  `compositeinterest.CompoundingFrequency` and `daycount.Convention` model
-  overlapping concepts with different types; a shared `finance/term` (or
-  similar) package would let them interoperate.
-- **Version note.** Removing `Decimal.ToMoney` and moving the `charts`
-  import path are breaking changes relative to v1.4.2. Under strict semver
-  they call for a v2 (`/v2` module path); alternatively document them
-  loudly in the next minor release notes, since the rest of the surface is
-  source-compatible through the alias and forwarders.
+- **`finance/compositeinterest` renamed to `finance/compoundinterest`.**
+  "Composite interest" is a non-standard term. The types followed suit
+  (`CompoundInterest`, `CompoundConfig`, `NewCompound`); no forwarding
+  package is kept — this is part of the breaking release described below.
+- **`Money.Mul(Money)`, `Money.Div(Money)` and `Money.MustDiv` are
+  deprecated.** Multiplying two monetary amounts is dimensionally
+  meaningless (money²), and dividing them yields a currency-less ratio.
+  Use `MulDecimal`/`DivDecimal` to scale amounts and
+  `ToDecimal()` + `decimal.Div` for ratios. `Add`/`Sub` now document that
+  they don't currency-check and point to `SafeAdd`/`SafeSub`.
+- **Shared time vocabulary in `finance/term`.** `term.Unit`
+  (days/weeks/months/years) and `term.Frequency` (daily … annually, with
+  `PeriodsPerYear`/`MonthsPerPeriod`) are the one set of types;
+  `simpleinterest.Periods` and `compoundinterest.CompoundingFrequency` are
+  aliases of them. The confusing `QuarterlyOne`/`QuarterlyTwo` constants
+  became `Quarterly` (4/yr) and `FourMonthly` (3/yr), with the old names
+  kept as deprecated aliases. Day-count conventions answer a different
+  question (date range → year fraction) and deliberately stay in
+  `finance/daycount`.
+
+## Remaining decisions
+
+- **Release as a major version.** The accumulated changes — `ToMoney`
+  removal, the `charts` module split, the `compoundinterest` rename — are
+  breaking relative to v1.4.2. The semver-correct release is v2.0.0 with
+  the module path bumped to `github.com/yeferson59/gofinance/v2` (a
+  release-time action for the maintainer: update the `module` line and
+  internal import prefixes, tag `v2.0.0`, and tag `charts/v2.0.0` for the
+  charts module). If reaching v1 consumers matters more than strict
+  semver, the fallback is a loudly-documented v1.5.0.
+- **Making `Add`/`Sub` currency-checked by default** (folding `SafeAdd`/
+  `SafeSub` into them) would change their signatures; if desired, it
+  should ride the same major release.

@@ -253,7 +253,7 @@ func main() {
     )
 
     // Convert to equivalent quarterly rate
-    quarterly, _ := rate.RatePeriodicToPeriodic(compoundinterest.QuarterlyOne)
+    quarterly, _ := rate.RatePeriodicToPeriodic(compoundinterest.Quarterly)
 
     fmt.Printf("Monthly rate: 1%%\n")
     fmt.Printf("Equivalent quarterly rate: %.4f (%.2f%%)\n", quarterly, quarterly*100)
@@ -488,8 +488,8 @@ func main() {
         {"Daily", compoundinterest.Daily},
         {"Monthly", compoundinterest.Monthly},
         {"Bimonthly", compoundinterest.Bimonthly},
-        {"Quarterly (4x)", compoundinterest.QuarterlyOne},
-        {"Quarterly (3x)", compoundinterest.QuarterlyTwo},
+        {"Quarterly (4x)", compoundinterest.Quarterly},
+        {"FourMonthly (3x)", compoundinterest.FourMonthly},
         {"Semi-annually", compoundinterest.SemiAnnually},
         {"Annually", compoundinterest.Annually},
     }
