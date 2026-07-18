@@ -87,10 +87,10 @@ func perpetuityExample() {
 func inflationExample() {
 	fmt.Println("\n=== Inflation ===")
 
-	real := returns.MustRealValue(money.MustMoneyFromFloat64(1000, money.USD), money.MustFromFloat64(0.03), money.MustFromFloat64(10))
+	realAmount := returns.MustRealValue(money.MustMoneyFromFloat64(1000, money.USD), money.MustFromFloat64(0.03), money.MustFromFloat64(10))
 	realRate := returns.MustRealRate(money.MustFromFloat64(0.08), money.MustFromFloat64(0.03))
 
-	fmt.Println("$1,000 in 10 years at 3% inflation (today's money):", real.RoundBankString(2))
+	fmt.Println("$1,000 in 10 years at 3% inflation (today's money):", realAmount.RoundBankString(2))
 	fmt.Println("Real rate (8% nominal, 3% inflation):", realRate.RoundBank(6).StringFixed(6))
 }
 

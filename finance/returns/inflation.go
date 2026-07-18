@@ -18,12 +18,12 @@ func RealValue(nominal money.Money, inflation, periods money.Decimal) (money.Mon
 		return money.Money{}, err
 	}
 
-	real, err := nominal.ToDecimal().Div(factor)
+	realAmount, err := nominal.ToDecimal().Div(factor)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return real.ToMoney(nominal.Currency()), nil
+	return realAmount.ToMoney(nominal.Currency()), nil
 }
 
 // MustRealValue is like RealValue but panics on error.
@@ -45,18 +45,18 @@ func MustRealValue(nominal money.Money, inflation, periods money.Decimal) money.
 // than −1. The result carries the real amount's currency.
 //
 // It returns ErrInvalidInflationRate if 1+inflation is not positive.
-func NominalValue(real money.Money, inflation, periods money.Decimal) (money.Money, error) {
+func NominalValue(realAmount money.Money, inflation, periods money.Decimal) (money.Money, error) {
 	factor, err := priceLevelFactor(inflation, periods)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return real.ToDecimal().Mul(factor).ToMoney(real.Currency()), nil
+	return realAmount.ToDecimal().Mul(factor).ToMoney(realAmount.Currency()), nil
 }
 
 // MustNominalValue is like NominalValue but panics on error.
-func MustNominalValue(real money.Money, inflation, periods money.Decimal) money.Money {
-	m, err := NominalValue(real, inflation, periods)
+func MustNominalValue(realAmount money.Money, inflation, periods money.Decimal) money.Money {
+	m, err := NominalValue(realAmount, inflation, periods)
 	if err != nil {
 		panic(err)
 	}

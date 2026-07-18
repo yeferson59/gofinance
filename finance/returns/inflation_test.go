@@ -10,10 +10,10 @@ import (
 
 func TestRealValue(t *testing.T) {
 	// $1,000 in 10 years at 3% inflation ≈ $744.09 today.
-	real, err := RealValue(usd(1000), money.MustFromFloat64(0.03), money.MustFromFloat64(10))
+	realAmount, err := RealValue(usd(1000), money.MustFromFloat64(0.03), money.MustFromFloat64(10))
 	require.NoError(t, err)
-	assert.InDelta(t, 744.09, real.InexactFloat64(), 0.01)
-	assert.Equal(t, money.USD, real.Currency())
+	assert.InDelta(t, 744.09, realAmount.InexactFloat64(), 0.01)
+	assert.Equal(t, money.USD, realAmount.Currency())
 }
 
 func TestNominalValueRoundTrip(t *testing.T) {
