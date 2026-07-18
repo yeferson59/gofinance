@@ -47,11 +47,23 @@ A robust, type-safe Go library for financial calculations and money management. 
 ### 📊 **Returns** (`finance/returns`)
 
 - Compound annual growth rate (`CAGR`), simple return on investment (`ROI`), holding-period return, and annualization of a cumulative return — all on the decimal engine
+- Inflation adjustment: real vs nominal value and the Fisher real rate (`RealValue`, `NominalValue`, `RealRate`)
 
 ### 💹 **Investment** (`finance/investment`)
 
 - Net present value (`NPV`) of a periodic cash-flow stream at a discount rate
 - Internal rate of return (`IRR`) via Newton–Raphson with a bracketed-bisection fallback
+- Date-based `XNPV`/`XIRR` for irregular cash flows (Actual/365 basis)
+- Level and growing (`Perpetuity`, `GrowingPerpetuity`, Gordon model) perpetuities
+
+### 🏦 **Bonds** (`finance/bonds`)
+
+- Clean price from yield, yield to maturity from price (`Price`, `YTM`)
+- Macaulay and modified duration, convexity, and accrued interest
+
+### 🏭 **Depreciation** (`finance/depreciation`)
+
+- Straight-line, declining balance, double declining (with straight-line switch), sum-of-years'-digits, and MACRS (GDS) schedules
 
 ### 🧮 **Time Value of Money** (`finance/tvm`)
 
@@ -242,8 +254,10 @@ gofinance/
 │   ├── simpleinterest/            # Simple interest (fluent builder)
 │   ├── compositeinterest/         # Compound interest and rate conversions
 │   ├── annuities/                 # Annuities and amortization schedules
-│   ├── returns/                   # CAGR, ROI, holding-period & annualized returns
-│   ├── investment/                # NPV and IRR over cash-flow streams
+│   ├── returns/                   # CAGR, ROI, returns & inflation adjustment
+│   ├── investment/                # NPV/IRR, XNPV/XIRR, perpetuities
+│   ├── bonds/                     # Bond pricing, YTM, duration, convexity
+│   ├── depreciation/              # Straight-line, declining balance, MACRS
 │   ├── tvm/                       # General time-value-of-money solver
 │   ├── daycount/                  # Day-count conventions (30/360, Actual/*, …)
 │   └── charts/                    # Amortization chart rendering (go-echarts)
@@ -389,10 +403,10 @@ If you have questions or issues:
 See [`FEATURES.md`](FEATURES.md) for the full, prioritized list.
 
 - [x] Additional financial instruments (NPV/IRR, returns, TVM solver, day-count conventions)
+- [x] Bond valuation (YTM, duration, convexity) and XNPV/XIRR
+- [x] Depreciation schedules (straight-line, declining balance, MACRS)
 - [x] Performance optimizations (native decimal math, Knuth division, zero-allocation kernels)
 - [ ] Extended documentation with more examples
-- [ ] Bond valuation (YTM, duration, convexity) and XNPV/XIRR
-- [ ] Depreciation schedules (straight-line, declining balance, MACRS)
 - [ ] CLI tools for quick calculations
 - [ ] Web API wrapper
 

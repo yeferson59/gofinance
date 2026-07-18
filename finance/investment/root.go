@@ -44,6 +44,19 @@ var (
 	// ErrNoConvergence is returned by IRR when neither the Newton iteration
 	// nor the bracketed search locate a root within the iteration budget.
 	ErrNoConvergence = errors.New("investment: IRR did not converge")
+
+	// ErrDatesBeforeBase is returned by XNPV and XIRR when a cash flow is
+	// dated before the first flow's date, which serves as the discounting
+	// base.
+	ErrDatesBeforeBase = errors.New("investment: cash-flow dates must be on or after the first date")
+
+	// ErrNonPositiveRate is returned by Perpetuity when the discount rate is
+	// not strictly positive, which would make the value infinite or undefined.
+	ErrNonPositiveRate = errors.New("investment: rate must be positive")
+
+	// ErrRateBelowGrowth is returned by GrowingPerpetuity when the discount
+	// rate does not exceed the growth rate, so the series does not converge.
+	ErrRateBelowGrowth = errors.New("investment: rate must exceed growth")
 )
 
 // decimalFlows validates that cashFlows is non-empty and single-currency, and

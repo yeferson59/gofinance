@@ -28,4 +28,9 @@ var (
 	// ErrNonPositivePeriods is returned when the number of periods used to
 	// annualize a return is zero or negative.
 	ErrNonPositivePeriods = errors.New("returns: periods must be positive")
+
+	// ErrInvalidInflationRate is returned when an inflation rate is not greater
+	// than −1, which would make the price-level factor (1+inflation) zero or
+	// negative.
+	ErrInvalidInflationRate = errors.New("returns: inflation rate must be greater than -1")
 )

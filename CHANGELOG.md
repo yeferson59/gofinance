@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `finance/investment`: date-based `XNPV`/`XIRR` for irregular cash flows (`DatedCashFlow`, Actual/365 basis) and `Perpetuity`/`GrowingPerpetuity` (Gordon model), all with `Must*` variants and typed errors (`ErrDatesBeforeBase`, `ErrNonPositiveRate`, `ErrRateBelowGrowth`)
+- New `finance/bonds` package: fluent `NewBond()` builder with clean `Price` from yield, `YTM` from price (bracketed bisection), `MacaulayDuration`/`ModifiedDuration`/`Convexity`, `CouponPayment`, and `AccruedInterest` (reusing `finance/daycount`)
+- New `finance/depreciation` package: `StraightLine`, `DecliningBalance`, `DoubleDecliningBalance` (with straight-line switchover), `SumOfYearsDigits`, and `MACRS` (GDS half-year tables for 3/5/7/10/15/20-year recovery), each returning a year-by-year `Schedule`
+- `finance/returns`: inflation adjustment `RealValue`, `NominalValue`, and Fisher `RealRate` (with `Must*` variants and `ErrInvalidInflationRate`)
+- Runnable examples for the new instruments in `examples/main.go`
 - New `finance/returns` package: `CAGR`, `ROI`, `HoldingPeriodReturn`, and `Annualized` return metrics (with `Must*` variants), computed on the decimal engine
 - New `finance/investment` package: `NPV` of a periodic cash-flow stream at a discount rate, and `IRR` via Newton–Raphson with a bracketed-bisection fallback (with `Must*` variants); typed errors `ErrNoCashFlows`, `ErrInvalidRate`, `ErrNoSignChange`, `ErrNoConvergence`
 - New `finance/tvm` package: a general time-value-of-money solver (`SolveN`, `SolveRate`, `SolvePV`, `SolvePMT`, `SolveFV`, plus `Must*`) with a fluent `NewTVM()` builder and ordinary/annuity-due timing
