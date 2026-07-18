@@ -28,3 +28,4 @@ go.work.sum
 
 # Generated chart HTML output from examples/main.go
 /examples/output/
+/output/

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- New `finance/returns` package: `CAGR`, `ROI`, `HoldingPeriodReturn`, and `Annualized` return metrics (with `Must*` variants), computed on the decimal engine
+- New `finance/investment` package: `NPV` of a periodic cash-flow stream at a discount rate, and `IRR` via Newton–Raphson with a bracketed-bisection fallback (with `Must*` variants); typed errors `ErrNoCashFlows`, `ErrInvalidRate`, `ErrNoSignChange`, `ErrNoConvergence`
+- New `finance/tvm` package: a general time-value-of-money solver (`SolveN`, `SolveRate`, `SolvePV`, `SolvePMT`, `SolveFV`, plus `Must*`) with a fluent `NewTVM()` builder and ordinary/annuity-due timing
+- New `finance/daycount` package: `Days` and `YearFraction` under the 30/360, Actual/360, Actual/365 (Fixed), and Actual/Actual (ISDA) conventions
+- Runnable examples for the new packages in `examples/main.go`, and a `FEATURES.md` roadmap of candidate features
 - Fluent rate conversion builder `compositeinterest.NewRateConversion()` for converting rates between periodic, nominal, effective annual, and anticipated types, and across compounding frequencies
 - `money.SafeAdd`/`money.SafeSub` currency-checked arithmetic returning `ErrCurrencyMismatch` on mixed currencies
 - `simpleinterest` builder `PresentValue()` convenience method

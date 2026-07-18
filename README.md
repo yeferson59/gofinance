@@ -44,6 +44,25 @@ A robust, type-safe Go library for financial calculations and money management. 
 - Full amortization schedule generation (`BuildSchedule`)
 - Optional chart rendering of schedules via `finance/charts` (go-echarts)
 
+### 📊 **Returns** (`finance/returns`)
+
+- Compound annual growth rate (`CAGR`), simple return on investment (`ROI`), holding-period return, and annualization of a cumulative return — all on the decimal engine
+
+### 💹 **Investment** (`finance/investment`)
+
+- Net present value (`NPV`) of a periodic cash-flow stream at a discount rate
+- Internal rate of return (`IRR`) via Newton–Raphson with a bracketed-bisection fallback
+
+### 🧮 **Time Value of Money** (`finance/tvm`)
+
+- General financial-calculator solver: set any four of N, rate, PV, PMT, FV and solve for the fifth, with ordinary-annuity and annuity-due timing
+
+### 📆 **Day-Count Conventions** (`finance/daycount`)
+
+- Year fractions and day counts under 30/360, Actual/360, Actual/365 (Fixed), and Actual/Actual (ISDA)
+
+See [`FEATURES.md`](FEATURES.md) for the full roadmap of proposed and in-progress features.
+
 ---
 
 ## 🚀 Getting Started
@@ -223,6 +242,10 @@ gofinance/
 │   ├── simpleinterest/            # Simple interest (fluent builder)
 │   ├── compositeinterest/         # Compound interest and rate conversions
 │   ├── annuities/                 # Annuities and amortization schedules
+│   ├── returns/                   # CAGR, ROI, holding-period & annualized returns
+│   ├── investment/                # NPV and IRR over cash-flow streams
+│   ├── tvm/                       # General time-value-of-money solver
+│   ├── daycount/                  # Day-count conventions (30/360, Actual/*, …)
 │   └── charts/                    # Amortization chart rendering (go-echarts)
 │
 ├── benchmarks/                     # Cross-package benchmark suites
@@ -363,9 +386,13 @@ If you have questions or issues:
 
 ## 🎯 Roadmap
 
-- [ ] Additional financial instruments support
+See [`FEATURES.md`](FEATURES.md) for the full, prioritized list.
+
+- [x] Additional financial instruments (NPV/IRR, returns, TVM solver, day-count conventions)
 - [x] Performance optimizations (native decimal math, Knuth division, zero-allocation kernels)
 - [ ] Extended documentation with more examples
+- [ ] Bond valuation (YTM, duration, convexity) and XNPV/XIRR
+- [ ] Depreciation schedules (straight-line, declining balance, MACRS)
 - [ ] CLI tools for quick calculations
 - [ ] Web API wrapper
 

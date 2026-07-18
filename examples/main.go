@@ -4,13 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/types"
 	"github.com/yeferson59/gofinance/finance/annuities"
 	"github.com/yeferson59/gofinance/finance/charts"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/daycount"
+	dcf "github.com/yeferson59/gofinance/finance/investment"
+	"github.com/yeferson59/gofinance/finance/returns"
 	"github.com/yeferson59/gofinance/finance/simpleinterest"
+	"github.com/yeferson59/gofinance/finance/tvm"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -26,6 +31,88 @@ func main() {
 	growthExample()
 
 	investmentExample()
+
+	returnsExample()
+
+	dcfExample()
+
+	tvmExample()
+
+	daycountExample()
+}
+
+// returnsExample shows the finance/returns metrics: CAGR, ROI, and
+// annualizing a cumulative return.
+func returnsExample() {
+	fmt.Println("\n=== Returns ===")
+
+	begin := money.MustMoneyFromFloat64(1000, money.USD)
+	end := money.MustMoneyFromFloat64(2000, money.USD)
+
+	cagr := returns.MustCAGR(begin, end, money.MustFromFloat64(5))
+	roi := returns.MustROI(begin, end)
+
+	fmt.Println("$1,000 → $2,000 over 5 years")
+	fmt.Println("CAGR:", cagr.RoundBank(4).StringFixed(4))
+	fmt.Println("ROI:", roi.RoundBank(4).StringFixed(4))
+}
+
+// dcfExample shows the finance/investment discounted cash-flow metrics: net
+// present value and internal rate of return over a stream of cash flows.
+func dcfExample() {
+	fmt.Println("\n=== Investment (NPV / IRR) ===")
+
+	flows := []money.Money{
+		money.MustMoneyFromFloat64(-1000, money.USD), // outflow today
+		money.MustMoneyFromFloat64(400, money.USD),
+		money.MustMoneyFromFloat64(400, money.USD),
+		money.MustMoneyFromFloat64(400, money.USD),
+	}
+
+	npv := dcf.MustNPV(money.MustFromFloat64(0.10), flows)
+	irr := dcf.MustIRR(flows)
+
+	fmt.Println("Cash flows: -1000, 400, 400, 400")
+	fmt.Println("NPV @ 10%:", npv.RoundBankString(2))
+	fmt.Println("IRR:", irr.RoundBank(4).StringFixed(4))
+}
+
+// tvmExample shows the finance/tvm solver recovering the monthly payment of a
+// loan from the other four time-value-of-money variables.
+func tvmExample() {
+	fmt.Println("\n=== Time Value of Money ===")
+
+	payment := tvm.NewTVM().
+		PV(300000).
+		Rate(0.06 / 12).
+		N(360).
+		MustSolvePMT()
+
+	fmt.Println("$300,000 loan at 6%/yr over 360 months")
+	fmt.Println("Monthly payment:", payment.RoundBank(2).StringFixed(2))
+}
+
+// daycountExample shows the finance/daycount year fractions between two dates
+// under different conventions.
+func daycountExample() {
+	fmt.Println("\n=== Day Count ===")
+
+	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+
+	for _, conv := range []daycount.Convention{
+		daycount.Thirty360,
+		daycount.Actual365Fixed,
+		daycount.ActualActualISDA,
+	} {
+		yf, err := daycount.YearFraction(start, end, conv)
+		if err != nil {
+			fmt.Println("daycount error:", err)
+			return
+		}
+
+		fmt.Printf("%-20s %s\n", conv, yf.RoundBank(6).StringFixed(6))
+	}
 }
 
 func compoundExample() {
