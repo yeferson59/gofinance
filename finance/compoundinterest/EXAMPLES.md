@@ -1,6 +1,6 @@
 # Usage Examples - Composite Interest Package
 
-This file contains practical examples of how to use the `compositeinterest` package.
+This file contains practical examples of how to use the `compoundinterest` package.
 
 ## Table of Contents
 
@@ -21,31 +21,31 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: $1,000 invested at 1% monthly for 12 months
 
     // Create rate: 1% periodic monthly
-    rate, err := compositeinterest.NewRateInterest(
+    rate, err := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
     if err != nil {
         log.Fatal(err)
     }
 
     // Create period: 12 months
-    period, err := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, err := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
     if err != nil {
         log.Fatal(err)
     }
 
-    // Create CompositeInterest object
+    // Create CompoundInterest object
     // Present: 1000, Future: 0 (to calculate)
-    ci, err := compositeinterest.New(1000, 0, rate, period)
+    ci, err := compoundinterest.New(1000, 0, rate, period)
     if err != nil {
         log.Fatal(err)
     }
@@ -75,23 +75,23 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: I want to have $10,000 in 2 years
     // How much should I invest today at 5% annual?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.05,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
-    period, _ := compositeinterest.NewPeriod(2, compositeinterest.Annually)
+    period, _ := compoundinterest.NewPeriod(2, compoundinterest.Annually)
 
     // Present: 0 (to calculate), Future: 10000
-    ci, _ := compositeinterest.New(0, 10000, rate, period)
+    ci, _ := compoundinterest.New(0, 10000, rate, period)
 
     present, _ := ci.Present()
 
@@ -110,22 +110,22 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: I invested $1,000 and after 12 months I have $1,126.83
     // What's the monthly rate?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
-    period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
-    ci, _ := compositeinterest.New(1000, 1126.83, rate, period)
+    ci, _ := compoundinterest.New(1000, 1126.83, rate, period)
 
     interest, _ := ci.Interest()
 
@@ -144,21 +144,21 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: With $1,000 and 5% periodic, how many months to reach $1,500?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.05,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
-    period, _ := compositeinterest.NewPeriod(1, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(1, compoundinterest.Monthly)
 
-    ci, _ := compositeinterest.New(1000, 1500, rate, period)
+    ci, _ := compoundinterest.New(1000, 1500, rate, period)
 
     periods, _ := ci.Periods()
 
@@ -181,17 +181,17 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: Annual nominal rate of 12% compounded monthly
     // What's the monthly periodic rate?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.12,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyNominal,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyNominal,
     )
 
     // Convert to periodic
@@ -211,17 +211,17 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: What's the effective annual rate equivalent
     // of a 12% nominal rate compounded monthly?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.12,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyNominal,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyNominal,
     )
 
     annual, _ := rate.RateEffectyAnnually()
@@ -239,21 +239,21 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: I have a monthly rate of 1%
     // What's its equivalent quarterly rate?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
     // Convert to equivalent quarterly rate
-    quarterly, _ := rate.RatePeriodicToPeriodic(compositeinterest.QuarterlyOne)
+    quarterly, _ := rate.RatePeriodicToPeriodic(compoundinterest.QuarterlyOne)
 
     fmt.Printf("Monthly rate: 1%%\n")
     fmt.Printf("Equivalent quarterly rate: %.4f (%.2f%%)\n", quarterly, quarterly*100)
@@ -268,17 +268,17 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: I have an ordinary rate of 10% annual
     // What's its equivalent anticipated (discount) rate?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.10,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
     // Convert to anticipated nominal rate
@@ -289,10 +289,10 @@ func main() {
     // Output: Equivalent anticipated rate: 0.0909 (9.09%)
 
     // Verify reverse conversion
-    rate2, _ := compositeinterest.NewRateInterest(
+    rate2, _ := compoundinterest.NewRateInterest(
         anticipated,
-        compositeinterest.Annually,
-        compositeinterest.RateAnticipateEffectyNominal,
+        compoundinterest.Annually,
+        compoundinterest.RateAnticipateEffectyNominal,
     )
     back, _ := rate2.ToNominal()
     fmt.Printf("Reverse conversion: %.4f (matches 10%%)\n", back)
@@ -310,22 +310,22 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: $300,000 mortgage at 4.5% annual for 30 years
     // (simplified, without periodic payments)
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.045,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
-    period, _ := compositeinterest.NewPeriod(30, compositeinterest.Annually)
+    period, _ := compoundinterest.NewPeriod(30, compoundinterest.Annually)
 
-    ci, _ := compositeinterest.New(300000, 0, rate, period)
+    ci, _ := compoundinterest.New(300000, 0, rate, period)
 
     totalDebt, _ := ci.Future()
 
@@ -349,7 +349,7 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
@@ -357,33 +357,33 @@ func main() {
     years := 5
 
     // Option 1: 6% nominal monthly
-    rate1, _ := compositeinterest.NewRateInterest(
+    rate1, _ := compoundinterest.NewRateInterest(
         0.06,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyNominal,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyNominal,
     )
-    period1, _ := compositeinterest.NewPeriod(float64(years*12), compositeinterest.Monthly)
-    ci1, _ := compositeinterest.New(capital, 0, rate1, period1)
+    period1, _ := compoundinterest.NewPeriod(float64(years*12), compoundinterest.Monthly)
+    ci1, _ := compoundinterest.New(capital, 0, rate1, period1)
     future1, _ := ci1.Future()
 
     // Option 2: 6.17% effective annual
-    rate2, _ := compositeinterest.NewRateInterest(
+    rate2, _ := compoundinterest.NewRateInterest(
         0.0617,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
-    period2, _ := compositeinterest.NewPeriod(float64(years), compositeinterest.Annually)
-    ci2, _ := compositeinterest.New(capital, 0, rate2, period2)
+    period2, _ := compoundinterest.NewPeriod(float64(years), compoundinterest.Annually)
+    ci2, _ := compoundinterest.New(capital, 0, rate2, period2)
     future2, _ := ci2.Future()
 
     // Option 3: 0.5% periodic monthly
-    rate3, _ := compositeinterest.NewRateInterest(
+    rate3, _ := compoundinterest.NewRateInterest(
         0.005,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
-    period3, _ := compositeinterest.NewPeriod(float64(years*12), compositeinterest.Monthly)
-    ci3, _ := compositeinterest.New(capital, 0, rate3, period3)
+    period3, _ := compoundinterest.NewPeriod(float64(years*12), compoundinterest.Monthly)
+    ci3, _ := compoundinterest.New(capital, 0, rate3, period3)
     future3, _ := ci3.Future()
 
     fmt.Printf("═════════════════════════════════════════════════════\n")
@@ -423,7 +423,7 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
@@ -431,16 +431,16 @@ func main() {
     // due in 6 months. A bank discounts it at 10% annual anticipated rate.
     // How much does the company receive?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.10,
-        compositeinterest.Annually,
-        compositeinterest.RateAnticipateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateAnticipateEffectyAnnually,
     )
 
     // 6 months is 0.5 years
-    period, _ := compositeinterest.NewPeriod(0.5, compositeinterest.Annually)
+    period, _ := compoundinterest.NewPeriod(0.5, compoundinterest.Annually)
 
-    ci, _ := compositeinterest.New(0, 50000, rate, period)
+    ci, _ := compoundinterest.New(0, 50000, rate, period)
 
     received, _ := ci.Present()
     discount := 50000 - received
@@ -469,29 +469,29 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
     // Find equivalent rates for all frequencies
 
-    baseRate, _ := compositeinterest.NewRateInterest(
+    baseRate, _ := compoundinterest.NewRateInterest(
         0.12,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyNominal,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyNominal,
     )
 
     frequencies := []struct {
         name  string
-        freq  compositeinterest.CompoundingFrequency
+        freq  compoundinterest.CompoundingFrequency
     }{
-        {"Daily", compositeinterest.Daily},
-        {"Monthly", compositeinterest.Monthly},
-        {"Bimonthly", compositeinterest.Bimonthly},
-        {"Quarterly (4x)", compositeinterest.QuarterlyOne},
-        {"Quarterly (3x)", compositeinterest.QuarterlyTwo},
-        {"Semi-annually", compositeinterest.SemiAnnually},
-        {"Annually", compositeinterest.Annually},
+        {"Daily", compoundinterest.Daily},
+        {"Monthly", compoundinterest.Monthly},
+        {"Bimonthly", compoundinterest.Bimonthly},
+        {"Quarterly (4x)", compoundinterest.QuarterlyOne},
+        {"Quarterly (3x)", compoundinterest.QuarterlyTwo},
+        {"Semi-annually", compoundinterest.SemiAnnually},
+        {"Annually", compoundinterest.Annually},
     }
 
     fmt.Printf("═════════════════════════════════════════════════════\n")

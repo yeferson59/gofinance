@@ -200,12 +200,12 @@ func futureValueDue(payment, rate, periods decimal.Decimal) (decimal.Decimal, er
 //	rate, err := ann.RateWithPresent()
 //	// rate is the periodic rate at which $500 payments amortize $10,000
 func (a Annuity) RateWithPresent() (decimal.Decimal, error) {
-	periods, _, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	present, err := a.compositeInterest.Present()
+	present, err := a.compoundInterest.Present()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -234,12 +234,12 @@ func (a Annuity) RateWithPresent() (decimal.Decimal, error) {
 //	rate, err := ann.RateWithFuture()
 //	// rate is the periodic rate at which $500 payments accumulate to $10,000
 func (a Annuity) RateWithFuture() (decimal.Decimal, error) {
-	periods, _, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	future, err := a.compositeInterest.Future()
+	future, err := a.compoundInterest.Future()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -256,12 +256,12 @@ func (a Annuity) RateWithFuture() (decimal.Decimal, error) {
 // is made at the beginning of its period (annuity due) instead of the end:
 // PV = PMT × [1-(1+i)^-n]/i × (1+i).
 func (a Annuity) AnticipateRateWithPresent() (decimal.Decimal, error) {
-	periods, _, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	present, err := a.compositeInterest.Present()
+	present, err := a.compoundInterest.Present()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -278,12 +278,12 @@ func (a Annuity) AnticipateRateWithPresent() (decimal.Decimal, error) {
 // is made at the beginning of its period (annuity due) instead of the end:
 // FV = PMT × [(1+i)^n-1]/i × (1+i).
 func (a Annuity) AnticipateRateWithFuture() (decimal.Decimal, error) {
-	periods, _, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	future, err := a.compositeInterest.Future()
+	future, err := a.compoundInterest.Future()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

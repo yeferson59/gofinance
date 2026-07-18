@@ -60,7 +60,7 @@ periods := (math.Log(a.value/(a.value-(present*rateInterest))) / logBase)
 
 ### 3. Cached `math.Log()` in Composite Interest Period Calculations ⚡ MEDIUM IMPACT
 
-**Location:** `finance/compositeinterest/periods.go:39`
+**Location:** `finance/compoundinterest/periods.go:39`
 
 **Issue:**
 The `Periods()` method computed `math.Log(1+periodicRate)` inline as the denominator:
@@ -89,7 +89,7 @@ numberOfPeriods := (math.Log((c.future / c.present)) / logBase)
 
 **Issue:**
 - `getPeriod()` method used O(4) sequential if-statement checks to find which period field was set
-- Inconsistent with the optimized O(1) approach used in compositeinterest
+- Inconsistent with the optimized O(1) approach used in compoundinterest
 
 **Solution:**
 - Added `periods` field to track which period type is active
@@ -119,7 +119,7 @@ case Months:
 - Constant-time O(1) lookup instead of O(4)
 - More predictable performance
 - Adds only 16 bytes to struct size (Periods is a string alias)
-- Consistent with compositeinterest optimization
+- Consistent with compoundinterest optimization
 
 ---
 
@@ -153,7 +153,7 @@ present := a.value * ((pow - 1) / (rateInterest * pow))
 
 ### 2. Optimized Period Struct Lookup ⚡ HIGH IMPACT
 
-**Location:** `finance/compositeinterest/root.go`
+**Location:** `finance/compoundinterest/root.go`
 
 **Issue:**
 - Period struct stored 7 float64 fields (56 bytes) but only used one at a time (85% memory waste)
@@ -193,7 +193,7 @@ case Monthly:
 
 ### 3. Cached Exponential Calculations in Rate Conversions ⚡ MEDIUM IMPACT
 
-**Location:** `finance/compositeinterest/rate_conversion.go`
+**Location:** `finance/compoundinterest/rate_conversion.go`
 
 **Issue:**
 Both `RatePeriodic()` and `RateNominal()` methods had duplicate exponential calculations for the same formula when converting from effective annual rates.
@@ -219,7 +219,7 @@ nominalRate := compoundingPeriodsPerYear * (pow - 1)
 
 ### 4. Improved Error Handling Consistency ✅ CODE QUALITY
 
-**Location:** `finance/compositeinterest/root.go`
+**Location:** `finance/compoundinterest/root.go`
 
 **Issue:**
 `NewPeriod()` returned an empty Period struct with `nil` error for invalid compounding frequencies, but subsequent calls to `getPeriod()` would fail. This created inconsistent and confusing behavior.
@@ -252,15 +252,15 @@ Sample benchmark results (January 2026 - after all optimizations):
 BenchmarkNewAnnuity-4                                     49173336        24.00 ns/op        0 B/op        0 allocs/op
 BenchmarkPeriod-4                                        349853197         3.430 ns/op        0 B/op        0 allocs/op
 BenchmarkNewRateInterest-4                               384386529         3.120 ns/op        0 B/op        0 allocs/op
-BenchmarkCompositeInterest/present-4                      30899818        38.81 ns/op        0 B/op        0 allocs/op
-BenchmarkCompositeInterest/periods-4                      32146281        37.27 ns/op        0 B/op        0 allocs/op
+BenchmarkCompoundInterest/present-4                      30899818        38.81 ns/op        0 B/op        0 allocs/op
+BenchmarkCompoundInterest/periods-4                      32146281        37.27 ns/op        0 B/op        0 allocs/op
 BenchmarkNewSimpleInterest-4                             100000000        10.96 ns/op        0 B/op        0 allocs/op
 BenchmarkSimpleInterest/periods-4                        285871533         4.170 ns/op        0 B/op        0 allocs/op
 ```
 
 **Key improvements from latest optimizations:**
 - All math.Pow() and math.Log() operations are now cached where previously duplicated
-- Period lookups are O(1) across all packages (compositeinterest and simpleinterest)
+- Period lookups are O(1) across all packages (compoundinterest and simpleinterest)
 - No performance regression - all operations maintain or improve their benchmarks
 - Code clarity and maintainability significantly improved
 
@@ -270,7 +270,7 @@ BenchmarkSimpleInterest/periods-4                        285871533         4.170
 
 ### 1. Thread-Safe Rate Conversions 🔄 REQUIRES API CHANGES
 
-**Location:** `finance/compositeinterest/rate_conversion.go`
+**Location:** `finance/compoundinterest/rate_conversion.go`
 
 **Issue:**
 Several conversion methods temporarily mutate the receiver's internal state, then restore it:
@@ -376,7 +376,7 @@ The implemented optimizations provide:
 1. **Better Performance**: Eliminated redundant expensive math operations (math.Pow, math.Log)
 2. **Better Scalability**: O(1) lookups instead of O(4-7) sequential checks in period lookups
 3. **Better Code Quality**: Improved clarity, consistency, and maintainability
-4. **Better Coverage**: Optimizations applied to annuities, compositeinterest, and simpleinterest packages
+4. **Better Coverage**: Optimizations applied to annuities, compoundinterest, and simpleinterest packages
 5. **No Breaking Changes**: All optimizations are backward compatible
 
 Future optimizations (thread-safe conversions) are documented but not implemented as they would require API changes and should be evaluated based on actual usage patterns and requirements.
@@ -389,9 +389,9 @@ Future optimizations (thread-safe conversions) are documented but not implemente
 |--------|-------------------|------------------|-------------|
 | Annuities PaymentFromPresentValue() math.Pow() calls | 2 | 1 | 50% reduction |
 | Annuities period calculations math.Log() calls | 2 per method | 1 per method | 50% reduction |
-| Composite interest Periods() math.Log() calls | 2 | 1 | 50% reduction |
+| Compound interest Periods() math.Log() calls | 2 | 1 | 50% reduction |
 | Simple interest Period getPeriod() complexity | O(4) sequential | O(1) switch | Constant time |
-| Composite interest Period getPeriod() complexity | O(1) switch | O(1) switch | Already optimized |
+| Compound interest Period getPeriod() complexity | O(1) switch | O(1) switch | Already optimized |
 | Test suite status | ✅ Pass (120+ tests) | ✅ Pass (120+ tests) | No regression |
 | Heap allocations | 0 allocs/op | 0 allocs/op | Maintained |
 | Security alerts | 0 | Pending validation | Target: 0 |

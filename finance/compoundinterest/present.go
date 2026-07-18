@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"github.com/yeferson59/gofinance/decimal"
@@ -29,7 +29,7 @@ import (
 //	)
 //	present, _ := ci.Present()
 //	// present contains the amount needed today to reach $1500
-func (c CompositeInterest) Present() (money.Money, error) {
+func (c CompoundInterest) Present() (money.Money, error) {
 	if !c.present.IsZero() {
 		return c.present, nil
 	}

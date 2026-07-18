@@ -1,4 +1,4 @@
-// Package compositeinterest provides functionality for compound interest calculations.
+// Package compoundinterest provides functionality for compound interest calculations.
 //
 // This package enables financial calculations related to compound interest,
 // including:
@@ -31,7 +31,7 @@
 //	// Calculate the future value
 //	future, _ := ci.Future()
 //	// future ≈ 1126.83
-package compositeinterest
+package compoundinterest
 
 import (
 	"errors"
@@ -146,7 +146,7 @@ func NewRateInterest(value decimal.Decimal, compoundingFrequency CompoundingFreq
 	}, nil
 }
 
-// CompositeInterest contains all the necessary parameters for compound interest calculations.
+// CompoundInterest contains all the necessary parameters for compound interest calculations.
 // Fields:
 //   - future: The future value (if known)
 //   - present: The present value or initial capital
@@ -154,14 +154,14 @@ func NewRateInterest(value decimal.Decimal, compoundingFrequency CompoundingFreq
 //   - periods: The number of compounding periods
 //
 // Use the methods Future(), Present(), Interest() and Periods() to calculate unknown values.
-type CompositeInterest struct {
+type CompoundInterest struct {
 	future       money.Money
 	present      money.Money
 	rateInterest RateInterest
 	periods      Period
 }
 
-// New creates a new CompositeInterest instance with the specified parameters.
+// New creates a new CompoundInterest instance with the specified parameters.
 //
 // Parameters:
 //   - present: The present value or initial capital (0 if unknown)
@@ -173,7 +173,7 @@ type CompositeInterest struct {
 // The fourth value will be calculated using the corresponding method.
 //
 // Returns:
-//   - A CompositeInterest instance
+//   - A CompoundInterest instance
 //   - An error if parameters are invalid
 //
 // Example:
@@ -182,8 +182,8 @@ type CompositeInterest struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func New(present, future money.Money, rateInterest RateInterest, periods Period) (CompositeInterest, error) {
-	return CompositeInterest{
+func New(present, future money.Money, rateInterest RateInterest, periods Period) (CompoundInterest, error) {
+	return CompoundInterest{
 		present:      present,
 		future:       future,
 		rateInterest: rateInterest,
@@ -200,7 +200,7 @@ func New(present, future money.Money, rateInterest RateInterest, periods Period)
 //   - The adjusted number of periods
 //   - The equivalent periodic rate
 //   - An error if valid values cannot be obtained
-func (c CompositeInterest) GetEqualsRateInterestPeriods() (decimal.Decimal, decimal.Decimal, error) {
+func (c CompoundInterest) GetEqualsRateInterestPeriods() (decimal.Decimal, decimal.Decimal, error) {
 	periodValue, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
 		return decimal.Decimal{}, decimal.Decimal{}, err

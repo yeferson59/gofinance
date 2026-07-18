@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import "github.com/yeferson59/gofinance/decimal"
 
@@ -26,7 +26,7 @@ import "github.com/yeferson59/gofinance/decimal"
 //	)
 //	rate, _ := ci.Interest()
 //	// rate contains the calculated periodic interest rate
-func (c CompositeInterest) Interest() (decimal.Decimal, error) {
+func (c CompoundInterest) Interest() (decimal.Decimal, error) {
 	if !c.rateInterest.value.IsZero() {
 		return c.rateInterest.value, nil
 	}

@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"math"

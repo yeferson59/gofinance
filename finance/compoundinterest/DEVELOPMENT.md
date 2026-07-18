@@ -1,11 +1,11 @@
 # Development Guide - Composite Interest Package
 
-This guide provides detailed information for developers working with the `compositeinterest` package.
+This guide provides detailed information for developers working with the `compoundinterest` package.
 
 ## Project Structure
 
 ```
-compositeinterest/
+compoundinterest/
 ├── README.md                      # Main package documentation
 ├── DEVELOPMENT.md                 # This guide
 ├── EXAMPLES.md                    # Usage examples
@@ -86,26 +86,26 @@ d_a = i_a / (1 + i_a)  (where d_a is annual anticipated rate)
 ### 1. Create a Rate
 
 ```go
-rate, err := compositeinterest.NewRateInterest(
+rate, err := compoundinterest.NewRateInterest(
     0.12,                                    // value
-    compositeinterest.Monthly,               // frequency
-    compositeinterest.RateEffectyNominal,    // type
+    compoundinterest.Monthly,               // frequency
+    compoundinterest.RateEffectyNominal,    // type
 )
 ```
 
 ### 2. Create a Period
 
 ```go
-period, err := compositeinterest.NewPeriod(
+period, err := compoundinterest.NewPeriod(
     12,                              // number of periods
-    compositeinterest.Monthly,       // frequency
+    compoundinterest.Monthly,       // frequency
 )
 ```
 
-### 3. Create a CompositeInterest Object
+### 3. Create a CompoundInterest Object
 
 ```go
-ci, err := compositeinterest.New(
+ci, err := compoundinterest.New(
     1000,        // present (present value)
     0,           // future (0 if to be calculated)
     rate,        // interest rate
@@ -170,16 +170,16 @@ if err != nil {
 
 ```bash
 # All tests
-go test ./finance/compositeinterest -v
+go test ./finance/compoundinterest -v
 
 # Tests from a specific file
-go test -run TestFuture ./finance/compositeinterest
+go test -run TestFuture ./finance/compoundinterest
 
 # With coverage
-go test ./finance/compositeinterest -cover
+go test ./finance/compoundinterest -cover
 
 # Detailed coverage
-go test ./finance/compositeinterest -coverprofile=coverage.out
+go test ./finance/compoundinterest -coverprofile=coverage.out
 go tool cover -html=coverage.out
 ```
 
@@ -190,14 +190,14 @@ go tool cover -html=coverage.out
 ```go
 func TestNewFunctionality(t *testing.T) {
     // Arrange: Prepare data
-    rate, err := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+    rate, err := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
     require.NoError(t, err)
 
-    period, err := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, err := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
     require.NoError(t, err)
 
     // Act: Execute the operation
-    ci, err := compositeinterest.New(1000, 0, rate, period)
+    ci, err := compoundinterest.New(1000, 0, rate, period)
     require.NoError(t, err)
 
     result, err := ci.Future()
@@ -221,9 +221,9 @@ func TestNewFunctionality(t *testing.T) {
 
 ```go
 // $10,000 loan with 2% nominal monthly for 24 months
-rate, _ := compositeinterest.NewRateInterest(0.24, compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
-period, _ := compositeinterest.NewPeriod(24, compositeinterest.Monthly)
-ci, _ := compositeinterest.New(10000, 0, rate, period)
+rate, _ := compoundinterest.NewRateInterest(0.24, compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
+period, _ := compoundinterest.NewPeriod(24, compoundinterest.Monthly)
+ci, _ := compoundinterest.New(10000, 0, rate, period)
 amount, _ := ci.Future()
 ```
 
@@ -231,9 +231,9 @@ amount, _ := ci.Future()
 
 ```go
 // $5,000 investment with 8% effective annual for 3 years
-rate, _ := compositeinterest.NewRateInterest(0.08, compositeinterest.Annually, compositeinterest.RateEffectyAnnually)
-period, _ := compositeinterest.NewPeriod(3, compositeinterest.Annually)
-ci, _ := compositeinterest.New(5000, 0, rate, period)
+rate, _ := compoundinterest.NewRateInterest(0.08, compoundinterest.Annually, compoundinterest.RateEffectyAnnually)
+period, _ := compoundinterest.NewPeriod(3, compoundinterest.Annually)
+ci, _ := compoundinterest.New(5000, 0, rate, period)
 future, _ := ci.Future()
 ```
 
@@ -241,9 +241,9 @@ future, _ := ci.Future()
 
 ```go
 // $50,000 bill discounted at 10% annual anticipated rate
-rate, _ := compositeinterest.NewRateInterest(0.10, compositeinterest.Annually, compositeinterest.RateAnticipateEffectyAnnually)
-period, _ := compositeinterest.NewPeriod(1, compositeinterest.Annually)
-ci, _ := compositeinterest.New(0, 50000, rate, period)
+rate, _ := compoundinterest.NewRateInterest(0.10, compoundinterest.Annually, compoundinterest.RateAnticipateEffectyAnnually)
+period, _ := compoundinterest.NewPeriod(1, compoundinterest.Annually)
+ci, _ := compoundinterest.New(0, 50000, rate, period)
 present, _ := ci.Present()
 ```
 
@@ -260,12 +260,12 @@ present, _ := ci.Present()
 ```go
 // ❌ Inefficient: Creates rate 1000 times
 for i := 0; i < 1000; i++ {
-    rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+    rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
     // ...
 }
 
 // ✅ Efficient: Creates once
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
 for i := 0; i < 1000; i++ {
     // Reuse rate
 }

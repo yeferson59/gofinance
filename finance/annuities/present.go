@@ -6,7 +6,7 @@ import (
 )
 
 func (a Annuity) Present() (money.Money, error) {
-	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
 	}
@@ -25,7 +25,7 @@ func (a Annuity) Present() (money.Money, error) {
 }
 
 func (a Annuity) AnticipatePresent() (money.Money, error) {
-	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
 	}

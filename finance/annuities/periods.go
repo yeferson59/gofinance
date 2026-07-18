@@ -23,12 +23,12 @@ import "github.com/yeferson59/gofinance/decimal"
 //	periods, err := ann.PeriodsWithPresent()
 //	// periods is how many payment periods needed to pay off $5,000 with $500 payments
 func (a Annuity) PeriodsWithPresent() (decimal.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	present, err := a.compositeInterest.Present()
+	present, err := a.compoundInterest.Present()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -77,12 +77,12 @@ func (a Annuity) PeriodsWithPresent() (decimal.Decimal, error) {
 //	periods, err := ann.PeriodsWithFuture()
 //	// periods is how many payment periods needed to accumulate $10,000 with $500 payments
 func (a Annuity) PeriodsWithFuture() (decimal.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	future, err := a.compositeInterest.Future()
+	future, err := a.compoundInterest.Future()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -118,12 +118,12 @@ func (a Annuity) PeriodsWithFuture() (decimal.Decimal, error) {
 // periods, dividing the present value by (1+i) first reduces this to the
 // same ordinary formula: n = ln(PMT / (PMT - [PV/(1+i)] × i)) / ln(1+i)
 func (a Annuity) AnticipatePeriodsWithPresent() (decimal.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	present, err := a.compositeInterest.Present()
+	present, err := a.compoundInterest.Present()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -166,12 +166,12 @@ func (a Annuity) AnticipatePeriodsWithPresent() (decimal.Decimal, error) {
 // periods, dividing the future value by (1+i) first reduces this to the
 // same ordinary formula: n = ln(([FV/(1+i)] × i + PMT) / PMT) / ln(1+i)
 func (a Annuity) AnticipatePeriodsWithFuture() (decimal.Decimal, error) {
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	future, err := a.compositeInterest.Future()
+	future, err := a.compoundInterest.Future()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

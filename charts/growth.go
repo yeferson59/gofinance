@@ -1,4 +1,4 @@
-// Package charts: this file renders compositeinterest.GrowthSchedule
+// Package charts: this file renders compoundinterest.GrowthSchedule
 // (plain compound interest growth, no periodic contributions) as
 // go-echarts line charts.
 package charts
@@ -6,7 +6,7 @@ package charts
 import (
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 // changePercentPrecision is the number of decimal digits used to render
@@ -16,7 +16,7 @@ const changePercentPrecision = 6
 
 // GrowthXAxis returns the period indexes (0..len(schedule)-1) used as the X
 // axis for every chart in this file.
-func GrowthXAxis(schedule []compositeinterest.GrowthSchedule) []any {
+func GrowthXAxis(schedule []compoundinterest.GrowthSchedule) []any {
 	xAxis := make([]any, 0, len(schedule))
 
 	for i := range schedule {
@@ -29,7 +29,7 @@ func GrowthXAxis(schedule []compositeinterest.GrowthSchedule) []any {
 // GrowthBalance extracts the per-period balance series from schedule,
 // rounding each value to its currency's own precision. It returns an error
 // if the currency's precision cannot be determined.
-func GrowthBalance(schedule []compositeinterest.GrowthSchedule) ([]opts.LineData, error) {
+func GrowthBalance(schedule []compoundinterest.GrowthSchedule) ([]opts.LineData, error) {
 	items := make([]opts.LineData, 0, len(schedule))
 
 	if len(schedule) == 0 {
@@ -52,7 +52,7 @@ func GrowthBalance(schedule []compositeinterest.GrowthSchedule) ([]opts.LineData
 // period's balance minus the previous one, i.e. the interest earned that
 // period), rounding to its currency's own precision. It returns an error if
 // the currency's precision cannot be determined.
-func GrowthChange(schedule []compositeinterest.GrowthSchedule) ([]opts.LineData, error) {
+func GrowthChange(schedule []compoundinterest.GrowthSchedule) ([]opts.LineData, error) {
 	items := make([]opts.LineData, 0, len(schedule))
 
 	if len(schedule) == 0 {
@@ -75,7 +75,7 @@ func GrowthChange(schedule []compositeinterest.GrowthSchedule) ([]opts.LineData,
 // schedule. For plain compound interest this is constant across periods
 // (it's always the configured rate), unlike the equivalent series for an
 // investment with contributions.
-func GrowthChangePercent(schedule []compositeinterest.GrowthSchedule) []opts.LineData {
+func GrowthChangePercent(schedule []compoundinterest.GrowthSchedule) []opts.LineData {
 	items := make([]opts.LineData, 0, len(schedule))
 
 	for _, s := range schedule {
@@ -88,7 +88,7 @@ func GrowthChangePercent(schedule []compositeinterest.GrowthSchedule) []opts.Lin
 // GrowthSumInterest extracts the per-period cumulative interest series from
 // schedule, rounding each value to its currency's own precision. It returns
 // an error if the currency's precision cannot be determined.
-func GrowthSumInterest(schedule []compositeinterest.GrowthSchedule) ([]opts.LineData, error) {
+func GrowthSumInterest(schedule []compoundinterest.GrowthSchedule) ([]opts.LineData, error) {
 	items := make([]opts.LineData, 0, len(schedule))
 
 	if len(schedule) == 0 {
@@ -110,7 +110,7 @@ func GrowthSumInterest(schedule []compositeinterest.GrowthSchedule) ([]opts.Line
 // GrowthChart builds a line chart with the Balance and cumulative interest
 // (SumInterest) series over the schedule's periods. opt overrides
 // DefaultChartOption when provided.
-func GrowthChart(schedule []compositeinterest.GrowthSchedule, opt ...ChartOption) (*echartslib.Line, error) {
+func GrowthChart(schedule []compoundinterest.GrowthSchedule, opt ...ChartOption) (*echartslib.Line, error) {
 	option := DefaultChartOption()
 	if len(opt) > 0 {
 		option = opt[0]
@@ -155,7 +155,7 @@ func GrowthChart(schedule []compositeinterest.GrowthSchedule, opt ...ChartOption
 // GrowthBalanceOnlyChart builds a line chart with only the Balance series
 // over the schedule's periods. opt overrides DefaultChartOption when
 // provided.
-func GrowthBalanceOnlyChart(schedule []compositeinterest.GrowthSchedule, opt ...ChartOption) (*echartslib.Line, error) {
+func GrowthBalanceOnlyChart(schedule []compoundinterest.GrowthSchedule, opt ...ChartOption) (*echartslib.Line, error) {
 	option := DefaultChartOption()
 	if len(opt) > 0 {
 		option = opt[0]
@@ -188,7 +188,7 @@ func GrowthBalanceOnlyChart(schedule []compositeinterest.GrowthSchedule, opt ...
 // series (the interest earned each period, which grows over time even
 // though the rate is constant) over the schedule's periods. opt overrides
 // DefaultChartOption when provided.
-func GrowthChangeChart(schedule []compositeinterest.GrowthSchedule, opt ...ChartOption) (*echartslib.Line, error) {
+func GrowthChangeChart(schedule []compoundinterest.GrowthSchedule, opt ...ChartOption) (*echartslib.Line, error) {
 	option := DefaultChartOption()
 	if len(opt) > 0 {
 		option = opt[0]

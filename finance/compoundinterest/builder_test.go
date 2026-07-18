@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"math"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestBuilderChainedBuildDefaultsToPeriodicRate(t *testing.T) {
-	ci, err := NewComposite().
+	ci, err := NewCompound().
 		Present(1000, money.USD).
 		Rate(0.05).
 		Periods(12).
@@ -30,12 +30,12 @@ func TestBuilderChainedBuildDefaultsToPeriodicRate(t *testing.T) {
 	}
 }
 
-func TestCompositeConfigMoneySetters(t *testing.T) {
+func TestCompoundConfigMoneySetters(t *testing.T) {
 	present := money.MustMoneyFromFloat64(1000, money.USD)
 	future := money.MustMoneyFromFloat64(1500, money.USD)
 	rate := decimal.MustFromFloat64(0.05)
 
-	config := NewComposite().
+	config := NewCompound().
 		PresentMoney(present).
 		FutureMoney(future).
 		RateMoney(rate).
@@ -59,8 +59,8 @@ func TestCompositeConfigMoneySetters(t *testing.T) {
 	}
 }
 
-func TestCompositeConfigFutureSetter(t *testing.T) {
-	config := NewComposite().Future(1500, money.USD)
+func TestCompoundConfigFutureSetter(t *testing.T) {
+	config := NewCompound().Future(1500, money.USD)
 
 	if config.future.Currency() != money.USD {
 		t.Fatalf("expected USD currency, got %v", config.future.Currency())
@@ -70,15 +70,15 @@ func TestCompositeConfigFutureSetter(t *testing.T) {
 	}
 }
 
-func TestCompositeConfigFrequencyConvenienceMethods(t *testing.T) {
+func TestCompoundConfigFrequencyConvenienceMethods(t *testing.T) {
 	tests := []struct {
 		name     string
-		config   CompositeConfig
+		config   CompoundConfig
 		expected CompoundingFrequency
 	}{
-		{"annually", NewComposite().Annually(), Annually},
-		{"quarterly", NewComposite().Quarterly(), QuarterlyOne},
-		{"daily", NewComposite().Daily(), Daily},
+		{"annually", NewCompound().Annually(), Annually},
+		{"quarterly", NewCompound().Quarterly(), QuarterlyOne},
+		{"daily", NewCompound().Daily(), Daily},
 	}
 
 	for _, tt := range tests {
@@ -90,8 +90,8 @@ func TestCompositeConfigFrequencyConvenienceMethods(t *testing.T) {
 	}
 }
 
-func TestCompositeConfigMustBuild(t *testing.T) {
-	ci := NewComposite().
+func TestCompoundConfigMustBuild(t *testing.T) {
+	ci := NewCompound().
 		Present(1000, money.USD).
 		Rate(0.05).
 		Periods(12).
@@ -109,20 +109,20 @@ func TestCompositeConfigMustBuild(t *testing.T) {
 	}
 }
 
-func TestCompositeConfigMustBuildPanicsOnInvalidParams(t *testing.T) {
+func TestCompoundConfigMustBuildPanicsOnInvalidParams(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic for invalid period")
 		}
 	}()
 
-	NewComposite().Periods(-1).MustBuild()
+	NewCompound().Periods(-1).MustBuild()
 }
 
 func TestGetEqualsRateInterestPeriodsPropagatesError(t *testing.T) {
-	// A zero-value CompositeInterest has an invalid (empty) period frequency,
+	// A zero-value CompoundInterest has an invalid (empty) period frequency,
 	// so the error must be surfaced instead of silently returning zero values.
-	var ci CompositeInterest
+	var ci CompoundInterest
 	if _, _, err := ci.GetEqualsRateInterestPeriods(); err == nil {
 		t.Error("expected error for invalid period, got nil")
 	}

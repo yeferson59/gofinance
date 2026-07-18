@@ -33,7 +33,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 - Future value, present value, interest, rate, and period calculations
 - Fluent builder API with day/week/month/year time units
 
-### 🔄 **Compound Interest** (`finance/compositeinterest`)
+### 🔄 **Compound Interest** (`finance/compoundinterest`)
 
 - Future/present value and period calculations with flexible compounding frequencies (daily, monthly, bimonthly, quarterly, semi-annual, annual)
 - Rate conversions between periodic, nominal, effective annual, and anticipated rate types
@@ -158,17 +158,17 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
     "github.com/yeferson59/gofinance/money"
 )
 
 func main() {
-    ci := compositeinterest.NewComposite().
+    ci := compoundinterest.NewCompound().
         Present(1000, money.USD).
         Rate(0.05).
         Periods(12).
         Monthly().
-        RateType(compositeinterest.RateEffectyPeriodic).
+        RateType(compoundinterest.RateEffectyPeriodic).
         MustBuild()
 
     future, err := ci.Future()
@@ -252,7 +252,7 @@ gofinance/
 │
 ├── finance/
 │   ├── simpleinterest/            # Simple interest (fluent builder)
-│   ├── compositeinterest/         # Compound interest and rate conversions
+│   ├── compoundinterest/         # Compound interest and rate conversions
 │   ├── annuities/                 # Annuities and amortization schedules
 │   ├── returns/                   # CAGR, ROI, returns & inflation adjustment
 │   ├── investment/                # NPV/IRR, XNPV/XIRR, perpetuities

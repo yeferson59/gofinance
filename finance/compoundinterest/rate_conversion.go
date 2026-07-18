@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import "github.com/yeferson59/gofinance/decimal"
 

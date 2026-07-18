@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 
 // ErrInvalidPeriods is returned by BuildGrowthSchedule when nper doesn't
 // represent a positive whole number of periods.
-var ErrInvalidPeriods = errors.New("compositeinterest: number of periods must be positive")
+var ErrInvalidPeriods = errors.New("compoundinterest: number of periods must be positive")
 
 // GrowthSchedule is one row of a period-by-period compound interest growth
 // table: the balance at that period, how it changed from the previous

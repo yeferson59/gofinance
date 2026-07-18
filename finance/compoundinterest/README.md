@@ -4,7 +4,7 @@ Package for performing compound interest calculations in Go.
 
 ## Description
 
-The `compositeinterest` package provides a complete solution for compound interest financial calculations. It allows you to calculate present values, future values, interest rates, and periods, as well as perform conversions between different types of rates.
+The `compoundinterest` package provides a complete solution for compound interest financial calculations. It allows you to calculate present values, future values, interest rates, and periods, as well as perform conversions between different types of rates.
 
 ## Features
 
@@ -49,19 +49,19 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/finance/compoundinterest"
 )
 
 func main() {
   // Create a monthly interest rate of 1% (periodic)
-  rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+  rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
 
   // Create a period of 12 months
-  period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+  period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
   // Create a compound interest object
   // Parameters: (present=1000, future=0, rateInterest, period)
-  ci, _ := compositeinterest.New(1000, 0, rate, period)
+  ci, _ := compoundinterest.New(1000, 0, rate, period)
 
   // Calculate future value
   future, _ := ci.Future()
@@ -74,10 +74,10 @@ func main() {
 
 ```go
 // Determine how much money to invest today to get $1000 in 12 months
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
-ci, _ := compositeinterest.New(0, 1000, rate, period)
+ci, _ := compoundinterest.New(0, 1000, rate, period)
 present, _ := ci.Present()
 fmt.Printf("Present value: $%.2f\n", present)
 // Output: Present value: $887.45
@@ -87,10 +87,10 @@ fmt.Printf("Present value: $%.2f\n", present)
 
 ```go
 // Find the interest rate between two values
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
-ci, _ := compositeinterest.New(1000, 1126.83, rate, period)
+ci, _ := compoundinterest.New(1000, 1126.83, rate, period)
 interest, _ := ci.Interest()
 fmt.Printf("Periodic rate: %.4f (%.2f%%)\n", interest, interest*100)
 // Output: Periodic rate: 0.0100 (1.00%)
@@ -100,10 +100,10 @@ fmt.Printf("Periodic rate: %.4f (%.2f%%)\n", interest, interest*100)
 
 ```go
 // Determine how many periods are needed for money to grow from $1000 to $2000
-rate, _ := compositeinterest.NewRateInterest(0.05, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(1, compositeinterest.Monthly) // initial value
+rate, _ := compoundinterest.NewRateInterest(0.05, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(1, compoundinterest.Monthly) // initial value
 
-ci, _ := compositeinterest.New(1000, 2000, rate, period)
+ci, _ := compoundinterest.New(1000, 2000, rate, period)
 periods, _ := ci.Periods()
 fmt.Printf("Number of periods: %.2f months\n", periods)
 ```
@@ -112,7 +112,7 @@ fmt.Printf("Number of periods: %.2f months\n", periods)
 
 ```go
 // Convert an annual nominal rate of 12% to monthly periodic rate
-rate, _ := compositeinterest.NewRateInterest(0.12, compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
+rate, _ := compoundinterest.NewRateInterest(0.12, compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
 
 periodic, _ := rate.RatePeriodic()
 fmt.Printf("Periodic rate: %.4f\n", periodic)
@@ -220,7 +220,7 @@ Represents a rate with its frequency and type:
 rate, err := NewRateInterest(0.12, Monthly, RateEffectyNominal)
 ```
 
-### CompositeInterest
+### CompoundInterest
 
 Contains all parameters for a calculation:
 
@@ -260,8 +260,8 @@ ci, err := New(1000, 1636.36, rate, period)
 
 ```go
 // Convert a monthly rate of 1% to its equivalent quarterly rate
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-quarterly, _ := rate.RatePeriodicToPeriodic(compositeinterest.QuarterlyOne)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+quarterly, _ := rate.RatePeriodicToPeriodic(compoundinterest.QuarterlyOne)
 fmt.Printf("Equivalent quarterly rate: %.4f\n", quarterly)
 ```
 
@@ -269,7 +269,7 @@ fmt.Printf("Equivalent quarterly rate: %.4f\n", quarterly)
 
 ```go
 // Convert an ordinary rate to its equivalent anticipated rate
-rate, _ := compositeinterest.NewRateInterest(0.10, compositeinterest.Monthly, compositeinterest.RateEffectyAnnually)
+rate, _ := compoundinterest.NewRateInterest(0.10, compoundinterest.Monthly, compoundinterest.RateEffectyAnnually)
 anticipatedNominal, _ := rate.ToAnticipateNominal()
 fmt.Printf("Anticipated nominal rate: %.4f\n", anticipatedNominal)
 ```
@@ -280,13 +280,13 @@ The package includes a comprehensive test suite of 105 tests with 86.5% coverage
 
 ```bash
 # Run all tests
-go test ./finance/compositeinterest -v
+go test ./finance/compoundinterest -v
 
 # Run tests with coverage
-go test ./finance/compositeinterest -cover
+go test ./finance/compoundinterest -cover
 
 # Run a specific test
-go test -run TestFutureWithPeriodicRate ./finance/compositeinterest
+go test -run TestFutureWithPeriodicRate ./finance/compoundinterest
 ```
 
 ### Test Files

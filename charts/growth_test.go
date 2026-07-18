@@ -7,16 +7,16 @@ import (
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/compoundinterest"
 	"github.com/yeferson59/gofinance/money"
 )
 
-func buildTestGrowthSchedule(t *testing.T, currency money.Currency, presentAmount float64) []compositeinterest.GrowthSchedule {
+func buildTestGrowthSchedule(t *testing.T, currency money.Currency, presentAmount float64) []compoundinterest.GrowthSchedule {
 	t.Helper()
 
 	present := money.MustMoneyFromFloat64(presentAmount, currency)
 
-	rows, err := compositeinterest.BuildGrowthSchedule(present, decimal.MustFromFloat64(0.01), decimal.MustFromFloat64(12))
+	rows, err := compoundinterest.BuildGrowthSchedule(present, decimal.MustFromFloat64(0.01), decimal.MustFromFloat64(12))
 	if err != nil {
 		t.Fatalf("failed to build test growth schedule: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestGrowthSeriesRoundToCurrencyPrecision(t *testing.T) {
 	jpySchedule := buildTestGrowthSchedule(t, money.JPY, 1000)
 	usdSchedule := buildTestGrowthSchedule(t, money.USD, 1000)
 
-	seriesFns := map[string]func([]compositeinterest.GrowthSchedule) ([]opts.LineData, error){
+	seriesFns := map[string]func([]compoundinterest.GrowthSchedule) ([]opts.LineData, error){
 		"Balance":     GrowthBalance,
 		"Change":      GrowthChange,
 		"SumInterest": GrowthSumInterest,
@@ -86,7 +86,7 @@ func TestGrowthSeriesRoundToCurrencyPrecision(t *testing.T) {
 }
 
 func TestGrowthSeriesEmptySchedule(t *testing.T) {
-	seriesFns := map[string]func([]compositeinterest.GrowthSchedule) ([]opts.LineData, error){
+	seriesFns := map[string]func([]compoundinterest.GrowthSchedule) ([]opts.LineData, error){
 		"Balance":     GrowthBalance,
 		"Change":      GrowthChange,
 		"SumInterest": GrowthSumInterest,
@@ -134,7 +134,7 @@ func TestGrowthChangePercentIsConstant(t *testing.T) {
 func TestGrowthChartBuilders(t *testing.T) {
 	schedule := buildTestGrowthSchedule(t, money.USD, 1000)
 
-	builders := map[string]func([]compositeinterest.GrowthSchedule, ...ChartOption) (*echartslib.Line, error){
+	builders := map[string]func([]compoundinterest.GrowthSchedule, ...ChartOption) (*echartslib.Line, error){
 		"GrowthChart":            GrowthChart,
 		"GrowthBalanceOnlyChart": GrowthBalanceOnlyChart,
 		"GrowthChangeChart":      GrowthChangeChart,

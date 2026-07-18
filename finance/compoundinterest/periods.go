@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import "github.com/yeferson59/gofinance/decimal"
 
@@ -26,7 +26,7 @@ import "github.com/yeferson59/gofinance/decimal"
 //	)
 //	periods, _ := ci.Periods()
 //	// periods contains how many periods needed to reach $1500 from $1000
-func (c CompositeInterest) Periods() (decimal.Decimal, error) {
+func (c CompoundInterest) Periods() (decimal.Decimal, error) {
 	if periodValue, _, err := c.periods.getPeriod(); err == nil && !periodValue.IsZero() {
 		return periodValue, nil
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/annuities"
 	"github.com/yeferson59/gofinance/finance/bonds"
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/compoundinterest"
 	"github.com/yeferson59/gofinance/finance/daycount"
 	"github.com/yeferson59/gofinance/finance/depreciation"
 	dcf "github.com/yeferson59/gofinance/finance/investment"
@@ -208,14 +208,14 @@ func daycountExample() {
 }
 
 func compoundExample() {
-	fmt.Println("=== Composite Interest ===")
+	fmt.Println("=== Compound Interest ===")
 
-	ci := compositeinterest.NewComposite().
+	ci := compoundinterest.NewCompound().
 		Present(1000, money.USD).
 		Rate(0.05).
 		Periods(12).
 		Monthly().
-		RateType(compositeinterest.RateEffectyPeriodic).
+		RateType(compoundinterest.RateEffectyPeriodic).
 		MustBuild()
 
 	future, _ := ci.Future()
@@ -400,7 +400,7 @@ func growthExample() {
 	rate := decimal.MustFromFloat64(0.01)
 	periods := decimal.MustFromFloat64(24)
 
-	schedule, err := compositeinterest.BuildGrowthSchedule(present, rate, periods)
+	schedule, err := compoundinterest.BuildGrowthSchedule(present, rate, periods)
 	if err != nil {
 		fmt.Println("growth schedule error:", err)
 		return

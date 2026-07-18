@@ -4,12 +4,12 @@ import (
 	"errors"
 
 	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/compoundinterest"
 	"github.com/yeferson59/gofinance/money"
 )
 
 func (a Annuity) Future() (money.Money, error) {
-	if future, err := a.compositeInterest.Future(); err == nil && !future.IsZero() {
+	if future, err := a.compoundInterest.Future(); err == nil && !future.IsZero() {
 		return future, nil
 	}
 
@@ -22,7 +22,7 @@ func (a Annuity) Future() (money.Money, error) {
 // pre-set or principal-derived future value, so it can be combined with
 // principalFuture in FutureWithContributions.
 func (a Annuity) contributionsFuture() (money.Money, error) {
-	periods, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
 	}
@@ -41,7 +41,7 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 }
 
 func (a Annuity) AnticipateFuture() (money.Money, error) {
-	if future, err := a.compositeInterest.Future(); err == nil && !future.IsZero() {
+	if future, err := a.compoundInterest.Future(); err == nil && !future.IsZero() {
 		return future, nil
 	}
 
@@ -57,7 +57,7 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	_, rateInterest, err := a.compositeInterest.GetEqualsRateInterestPeriods()
+	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
 	}
@@ -70,8 +70,8 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 // principal was configured, it returns zero instead of an error, so it can be
 // added freely to contributionsFuture/contributionsAnticipateFuture.
 func (a Annuity) principalFuture() (money.Money, error) {
-	principal, err := a.compositeInterest.Future()
-	if errors.Is(err, compositeinterest.ErrInvalidOperation) {
+	principal, err := a.compoundInterest.Future()
+	if errors.Is(err, compoundinterest.ErrInvalidOperation) {
 		return money.MustMoneyFromFloat64(0, a.value.Currency()), nil
 	}
 	if err != nil {

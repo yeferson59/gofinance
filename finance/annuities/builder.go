@@ -2,7 +2,7 @@ package annuities
 
 import (
 	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/compoundinterest"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -30,8 +30,8 @@ type AnnuityConfig struct {
 	future    money.Money
 	periods   int
 	rate      float64
-	frequency compositeinterest.CompoundingFrequency
-	rateType  compositeinterest.TypeRate
+	frequency compoundinterest.CompoundingFrequency
+	rateType  compoundinterest.TypeRate
 }
 
 // NewAnnuity creates a new AnnuityConfig builder instance with default values.
@@ -52,8 +52,8 @@ type AnnuityConfig struct {
 //	    Monthly().
 func NewAnnuity() AnnuityConfig {
 	return AnnuityConfig{
-		frequency: compositeinterest.Monthly,
-		rateType:  compositeinterest.RateEffectyPeriodic,
+		frequency: compoundinterest.Monthly,
+		rateType:  compoundinterest.RateEffectyPeriodic,
 	}
 }
 
@@ -133,17 +133,17 @@ func (a AnnuityConfig) Periods(n int) AnnuityConfig {
 func (a AnnuityConfig) Years(n int) AnnuityConfig {
 	periodsPerYear := 12
 	switch a.frequency {
-	case compositeinterest.Daily:
+	case compoundinterest.Daily:
 		periodsPerYear = 365
-	case compositeinterest.Bimonthly:
+	case compoundinterest.Bimonthly:
 		periodsPerYear = 6
-	case compositeinterest.QuarterlyOne:
+	case compoundinterest.QuarterlyOne:
 		periodsPerYear = 4
-	case compositeinterest.QuarterlyTwo:
+	case compoundinterest.QuarterlyTwo:
 		periodsPerYear = 3
-	case compositeinterest.SemiAnnually:
+	case compoundinterest.SemiAnnually:
 		periodsPerYear = 2
-	case compositeinterest.Annually:
+	case compoundinterest.Annually:
 		periodsPerYear = 1
 	}
 
@@ -189,22 +189,22 @@ func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
 func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 	divisor := 12.0
 	switch a.frequency {
-	case compositeinterest.Daily:
+	case compoundinterest.Daily:
 		divisor = 365.0
-	case compositeinterest.Bimonthly:
+	case compoundinterest.Bimonthly:
 		divisor = 6.0
-	case compositeinterest.QuarterlyOne:
+	case compoundinterest.QuarterlyOne:
 		divisor = 4.0
-	case compositeinterest.QuarterlyTwo:
+	case compoundinterest.QuarterlyTwo:
 		divisor = 3.0
-	case compositeinterest.SemiAnnually:
+	case compoundinterest.SemiAnnually:
 		divisor = 2.0
-	case compositeinterest.Annually:
+	case compoundinterest.Annually:
 		divisor = 1.0
 	}
 
 	a.rate = r / divisor
-	a.rateType = compositeinterest.RateEffectyPeriodic
+	a.rateType = compoundinterest.RateEffectyPeriodic
 
 	return a
 }
@@ -226,7 +226,7 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 //	.NewAnnuity().EffectiveAnnualRate(0.2668)  // 26.68% effective annual, converts to ~2% monthly
 func (a AnnuityConfig) EffectiveAnnualRate(r float64) AnnuityConfig {
 	a.rate = r
-	a.rateType = compositeinterest.RateEffectyAnnually
+	a.rateType = compoundinterest.RateEffectyAnnually
 
 	return a
 }
@@ -238,7 +238,7 @@ func (a AnnuityConfig) EffectiveAnnualRate(r float64) AnnuityConfig {
 //
 //	.NewAnnuity().Monthly()
 func (a AnnuityConfig) Monthly() AnnuityConfig {
-	a.frequency = compositeinterest.Monthly
+	a.frequency = compoundinterest.Monthly
 
 	return a
 }
@@ -249,7 +249,7 @@ func (a AnnuityConfig) Monthly() AnnuityConfig {
 //
 //	.NewAnnuity().Annually()
 func (a AnnuityConfig) Annually() AnnuityConfig {
-	a.frequency = compositeinterest.Annually
+	a.frequency = compoundinterest.Annually
 
 	return a
 }
@@ -260,7 +260,7 @@ func (a AnnuityConfig) Annually() AnnuityConfig {
 //
 //	.NewAnnuity().Quarterly()
 func (a AnnuityConfig) Quarterly() AnnuityConfig {
-	a.frequency = compositeinterest.QuarterlyOne
+	a.frequency = compoundinterest.QuarterlyOne
 
 	return a
 }
@@ -281,7 +281,7 @@ func (a AnnuityConfig) Quarterly() AnnuityConfig {
 //	    Monthly().
 //	    Build()
 func (a AnnuityConfig) Build() (Annuity, error) {
-	rate, err := compositeinterest.NewRateInterest(
+	rate, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(a.rate),
 		a.frequency,
 		a.rateType,
@@ -290,7 +290,7 @@ func (a AnnuityConfig) Build() (Annuity, error) {
 		return Annuity{}, err
 	}
 
-	period, err := compositeinterest.NewPeriod(
+	period, err := compoundinterest.NewPeriod(
 		decimal.MustFromFloat64(float64(a.periods)),
 		a.frequency,
 	)

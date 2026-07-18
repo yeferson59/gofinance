@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"testing"
@@ -91,7 +91,7 @@ func TestNewPeriodWithDifferentsValues(t *testing.T) {
 	}
 }
 
-func TestNewCompositeInterestZeroValue(t *testing.T) {
+func TestNewCompoundInterestZeroValue(t *testing.T) {
 	presentMoney, err := money.New(0, 2, money.USD)
 	tx := assert.New(t)
 	tx.NoError(err)
@@ -120,12 +120,12 @@ func TestGetEqualsRateInterestPeriods_differentTime(t *testing.T) {
 	tx.NoError(err)
 	futureMoney, err := money.New(0, 2, money.USD)
 	tx.NoError(err)
-	compositeInterest, err := New(presentMoney, futureMoney, rate, period)
+	compoundInterest, err := New(presentMoney, futureMoney, rate, period)
 
-	tx.NotNil(compositeInterest)
+	tx.NotNil(compoundInterest)
 	tx.NoError(err)
 
-	future, err := compositeInterest.Future()
+	future, err := compoundInterest.Future()
 
 	tx.NoError(err)
 	// 2 bimonthly periods = 4 months; 5% nominal monthly => i = 0.05/12

@@ -7,21 +7,21 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/compoundinterest"
 	"github.com/yeferson59/gofinance/money"
 )
 
 func TestAnticipateFutureFromPaymentsOnly(t *testing.T) {
 	// With no principal or preset future value, AnticipateFuture must fall
 	// through to contributionsAnticipateFuture: FV_due = FV_ordinary × (1+i).
-	rate, err := compositeinterest.NewRateInterest(
+	rate, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(0.01),
-		compositeinterest.Monthly,
-		compositeinterest.RateEffectyPeriodic,
+		compoundinterest.Monthly,
+		compoundinterest.RateEffectyPeriodic,
 	)
 	require.NoError(t, err)
 
-	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
 	ann, err := New(money.MustMoneyFromFloat64(500, money.USD), money.MoneyZero, money.MoneyZero, period, rate)
@@ -38,10 +38,10 @@ func TestAnticipateFutureFromPaymentsOnly(t *testing.T) {
 func TestAnnuityFutureWithContributions(t *testing.T) {
 	// PV = 10000, PMT = 1000, i = 0.01, n = 12
 	// FV = PV×(1+i)^n + PMT×[(1+i)^n - 1]/i = 11268.2503 + 12682.5030 = 23950.7533
-	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -61,10 +61,10 @@ func TestAnnuityFutureWithContributions(t *testing.T) {
 func TestAnnuityFutureWithContributionsNoPrincipal(t *testing.T) {
 	// With no principal (present = 0), the result must equal the
 	// contributions-only future value.
-	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -84,10 +84,10 @@ func TestAnnuityFutureWithContributionsNoPrincipal(t *testing.T) {
 func TestAnnuityAnticipateFutureWithContributions(t *testing.T) {
 	// Same as above but contributions are made at the start of each period,
 	// so they earn one extra period of interest: 11268.2503 + 12809.3280 = 24077.5783
-	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(12), compositeinterest.Monthly)
+	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
 	require.NoError(t, err)
 
 	value, err := money.New(100000, 2, money.USD)
@@ -143,9 +143,9 @@ func TestContributionsFuturePropagatesPowOverflow(t *testing.T) {
 	// and the period count are astronomically large. This needs a 1000-period
 	// term, which newMonthlyPeriodicAnnuity's fixed 12 periods can't express,
 	// so it's built directly here instead.
-	period, err := compositeinterest.NewPeriod(decimal.MustFromFloat64(1000), compositeinterest.Monthly)
+	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(1000), compoundinterest.Monthly)
 	require.NoError(t, err)
-	rateInterest, err := compositeinterest.NewRateInterest(decimal.MustFromFloat64(1000), compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(1000), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
 	require.NoError(t, err)
 	annuity, err := New(
 		money.MustMoneyFromFloat64(1000, money.USD),
@@ -170,7 +170,7 @@ func TestContributionsFuturePropagatesDivideByZero(t *testing.T) {
 }
 
 func TestAnticipateFutureReturnsPresetFutureValue(t *testing.T) {
-	// When the underlying compositeInterest.Future() succeeds with a
+	// When the underlying compoundInterest.Future() succeeds with a
 	// nonzero value (present and rate both configured), AnticipateFuture
 	// must short-circuit and return it directly instead of deriving
 	// anything from the payment amount.
@@ -201,7 +201,7 @@ func TestPrincipalFuturePropagatesNonInvalidOperationError(t *testing.T) {
 
 	_, err := annuity.principalFuture()
 	assert.Error(t, err)
-	assert.NotErrorIs(t, err, compositeinterest.ErrInvalidOperation)
+	assert.NotErrorIs(t, err, compoundinterest.ErrInvalidOperation)
 }
 
 func TestFutureWithContributionsPropagatesContributionsError(t *testing.T) {

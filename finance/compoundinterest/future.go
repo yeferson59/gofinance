@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"github.com/yeferson59/gofinance/decimal"
@@ -29,7 +29,7 @@ import (
 //	)
 //	future, _ := ci.Future()
 //	// future contains the calculated future value
-func (c CompositeInterest) Future() (money.Money, error) {
+func (c CompoundInterest) Future() (money.Money, error) {
 	if !c.future.IsZero() {
 		return c.future, nil
 	}

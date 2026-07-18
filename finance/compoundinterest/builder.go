@@ -1,25 +1,25 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/money"
 )
 
-// CompositeConfig is a builder for creating CompositeInterest instances using a fluent API.
+// CompoundConfig is a builder for creating CompoundInterest instances using a fluent API.
 // It allows you to chain method calls to set the required parameters before building.
 //
-// Use NewComposite() to create a new builder instance, then chain the necessary methods,
-// and finally call Build() or MustBuild() to create the CompositeInterest.
+// Use NewCompound() to create a new builder instance, then chain the necessary methods,
+// and finally call Build() or MustBuild() to create the CompoundInterest.
 //
 // Example:
 //
-//	ci := NewComposite().
+//	ci := NewCompound().
 //	    Present(1000, money.USD).
 //	    Rate(0.05).
 //	    Periods(12).
 //	    Monthly().
 //	    MustBuild()
-type CompositeConfig struct {
+type CompoundConfig struct {
 	present   money.Money
 	future    money.Money
 	rate      decimal.Decimal
@@ -28,12 +28,12 @@ type CompositeConfig struct {
 	rateType  TypeRate
 }
 
-// NewComposite creates a new CompositeConfig builder instance.
+// NewCompound creates a new CompoundConfig builder instance.
 // The default rate type is RateEffectyPeriodic; use RateType() to change it.
 // You must set at least the present or future value, rate, periods, and frequency
 // before calling Build() or MustBuild().
-func NewComposite() CompositeConfig {
-	return CompositeConfig{
+func NewCompound() CompoundConfig {
+	return CompoundConfig{
 		rateType: RateEffectyPeriodic,
 	}
 }
@@ -47,8 +47,8 @@ func NewComposite() CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Present(1000, money.USD)
-func (c CompositeConfig) Present(amount float64, currency money.Currency) CompositeConfig {
+//	.NewCompound().Present(1000, money.USD)
+func (c CompoundConfig) Present(amount float64, currency money.Currency) CompoundConfig {
 	c.present = money.MustMoneyFromFloat64(amount, currency)
 	return c
 }
@@ -58,7 +58,7 @@ func (c CompositeConfig) Present(amount float64, currency money.Currency) Compos
 //
 // Parameters:
 //   - m: An existing Money instance representing the present value
-func (c CompositeConfig) PresentMoney(m money.Money) CompositeConfig {
+func (c CompoundConfig) PresentMoney(m money.Money) CompoundConfig {
 	c.present = m
 	return c
 }
@@ -72,8 +72,8 @@ func (c CompositeConfig) PresentMoney(m money.Money) CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Future(1500, money.USD)
-func (c CompositeConfig) Future(amount float64, currency money.Currency) CompositeConfig {
+//	.NewCompound().Future(1500, money.USD)
+func (c CompoundConfig) Future(amount float64, currency money.Currency) CompoundConfig {
 	c.future = money.MustMoneyFromFloat64(amount, currency)
 	return c
 }
@@ -83,7 +83,7 @@ func (c CompositeConfig) Future(amount float64, currency money.Currency) Composi
 //
 // Parameters:
 //   - m: An existing Money instance representing the future value
-func (c CompositeConfig) FutureMoney(m money.Money) CompositeConfig {
+func (c CompoundConfig) FutureMoney(m money.Money) CompoundConfig {
 	c.future = m
 	return c
 }
@@ -99,8 +99,8 @@ func (c CompositeConfig) FutureMoney(m money.Money) CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Rate(0.05)  // 5% interest rate
-func (c CompositeConfig) Rate(rate float64) CompositeConfig {
+//	.NewCompound().Rate(0.05)  // 5% interest rate
+func (c CompoundConfig) Rate(rate float64) CompoundConfig {
 	c.rate = decimal.MustFromFloat64(rate)
 	return c
 }
@@ -110,7 +110,7 @@ func (c CompositeConfig) Rate(rate float64) CompositeConfig {
 //
 // Parameters:
 //   - r: An existing Decimal instance representing the interest rate
-func (c CompositeConfig) RateMoney(r decimal.Decimal) CompositeConfig {
+func (c CompoundConfig) RateMoney(r decimal.Decimal) CompoundConfig {
 	c.rate = r
 	return c
 }
@@ -123,8 +123,8 @@ func (c CompositeConfig) RateMoney(r decimal.Decimal) CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Periods(12)  // 12 months, years, etc. based on frequency
-func (c CompositeConfig) Periods(n int) CompositeConfig {
+//	.NewCompound().Periods(12)  // 12 months, years, etc. based on frequency
+func (c CompoundConfig) Periods(n int) CompoundConfig {
 	c.periods = n
 	return c
 }
@@ -136,8 +136,8 @@ func (c CompositeConfig) Periods(n int) CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Frequency(Monthly)
-func (c CompositeConfig) Frequency(f CompoundingFrequency) CompositeConfig {
+//	.NewCompound().Frequency(Monthly)
+func (c CompoundConfig) Frequency(f CompoundingFrequency) CompoundConfig {
 	c.frequency = f
 	return c
 }
@@ -149,8 +149,8 @@ func (c CompositeConfig) Frequency(f CompoundingFrequency) CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().RateType(RateEffectyPeriodic)
-func (c CompositeConfig) RateType(t TypeRate) CompositeConfig {
+//	.NewCompound().RateType(RateEffectyPeriodic)
+func (c CompoundConfig) RateType(t TypeRate) CompoundConfig {
 	c.rateType = t
 	return c
 }
@@ -162,8 +162,8 @@ func (c CompositeConfig) RateType(t TypeRate) CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Monthly()
-func (c CompositeConfig) Monthly() CompositeConfig {
+//	.NewCompound().Monthly()
+func (c CompoundConfig) Monthly() CompoundConfig {
 	c.frequency = Monthly
 	return c
 }
@@ -175,8 +175,8 @@ func (c CompositeConfig) Monthly() CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Annually()
-func (c CompositeConfig) Annually() CompositeConfig {
+//	.NewCompound().Annually()
+func (c CompoundConfig) Annually() CompoundConfig {
 	c.frequency = Annually
 	return c
 }
@@ -188,8 +188,8 @@ func (c CompositeConfig) Annually() CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Quarterly()
-func (c CompositeConfig) Quarterly() CompositeConfig {
+//	.NewCompound().Quarterly()
+func (c CompoundConfig) Quarterly() CompoundConfig {
 	c.frequency = QuarterlyOne
 	return c
 }
@@ -201,61 +201,61 @@ func (c CompositeConfig) Quarterly() CompositeConfig {
 //
 // Example:
 //
-//	.NewComposite().Daily()
-func (c CompositeConfig) Daily() CompositeConfig {
+//	.NewCompound().Daily()
+func (c CompoundConfig) Daily() CompoundConfig {
 	c.frequency = Daily
 	return c
 }
 
-// Build creates and returns a CompositeInterest instance based on the configured parameters.
+// Build creates and returns a CompoundInterest instance based on the configured parameters.
 // It validates the parameters and returns an error if they are invalid.
 //
 // Returns:
-//   - A CompositeInterest instance with all configured parameters
+//   - A CompoundInterest instance with all configured parameters
 //   - An error if validation fails (invalid frequency, negative values, etc.)
 //
 // Example:
 //
-//	ci, err := NewComposite().
+//	ci, err := NewCompound().
 //	    Present(1000, money.USD).
 //	    Rate(0.05).
 //	    Periods(12).
 //	    Monthly().
 //	    Build()
-func (c CompositeConfig) Build() (CompositeInterest, error) {
+func (c CompoundConfig) Build() (CompoundInterest, error) {
 	period, err := NewPeriod(decimal.MustFromFloat64(float64(c.periods)), c.frequency)
 	if err != nil {
-		return CompositeInterest{}, err
+		return CompoundInterest{}, err
 	}
 
 	rate, err := NewRateInterest(c.rate, c.frequency, c.rateType)
 	if err != nil {
-		return CompositeInterest{}, err
+		return CompoundInterest{}, err
 	}
 
 	return New(c.present, c.future, rate, period)
 }
 
-// MustBuild creates and returns a CompositeInterest instance based on the configured parameters.
+// MustBuild creates and returns a CompoundInterest instance based on the configured parameters.
 // Unlike Build(), this method panics if validation fails.
 //
 // Use this for quick prototyping or when you are certain the parameters are valid.
 //
 // Returns:
-//   - A CompositeInterest instance with all configured parameters
+//   - A CompoundInterest instance with all configured parameters
 //
 // Panics:
 //   - If validation fails (invalid frequency, negative values, etc.)
 //
 // Example:
 //
-//	ci := NewComposite().
+//	ci := NewCompound().
 //	    Present(1000, money.USD).
 //	    Rate(0.05).
 //	    Periods(12).
 //	    Monthly().
 //	    MustBuild()
-func (c CompositeConfig) MustBuild() CompositeInterest {
+func (c CompoundConfig) MustBuild() CompoundInterest {
 	ci, err := c.Build()
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package compositeinterest
+package compoundinterest
 
 import (
 	"math"
@@ -10,10 +10,10 @@ import (
 	"github.com/yeferson59/gofinance/money"
 )
 
-// newInterestCase builds a CompositeInterest whose rate value is zero so that
+// newInterestCase builds a CompoundInterest whose rate value is zero so that
 // Interest() is forced to derive the periodic rate from present, future, and
 // periods via r = (FV/PV)^(1/n) - 1 instead of returning the configured rate.
-func newInterestCase(t *testing.T, present, future int64, freq CompoundingFrequency, typeRate TypeRate, periods float64) CompositeInterest {
+func newInterestCase(t *testing.T, present, future int64, freq CompoundingFrequency, typeRate TypeRate, periods float64) CompoundInterest {
 	t.Helper()
 
 	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0), freq, typeRate)
@@ -255,10 +255,10 @@ func TestInterestFutureGreaterThanPresent(t *testing.T) {
 }
 
 func TestInterestPropagatesPeriodError(t *testing.T) {
-	// A zero-value CompositeInterest has an invalid (empty) period
+	// A zero-value CompoundInterest has an invalid (empty) period
 	// frequency, so GetEqualsRateInterestPeriods fails and Interest must
 	// surface that error instead of deriving a bogus rate.
-	var ci CompositeInterest
+	var ci CompoundInterest
 
 	_, err := ci.Interest()
 	require.Error(t, err)
