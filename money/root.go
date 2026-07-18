@@ -79,6 +79,9 @@ func (m Money) ToDecimal() Decimal {
 	return m.value
 }
 
+// Add returns the sum of m and other, keeping m's currency. It does NOT
+// check that the currencies match; prefer SafeAdd, which returns
+// ErrCurrencyMismatch instead of silently mixing currencies.
 func (m Money) Add(other Money) Money {
 	return Money{
 		value:    m.value.Add(other.value),
@@ -96,6 +99,12 @@ func (m Money) SafeAdd(other Money) (Money, error) {
 	return m.Add(other), nil
 }
 
+// Mul multiplies the numeric values of m and other, ignoring other's
+// currency.
+//
+// Deprecated: multiplying two monetary amounts is dimensionally meaningless
+// (money × money = money²). Use MulDecimal to scale an amount by a rate or
+// factor, or MulInt64 for a quantity.
 func (m Money) Mul(other Money) Money {
 	return Money{
 		value:    m.value.Mul(other.value),
@@ -103,6 +112,9 @@ func (m Money) Mul(other Money) Money {
 	}
 }
 
+// Sub returns the difference of m and other, keeping m's currency. It does
+// NOT check that the currencies match; prefer SafeSub, which returns
+// ErrCurrencyMismatch instead of silently mixing currencies.
 func (m Money) Sub(other Money) Money {
 	return Money{
 		value:    m.value.Sub(other.value),
@@ -281,6 +293,11 @@ func (m Money) Max(other Money) (Money, error) {
 	return other, nil
 }
 
+// Div divides the numeric values of m and other, ignoring other's currency.
+//
+// Deprecated: dividing two monetary amounts yields a currency-less ratio,
+// not an amount. Use ToDecimal on both operands and decimal.Decimal.Div for
+// a ratio, or DivDecimal/DivInt64 to divide an amount by a factor.
 func (m Money) Div(other Money) (Money, error) {
 	div, err := m.value.Div(other.value)
 	if err != nil {
@@ -293,6 +310,9 @@ func (m Money) Div(other Money) (Money, error) {
 	}, nil
 }
 
+// MustDiv is like Div but panics on error.
+//
+// Deprecated: see Div.
 func (m Money) MustDiv(other Money) Money {
 	div, err := m.Div(other)
 	if err != nil {

@@ -40,7 +40,7 @@ func (c CompoundInterest) Interest() (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrInvalidOperation
 	}
 
-	futureToPresent, err := c.future.Div(c.present)
+	futureToPresent, err := c.future.ToDecimal().Div(c.present.ToDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -50,7 +50,7 @@ func (c CompoundInterest) Interest() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	growthFactor, err := futureToPresent.ToDecimal().Pow(reciprocalPeriods)
+	growthFactor, err := futureToPresent.Pow(reciprocalPeriods)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

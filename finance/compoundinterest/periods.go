@@ -40,12 +40,12 @@ func (c CompoundInterest) Periods() (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrInvalidOperation
 	}
 
-	futureToPresent, err := c.future.Div(c.present)
+	futureToPresent, err := c.future.ToDecimal().Div(c.present.ToDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	logarithmRatio, err := futureToPresent.ToDecimal().Ln()
+	logarithmRatio, err := futureToPresent.Ln()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
