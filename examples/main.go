@@ -11,7 +11,7 @@ import (
 	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/annuities"
 	"github.com/yeferson59/gofinance/finance/bonds"
-	"github.com/yeferson59/gofinance/finance/charts"
+	"github.com/yeferson59/gofinance/charts"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/finance/daycount"
 	"github.com/yeferson59/gofinance/finance/depreciation"
@@ -272,7 +272,7 @@ func simpleExample() {
 }
 
 // chartsExample renders a variety of amortization charts using the
-// finance/charts package and saves each one as a standalone HTML file
+// charts package and saves each one as a standalone HTML file
 // under examples/output/. Open the files in a browser to view them.
 func chartsExample() {
 	fmt.Println("\n=== Charts ===")
@@ -386,7 +386,7 @@ func chartsExample() {
 
 // growthExample builds a plain compound interest growth schedule (a lump
 // sum with no periodic contributions) and renders it with the
-// finance/charts package as standalone HTML files under examples/output/.
+// charts package as standalone HTML files under examples/output/.
 func growthExample() {
 	fmt.Println("\n=== Compound Interest Growth ===")
 
@@ -440,7 +440,7 @@ func growthExample() {
 // investmentExample builds an investment growth schedule (compound interest
 // plus a fixed contribution every period), for both ordinary (end of
 // period) and anticipated (start of period) contribution timing, and
-// renders them with the finance/charts package as standalone HTML files
+// renders them with the charts package as standalone HTML files
 // under examples/output/.
 func investmentExample() {
 	fmt.Println("\n=== Investment With Contributions ===")
