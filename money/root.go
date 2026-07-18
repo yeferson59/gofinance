@@ -79,24 +79,43 @@ func (m Money) ToDecimal() Decimal {
 	return m.value
 }
 
-// Add returns the sum of m and other, keeping m's currency. It does NOT
-// check that the currencies match; prefer SafeAdd, which returns
-// ErrCurrencyMismatch instead of silently mixing currencies.
-func (m Money) Add(other Money) Money {
-	return Money{
-		value:    m.value.Add(other.value),
-		currency: m.currency,
-	}
-}
-
-// SafeAdd returns the sum of m and other.
-// It returns ErrCurrencyMismatch if the operands have different currencies.
-func (m Money) SafeAdd(other Money) (Money, error) {
+// TryAdd returns the sum of m and other, keeping the currency. It returns
+// ErrCurrencyMismatch if the operands' currencies differ, or the decimal
+// engine's error on overflow.
+func (m Money) TryAdd(other Money) (Money, error) {
 	if m.currency != other.currency {
 		return Money{}, ErrCurrencyMismatch
 	}
 
-	return m.Add(other), nil
+	v, err := m.value.TryAdd(other.value)
+	if err != nil {
+		return Money{}, err
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}, nil
+}
+
+// Add returns the sum of m and other. Like the decimal engine's Add, it
+// panics instead of returning an error — on a currency mismatch or on
+// overflow. Use TryAdd for the error-returning form.
+func (m Money) Add(other Money) Money {
+	v, err := m.TryAdd(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// SafeAdd returns the sum of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+//
+// Deprecated: use TryAdd, which has the same behavior.
+func (m Money) SafeAdd(other Money) (Money, error) {
+	return m.TryAdd(other)
 }
 
 // Mul multiplies the numeric values of m and other, ignoring other's
@@ -112,24 +131,43 @@ func (m Money) Mul(other Money) Money {
 	}
 }
 
-// Sub returns the difference of m and other, keeping m's currency. It does
-// NOT check that the currencies match; prefer SafeSub, which returns
-// ErrCurrencyMismatch instead of silently mixing currencies.
-func (m Money) Sub(other Money) Money {
-	return Money{
-		value:    m.value.Sub(other.value),
-		currency: m.currency,
-	}
-}
-
-// SafeSub returns the difference of m and other.
-// It returns ErrCurrencyMismatch if the operands have different currencies.
-func (m Money) SafeSub(other Money) (Money, error) {
+// TrySub returns the difference of m and other, keeping the currency. It
+// returns ErrCurrencyMismatch if the operands' currencies differ, or the
+// decimal engine's error on overflow.
+func (m Money) TrySub(other Money) (Money, error) {
 	if m.currency != other.currency {
 		return Money{}, ErrCurrencyMismatch
 	}
 
-	return m.Sub(other), nil
+	v, err := m.value.TrySub(other.value)
+	if err != nil {
+		return Money{}, err
+	}
+
+	return Money{
+		value:    v,
+		currency: m.currency,
+	}, nil
+}
+
+// Sub returns the difference of m and other. Like the decimal engine's Sub,
+// it panics instead of returning an error — on a currency mismatch or on
+// overflow. Use TrySub for the error-returning form.
+func (m Money) Sub(other Money) Money {
+	v, err := m.TrySub(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// SafeSub returns the difference of m and other.
+// It returns ErrCurrencyMismatch if the operands have different currencies.
+//
+// Deprecated: use TrySub, which has the same behavior.
+func (m Money) SafeSub(other Money) (Money, error) {
+	return m.TrySub(other)
 }
 
 func (m Money) Currency() Currency {
