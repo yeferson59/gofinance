@@ -21,7 +21,7 @@ import (
     "fmt"
     "log"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
@@ -29,17 +29,17 @@ func main() {
     // What is the present value?
 
     // Create rate: 1% periodic monthly
-    rate, err := compositeinterest.NewRateInterest(
+    rate, err := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
     if err != nil {
         log.Fatal(err)
     }
 
     // Create period: 12 months
-    period, err := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, err := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
     if err != nil {
         log.Fatal(err)
     }
@@ -76,20 +76,20 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: $500 monthly savings for 12 months at 0.5% monthly
     // How much will be accumulated?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.005,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
-    period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
     ann, _ := annuities.New(500, 0, 0, period, rate)
 
@@ -111,20 +111,20 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: $10,000 loan at 1% monthly for 12 months
     // What's the monthly payment?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
-    period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
     ann, _ := annuities.New(0, 10000, 0, period, rate)
 
@@ -146,20 +146,20 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: Want to accumulate $10,000 in 12 months at 1% monthly
     // How much should we save monthly?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
-    period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
     ann, _ := annuities.New(0, 0, 10000, period, rate)
 
@@ -181,20 +181,20 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: With $500 monthly payments at 1% monthly
     // How many months to reach $10,000?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
-    period, _ := compositeinterest.NewPeriod(1, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(1, compoundinterest.Monthly)
 
     ann, _ := annuities.New(500, 0, 10000, period, rate)
 
@@ -220,7 +220,7 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
@@ -228,25 +228,25 @@ func main() {
     // Calculate monthly payment
 
     // Create annual rate of 4.5%
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.045,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
     // Convert to monthly equivalent rate
     // Using RatePeriodicToPeriodic to convert annual to monthly
-    monthlyRate, _ := rate.RatePeriodicToPeriodic(compositeinterest.Monthly)
+    monthlyRate, _ := rate.RatePeriodicToPeriodic(compoundinterest.Monthly)
 
     // Create monthly rate with the converted value
-    monthlyRateObj, _ := compositeinterest.NewRateInterest(
+    monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
     // 30 years × 12 months = 360 periods
-    period, _ := compositeinterest.NewPeriod(360, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(360, compoundinterest.Monthly)
 
     ann, _ := annuities.New(0, 300000, 0, period, monthlyRateObj)
 
@@ -274,30 +274,30 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: Save $500 monthly at 6% annual for 5 years
     // How much will be accumulated?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.06,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyNominal,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyNominal,
     )
 
     // Convert nominal to periodic
     monthlyRate, _ := rate.RatePeriodic()
 
-    monthlyRateObj, _ := compositeinterest.NewRateInterest(
+    monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
     // 5 years × 12 months = 60 periods
-    period, _ := compositeinterest.NewPeriod(60, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(60, compoundinterest.Monthly)
 
     ann, _ := annuities.New(500, 0, 0, period, monthlyRateObj)
 
@@ -325,30 +325,30 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: Plan to retire in 25 years with $1 million
     // Invest at 7% annual. How much monthly?
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.07,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
     // Convert to monthly
-    monthlyRate, _ := rate.RatePeriodicToPeriodic(compositeinterest.Monthly)
+    monthlyRate, _ := rate.RatePeriodicToPeriodic(compoundinterest.Monthly)
 
-    monthlyRateObj, _ := compositeinterest.NewRateInterest(
+    monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
     // 25 years × 12 months = 300 periods
-    period, _ := compositeinterest.NewPeriod(300, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(300, compoundinterest.Monthly)
 
     ann, _ := annuities.New(0, 0, 1000000, period, monthlyRateObj)
 
@@ -376,20 +376,20 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: Equipment worth $50,000 leased over 5 years at 8% annual
     // Calculate annual lease payment
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.08,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
-    period, _ := compositeinterest.NewPeriod(5, compositeinterest.Annually)
+    period, _ := compoundinterest.NewPeriod(5, compoundinterest.Annually)
 
     ann, _ := annuities.New(0, 50000, 0, period, rate)
 
@@ -416,30 +416,30 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Scenario: $50,000 student loan at 5% annual for 10 years
     // Calculate monthly payment
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.05,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
     // Convert to monthly
-    monthlyRate, _ := rate.RatePeriodicToPeriodic(compositeinterest.Monthly)
+    monthlyRate, _ := rate.RatePeriodicToPeriodic(compoundinterest.Monthly)
 
-    monthlyRateObj, _ := compositeinterest.NewRateInterest(
+    monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
     // 10 years × 12 months = 120 periods
-    period, _ := compositeinterest.NewPeriod(120, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriod(120, compoundinterest.Monthly)
 
     ann, _ := annuities.New(0, 50000, 0, period, monthlyRateObj)
 
@@ -471,7 +471,7 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
@@ -496,21 +496,21 @@ func main() {
         {30, 360},
     }
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         annualRate,
-        compositeinterest.Annually,
-        compositeinterest.RateEffectyAnnually,
+        compoundinterest.Annually,
+        compoundinterest.RateEffectyAnnually,
     )
 
-    monthlyRate, _ := rate.RatePeriodicToPeriodic(compositeinterest.Monthly)
-    monthlyRateObj, _ := compositeinterest.NewRateInterest(
+    monthlyRate, _ := rate.RatePeriodicToPeriodic(compoundinterest.Monthly)
+    monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
     for _, term := range terms {
-        period, _ := compositeinterest.NewPeriod(float64(term.months), compositeinterest.Monthly)
+        period, _ := compoundinterest.NewPeriod(float64(term.months), compoundinterest.Monthly)
         ann, _ := annuities.New(0, loanAmount, 0, period, monthlyRateObj)
         payment, _ := ann.PaymentFromPresentValue()
 
@@ -532,20 +532,20 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
     // Track remaining balance through loan repayment
     // $10,000 loan at 1% monthly for 12 months
 
-    rate, _ := compositeinterest.NewRateInterest(
+    rate, _ := compoundinterest.NewRateInterest(
         0.01,
-        compositeinterest.Monthly,
-        compositeinterest.RateEffectyPeriodic,
+        compoundinterest.Monthly,
+        compoundinterest.RateEffectyPeriodic,
     )
 
-    period, _ := compositeinterest.NewPeriodic(12, compositeinterest.Monthly)
+    period, _ := compoundinterest.NewPeriodic(12, compoundinterest.Monthly)
 
     ann, _ := annuities.New(0, 10000, 0, period, rate)
 
@@ -588,7 +588,7 @@ func main() {
 
 2. **Decimal precision:** For real financial calculations, consider using arbitrary precision libraries.
 
-3. **Rate conversions:** When changing from annual to monthly rates, use the appropriate conversion methods from compositeinterest.
+3. **Rate conversions:** When changing from annual to monthly rates, use the appropriate conversion methods from compoundinterest.
 
 4. **Payment timing:** This package assumes payments are made at the end of each period (ordinary annuity).
 

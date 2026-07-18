@@ -66,19 +66,19 @@ The interest rate applied in each compounding period.
 ### 1. Create a Rate
 
 ```go
-rate, err := compositeinterest.NewRateInterest(
+rate, err := compoundinterest.NewRateInterest(
     0.01,                                    // value
-    compositeinterest.Monthly,               // frequency
-    compositeinterest.RateEffectyPeriodic,   // type
+    compoundinterest.Monthly,               // frequency
+    compoundinterest.RateEffectyPeriodic,   // type
 )
 ```
 
 ### 2. Create a Period
 
 ```go
-period, err := compositeinterest.NewPeriod(
+period, err := compoundinterest.NewPeriod(
     12,                              // number of periods
-    compositeinterest.Monthly,       // frequency
+    compoundinterest.Monthly,       // frequency
 )
 ```
 
@@ -117,16 +117,16 @@ periods, err := ann.PeriodsWithFuture()
 ```go
 type Annuity struct {
     value             float64
-    compositeInterest compositeinterest.CompositeInterest
+    compositeInterest compoundinterest.CompoundInterest
 }
 ```
 
 - `value`: The periodic payment amount
 - `compositeInterest`: Underlying composite interest calculation
 
-### Using CompositeInterest
+### Using CompoundInterest
 
-The annuity package leverages the `compositeinterest` package:
+The annuity package leverages the `compoundinterest` package:
 
 1. **GetEqualsRateInterestPeriods():** Converts rate to periodic and adjusts periods to match rate frequency
 
@@ -186,10 +186,10 @@ go tool cover -html=coverage.out
 ```go
 func TestNewFunctionality(t *testing.T) {
     // Arrange: Prepare data
-    rate, err := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+    rate, err := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
     require.NoError(t, err)
 
-    period, err := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+    period, err := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
     require.NoError(t, err)
 
     ann, err := annuities.New(100, 0, 0, period, rate)
@@ -217,8 +217,8 @@ func TestNewFunctionality(t *testing.T) {
 
 ```go
 // $10,000 loan with 1% monthly for 12 months
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 ann, _ := annuities.New(0, 10000, 0, period, rate)
 payment, _ := ann.PaymentFromPresentValue()
 ```
@@ -227,8 +227,8 @@ payment, _ := ann.PaymentFromPresentValue()
 
 ```go
 // $500 monthly savings at 0.5% monthly for 12 months
-rate, _ := compositeinterest.NewRateInterest(0.005, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.005, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 ann, _ := annuities.New(500, 0, 0, period, rate)
 future, _ := ann.Future()
 ```
@@ -237,8 +237,8 @@ future, _ := ann.Future()
 
 ```go
 // $100,000 goal in 5 years at 6% annual
-rate, _ := compositeinterest.NewRateInterest(0.06, compositeinterest.Annually, compositeinterest.RateEffectyAnnually)
-period, _ := compositeinterest.NewPeriod(5, compositeinterest.Annually)
+rate, _ := compoundinterest.NewRateInterest(0.06, compoundinterest.Annually, compoundinterest.RateEffectyAnnually)
+period, _ := compoundinterest.NewPeriod(5, compoundinterest.Annually)
 ann, _ := annuities.New(0, 0, 100000, period, rate)
 payment, _ := ann.PaymentFromFutureValue()
 ```
@@ -256,12 +256,12 @@ payment, _ := ann.PaymentFromFutureValue()
 ```go
 // ❌ Inefficient: Creates rate 1000 times
 for i := 0; i < 1000; i++ {
-    rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+    rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
     // ...
 }
 
 // ✅ Efficient: Creates once
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
 for i := 0; i < 1000; i++ {
     // Reuse rate
 }
@@ -274,8 +274,8 @@ for i := 0; i < 1000; i++ {
 1. **Print intermediate values:**
 
 ```go
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 ann, _ := annuities.New(100, 0, 0, period, rate)
 
 periods, rateInterest, _ := ann.compositeInterest.GetEqualsRateInterestPeriods()
@@ -358,7 +358,7 @@ A: The "value" field is the periodic payment amount. This is what gets paid/rece
 A: Probably because the payment equals the interest (no progress toward goal), or when payment is less than the interest accruing.
 
 **Q: Can I use anticipated rates with annuities?**
-A: Yes! Create a rate with anticipated rate type and pass it to the annuity. The underlying `compositeinterest` package handles the conversions.
+A: Yes! Create a rate with anticipated rate type and pass it to the annuity. The underlying `compoundinterest` package handles the conversions.
 
 ## Contributing
 

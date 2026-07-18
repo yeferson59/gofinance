@@ -49,15 +49,15 @@ package main
 import (
     "fmt"
     "github.com/yeferson59/gofinance/v2/finance/annuities"
-    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {
   // Create a monthly interest rate of 1% (periodic)
-  rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+  rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
 
   // Create a period of 12 months
-  period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+  period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
   // Create an annuity object with monthly payment of $100
   // Parameters: (payment=100, present=0, future=0, period, rateInterest)
@@ -74,8 +74,8 @@ func main() {
 
 ```go
 // Calculate monthly payment for a $10,000 loan at 1% monthly for 12 months
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
 ann, _ := annuities.New(0, 10000, 0, period, rate)
 payment, _ := ann.PaymentFromPresentValue()
@@ -87,8 +87,8 @@ fmt.Printf("Monthly payment: $%.2f\n", payment)
 
 ```go
 // Calculate future value of $100 monthly payments at 1% monthly for 12 months
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
 ann, _ := annuities.New(100, 0, 0, period, rate)
 future, _ := ann.Future()
@@ -100,8 +100,8 @@ fmt.Printf("Future value: $%.2f\n", future)
 
 ```go
 // Calculate monthly payment needed to accumulate $10,000 in 12 months at 1% monthly
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(12, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
 ann, _ := annuities.New(0, 0, 10000, period, rate)
 payment, _ := ann.PaymentFromFutureValue()
@@ -113,8 +113,8 @@ fmt.Printf("Monthly payment: $%.2f\n", payment)
 
 ```go
 // Calculate how many months are needed for $100 payments to reach present value
-rate, _ := compositeinterest.NewRateInterest(0.01, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
-period, _ := compositeinterest.NewPeriod(1, compositeinterest.Monthly)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+period, _ := compoundinterest.NewPeriod(1, compoundinterest.Monthly)
 
 ann, _ := annuities.New(100, 5000, 0, period, rate)
 periods, _ := ann.PeriodsWithPresent()
@@ -192,21 +192,21 @@ ann, err := annuities.New(payment, present, future, period, rateInterest)
 
 ```go
 // Calculate monthly payment for a $300,000 mortgage at 4.5% annual for 30 years
-rate, _ := compositeinterest.NewRateInterest(
+rate, _ := compoundinterest.NewRateInterest(
     0.045,
-    compositeinterest.Annually,
-    compositeinterest.RateEffectyAnnually,
+    compoundinterest.Annually,
+    compoundinterest.RateEffectyAnnually,
 )
 
 // Convert to monthly equivalent
-monthlyRate, _ := rate.RatePeriodicToPeriodic(compositeinterest.Monthly)
-rate, _ = compositeinterest.NewRateInterest(
+monthlyRate, _ := rate.RatePeriodicToPeriodic(compoundinterest.Monthly)
+rate, _ = compoundinterest.NewRateInterest(
     monthlyRate,
-    compositeinterest.Monthly,
-    compositeinterest.RateEffectyPeriodic,
+    compoundinterest.Monthly,
+    compoundinterest.RateEffectyPeriodic,
 )
 
-period, _ := compositeinterest.NewPeriod(360, compositeinterest.Monthly) // 30 years × 12 months
+period, _ := compoundinterest.NewPeriod(360, compoundinterest.Monthly) // 30 years × 12 months
 
 ann, _ := annuities.New(0, 300000, 0, period, rate)
 payment, _ := ann.PaymentFromPresentValue()
@@ -217,11 +217,11 @@ fmt.Printf("Monthly payment: $%.2f\n", payment)
 
 ```go
 // How much will be accumulated if saving $500/month at 6% annual for 5 years?
-rate, _ := compositeinterest.NewRateInterest(0.06, compositeinterest.Monthly, compositeinterest.RateEffectyNominal)
+rate, _ := compoundinterest.NewRateInterest(0.06, compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
 monthlyRate, _ := rate.RatePeriodic()
-rate, _ = compositeinterest.NewRateInterest(monthlyRate, compositeinterest.Monthly, compositeinterest.RateEffectyPeriodic)
+rate, _ = compoundinterest.NewRateInterest(monthlyRate, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
 
-period, _ := compositeinterest.NewPeriod(60, compositeinterest.Monthly) // 5 years × 12 months
+period, _ := compoundinterest.NewPeriod(60, compoundinterest.Monthly) // 5 years × 12 months
 
 ann, _ := annuities.New(500, 0, 0, period, rate)
 future, _ := ann.Future()
@@ -232,8 +232,8 @@ fmt.Printf("Accumulated amount: $%.2f\n", future)
 
 ```go
 // Calculate lease payment for equipment worth $50,000 over 5 years at 8% annual
-rate, _ := compositeinterest.NewRateInterest(0.08, compositeinterest.Annually, compositeinterest.RateEffectyAnnually)
-period, _ := compositeinterest.NewPeriod(5, compositeinterest.Annually)
+rate, _ := compoundinterest.NewRateInterest(0.08, compoundinterest.Annually, compoundinterest.RateEffectyAnnually)
+period, _ := compoundinterest.NewPeriod(5, compoundinterest.Annually)
 
 ann, _ := annuities.New(0, 50000, 0, period, rate)
 payment, _ := ann.PaymentFromPresentValue()

@@ -169,18 +169,27 @@ func TestContributionsFuturePropagatesDivideByZero(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestAnticipateFutureReturnsPresetFutureValue(t *testing.T) {
-	// When the underlying compoundInterest.Future() succeeds with a
-	// nonzero value (present and rate both configured), AnticipateFuture
-	// must short-circuit and return it directly instead of deriving
-	// anything from the payment amount.
+func TestAnticipateFutureIgnoresPrincipal(t *testing.T) {
+	// Even with a principal configured, AnticipateFuture must return the
+	// payments' annuity-due value — the principal's growth is only
+	// reachable through PrincipalFuture / the WithContributions variants.
 	annuity := newMonthlyPeriodicAnnuity(t, 1000, 1000, 0, 0.01)
 
 	future, err := annuity.AnticipateFuture()
 	require.NoError(t, err)
 
+	// FV_due = PMT × ((1+i)^n − 1)/i × (1+i) = 12682.5030 × 1.01 = 12809.3280
+	assert.InDelta(t, 12809.3280, future.InexactFloat64(), 0.01)
+}
+
+func TestPrincipalFutureReturnsCompoundedPrincipal(t *testing.T) {
+	annuity := newMonthlyPeriodicAnnuity(t, 1000, 1000, 0, 0.01)
+
+	principal, err := annuity.PrincipalFuture()
+	require.NoError(t, err)
+
 	// FV = PV × (1+i)^n = 1000 × 1.01^12 = 1126.8250
-	assert.InDelta(t, 1126.8250, future.InexactFloat64(), 0.01)
+	assert.InDelta(t, 1126.8250, principal.InexactFloat64(), 0.01)
 }
 
 func TestContributionsAnticipateFuturePropagatesContributionsFutureError(t *testing.T) {
@@ -199,7 +208,7 @@ func TestPrincipalFuturePropagatesNonInvalidOperationError(t *testing.T) {
 	// surface it instead of silently returning zero.
 	var annuity Annuity
 
-	_, err := annuity.principalFuture()
+	_, err := annuity.PrincipalFuture()
 	assert.Error(t, err)
 	assert.NotErrorIs(t, err, compoundinterest.ErrInvalidOperation)
 }

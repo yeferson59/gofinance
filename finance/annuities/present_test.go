@@ -79,9 +79,11 @@ func TestAnnuityPresentWithSmallPeriods(t *testing.T) {
 	assert.InDelta(t, 95.2381, presentValue.ToDecimal().InexactFloat64(), 0.01)
 }
 
-func TestAnnuityFuture(t *testing.T) {
-	// Future value is derived from the underlying compound interest data:
-	// FV = PV × (1+i)^n = 10000 × 1.01^12 = 11268.2503
+func TestAnnuityFutureAndPrincipalFuture(t *testing.T) {
+	// Future returns the payments' ordinary-annuity value:
+	// FV = PMT × ((1+i)^n − 1)/i = 1000 × (1.01^12 − 1)/0.01 = 12682.5030.
+	// PrincipalFuture returns the compounded principal:
+	// FV = PV × (1+i)^n = 10000 × 1.01^12 = 11268.2503.
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
@@ -99,7 +101,11 @@ func TestAnnuityFuture(t *testing.T) {
 
 	futureValue, err := annuity.Future()
 	require.NoError(t, err)
-	assert.InDelta(t, 11268.2503, futureValue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 12682.5030, futureValue.ToDecimal().InexactFloat64(), 0.01)
+
+	principalValue, err := annuity.PrincipalFuture()
+	require.NoError(t, err)
+	assert.InDelta(t, 11268.2503, principalValue.ToDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityAnticipatePresent(t *testing.T) {
@@ -250,7 +256,7 @@ func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
 			require.NoError(t, err)
 			assert.InDelta(t, tc.expectedPresent, presentValue.ToDecimal().InexactFloat64(), 0.01)
 
-			futureValue, err := annuity.Future()
+			futureValue, err := annuity.PrincipalFuture()
 			require.NoError(t, err)
 			assert.InDelta(t, tc.expectedFuture, futureValue.ToDecimal().InexactFloat64(), 0.01)
 		})
