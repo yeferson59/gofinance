@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // ErrCurrencyMismatch is returned by operations that require both operands

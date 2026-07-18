@@ -1,6 +1,6 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // orderTime assigns each compounding frequency a temporal ordering weight,
 // used by the rate conversions to compare frequencies. Periods-per-year and

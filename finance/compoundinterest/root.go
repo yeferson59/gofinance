@@ -37,9 +37,9 @@ package compoundinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/term"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/term"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // CompoundingFrequency defines the frequency of interest compounding in a

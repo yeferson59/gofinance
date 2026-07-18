@@ -6,7 +6,7 @@ package charts
 import (
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
-	"github.com/yeferson59/gofinance/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 // changePercentPrecision is the number of decimal digits used to render

@@ -1,6 +1,6 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // RatePeriodic converts the current interest rate to a periodic (per-period) rate.
 // This is useful when you have a nominal or effective annual rate and need the actual

@@ -20,8 +20,8 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -75,8 +75,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -110,8 +110,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -145,8 +145,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -180,8 +180,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -219,8 +219,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -273,8 +273,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -324,8 +324,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -375,8 +375,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -415,8 +415,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -470,8 +470,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {
@@ -531,8 +531,8 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/finance/compositeinterest"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/finance/compositeinterest"
 )
 
 func main() {

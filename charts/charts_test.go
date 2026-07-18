@@ -6,9 +6,9 @@ import (
 
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/annuities"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/annuities"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func buildTestSchedule(t *testing.T, currency money.Currency, pvAmount, paymentAmount float64) []annuities.Schedule {

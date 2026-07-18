@@ -1,6 +1,6 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // RateConversionConfig is a builder for converting interest rates between
 // types (periodic, nominal, effective annual, anticipated) and compounding

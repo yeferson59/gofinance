@@ -3,7 +3,7 @@ package daycount
 import (
 	"time"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // normalize strips the clock time and time zone, reducing t to a UTC

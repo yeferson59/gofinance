@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 func assertRate(t *testing.T, got decimal.Decimal, err error, expected float64) {

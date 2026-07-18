@@ -3,9 +3,9 @@ package investment
 import (
 	"time"
 
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/daycount"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/daycount"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // DatedCashFlow is a cash flow that occurs on a specific calendar date, used by

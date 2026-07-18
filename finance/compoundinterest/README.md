@@ -49,7 +49,7 @@ package main
 
 import (
     "fmt"
-    "github.com/yeferson59/gofinance/finance/compoundinterest"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 )
 
 func main() {

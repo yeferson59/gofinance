@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 func TestUnitValid(t *testing.T) {

@@ -1,6 +1,6 @@
 package depreciation
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // macrsTable returns the MACRS GDS half-year-convention depreciation rates (as
 // fractions of the original cost) for the given recovery period, and whether a

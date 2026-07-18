@@ -10,7 +10,7 @@ The repository hosts three Go modules:
 
 | Module | Path | External runtime deps |
 | ------ | ---- | --------------------- |
-| `github.com/yeferson59/gofinance` | repo root | none (testify is test-only) |
+| `github.com/yeferson59/gofinance/v2` | repo root | none (testify is test-only) |
 | `github.com/yeferson59/gofinance/charts` | `charts/` | go-echarts |
 | `github.com/yeferson59/gofinance/examples` | `examples/` | go-echarts (via `charts`) |
 
@@ -93,16 +93,17 @@ The previous structure had four structural problems, all fixed in this pass:
   question (date range → year fraction) and deliberately stay in
   `finance/daycount`.
 
-## Remaining decisions
+## Executed follow-ups (third pass)
 
-- **Release as a major version.** The accumulated changes — `ToMoney`
-  removal, the `charts` module split, the `compoundinterest` rename — are
-  breaking relative to v1.4.2. The semver-correct release is v2.0.0 with
-  the module path bumped to `github.com/yeferson59/gofinance/v2` (a
-  release-time action for the maintainer: update the `module` line and
-  internal import prefixes, tag `v2.0.0`, and tag `charts/v2.0.0` for the
-  charts module). If reaching v1 consumers matters more than strict
-  semver, the fallback is a loudly-documented v1.5.0.
-- **Making `Add`/`Sub` currency-checked by default** (folding `SafeAdd`/
-  `SafeSub` into them) would change their signatures; if desired, it
-  should ride the same major release.
+- **The module path is now `github.com/yeferson59/gofinance/v2`.** The
+  accumulated breaking changes (`ToMoney` removal, the `charts` module
+  split, the `compoundinterest` rename, the `Add`/`Sub` redesign below)
+  ride a proper major release. Release-time actions left for the
+  maintainer: tag `v2.0.0` on the root module and `charts/v1.0.0` for the
+  charts module (its own path carries no `/vN` suffix, so its tags stay in
+  the v0/v1 series while requiring the library's `/v2`).
+- **`Money.Add`/`Sub` are currency-checked by default.** They now panic on
+  a currency mismatch, exactly as they already panicked on overflow —
+  mirroring the decimal engine's `Add`/`TryAdd` split. The error-returning
+  forms are `TryAdd`/`TrySub` (mismatch → `ErrCurrencyMismatch`);
+  `SafeAdd`/`SafeSub` survive as deprecated aliases of them.

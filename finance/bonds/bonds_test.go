@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeferson59/gofinance/finance/daycount"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/finance/daycount"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func usd(amount float64) money.Money {

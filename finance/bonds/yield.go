@@ -1,6 +1,6 @@
 package bonds
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 const maxYieldBisectIter = 200
 

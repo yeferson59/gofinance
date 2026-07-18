@@ -7,7 +7,7 @@ import (
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
-	"github.com/yeferson59/gofinance/finance/annuities"
+	"github.com/yeferson59/gofinance/v2/finance/annuities"
 )
 
 // ChartOption configures the appearance of a chart produced by this

@@ -1,8 +1,8 @@
 package investment
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // XNPV returns the net present value of a series of cash flows that occur on

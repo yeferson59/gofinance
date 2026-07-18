@@ -1,8 +1,8 @@
 package returns
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // CAGR returns the compound annual growth rate that takes begin to end over

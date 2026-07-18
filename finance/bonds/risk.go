@@ -1,6 +1,6 @@
 package bonds
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // MacaulayDuration returns the Macaulay duration in years: the present-value
 // weighted average time to the bond's cash flows, discounted at the configured

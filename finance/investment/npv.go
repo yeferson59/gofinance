@@ -1,8 +1,8 @@
 package investment
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // NPV returns the net present value of cashFlows discounted at the given

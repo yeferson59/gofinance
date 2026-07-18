@@ -3,8 +3,8 @@ package simpleinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // Present calculates the present value using interest, rate, and periods.

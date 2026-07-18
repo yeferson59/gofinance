@@ -3,7 +3,7 @@ package annuities
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // ErrRateNotFound is returned when RateWithPresent, RateWithFuture,

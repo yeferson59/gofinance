@@ -1,6 +1,6 @@
 package investment
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // XIRR returns the internal rate of return of cash flows that occur on specific
 // dates: the annual rate at which their date-based net present value (XNPV) is

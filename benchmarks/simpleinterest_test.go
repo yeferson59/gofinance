@@ -3,9 +3,9 @@ package benchmarks
 import (
 	"testing"
 
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/simpleinterest"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/simpleinterest"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func mustDecimal(f float64) decimal.Decimal {

@@ -1,8 +1,8 @@
 package annuities
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func (a Annuity) Present() (money.Money, error) {

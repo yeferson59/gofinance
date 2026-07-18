@@ -1,7 +1,7 @@
 package money
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // Decimal is an alias of decimal.Decimal, kept so that code written against

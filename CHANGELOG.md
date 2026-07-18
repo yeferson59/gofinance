@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+This release is breaking; it should be tagged **v2.0.0** (root module) and **charts/v1.0.0** (charts module).
+
 ### Changed
+- **Breaking**: the module path is now `github.com/yeferson59/gofinance/v2`; update imports of `decimal`, `money` and `finance/...` accordingly. The `charts` module keeps its `github.com/yeferson59/gofinance/charts` path and now requires the `/v2` library
+- **Breaking**: `Money.Add`/`Sub` now panic on a currency mismatch (as they already did on overflow), mirroring the decimal engine's `Add`/`TryAdd` split; the new `Money.TryAdd`/`TrySub` return `ErrCurrencyMismatch` (or the overflow error) instead. `SafeAdd`/`SafeSub` remain as deprecated aliases of the `Try` variants
+- The investment contribution schedules (`BuildInvestmentSchedule`, `BuildAnticipateInvestmentSchedule`) compute interest with `MulDecimal` instead of the deprecated `Money.Mul` with a currency-attached rate
 - **Breaking**: `finance/compositeinterest` renamed to `finance/compoundinterest` ("composite interest" is a non-standard term); `CompositeInterest`/`CompositeConfig`/`NewComposite` are now `CompoundInterest`/`CompoundConfig`/`NewCompound`
 - `simpleinterest.Periods` and `compoundinterest.CompoundingFrequency` are now aliases of the shared `term.Unit` and `term.Frequency` types; `QuarterlyOne`/`QuarterlyTwo` renamed to `Quarterly` (4×/yr) and `FourMonthly` (3×/yr) with the old names kept as deprecated aliases. Invalid-frequency errors are the typed `term.ErrInvalidFrequency`
 - `Money.Mul`, `Money.Div` and `Money.MustDiv` (Money-by-Money) are deprecated: use `MulDecimal`/`DivDecimal` to scale an amount, or `ToDecimal` on both operands for a ratio. `Money.Add`/`Sub` now document that they don't currency-check (prefer `SafeAdd`/`SafeSub`)

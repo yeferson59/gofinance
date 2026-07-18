@@ -3,9 +3,9 @@ package annuities
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/compoundinterest"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 func (a Annuity) Future() (money.Money, error) {

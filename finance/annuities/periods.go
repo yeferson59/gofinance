@@ -1,6 +1,6 @@
 package annuities
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // PeriodsWithPresent calculates the number of periods needed for periodic payments to reach
 // a specific present value using the formula:

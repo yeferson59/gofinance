@@ -5,7 +5,7 @@ package charts
 import (
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
-	"github.com/yeferson59/gofinance/finance/annuities"
+	"github.com/yeferson59/gofinance/v2/finance/annuities"
 )
 
 // InvestmentXAxis returns the period indexes (0..len(schedule)-1) used as

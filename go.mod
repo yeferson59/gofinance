@@ -1,4 +1,4 @@
-module github.com/yeferson59/gofinance
+module github.com/yeferson59/gofinance/v2
 
 go 1.26.5
 

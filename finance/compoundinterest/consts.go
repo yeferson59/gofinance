@@ -3,7 +3,7 @@ package compoundinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/finance/term"
+	"github.com/yeferson59/gofinance/v2/finance/term"
 )
 
 // Compounding frequencies of interest per year, re-exported from the shared

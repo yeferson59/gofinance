@@ -1,8 +1,8 @@
 package compoundinterest
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // Future calculates the future value of an investment or loan based on compound interest.

@@ -1,7 +1,7 @@
 package simpleinterest
 
 import (
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // Interest calculates the interest using present value, rate, and periods.

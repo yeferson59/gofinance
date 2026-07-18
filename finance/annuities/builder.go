@@ -1,9 +1,9 @@
 package annuities
 
 import (
-	"github.com/yeferson59/gofinance/decimal"
-	"github.com/yeferson59/gofinance/finance/compoundinterest"
-	"github.com/yeferson59/gofinance/money"
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/money"
 )
 
 // AnnuityConfig is a builder for creating Annuity instances using a fluent API.

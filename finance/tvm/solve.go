@@ -1,6 +1,6 @@
 package tvm
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // factors returns (1+rate)ᴺ and the coefficient that multiplies PMT in the
 // TVM equation, (1 + rate·type)·((1+rate)ᴺ − 1)/rate, using the annuity-timing

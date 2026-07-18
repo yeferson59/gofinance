@@ -1,6 +1,6 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // Periods calculates the number of compounding periods needed to reach a target future value
 // from a present value at a given interest rate.

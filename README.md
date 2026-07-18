@@ -24,7 +24,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 - Precise monetary amounts built on the `decimal` engine
 - Multi-currency support with ISO 4217 codes, symbols, and per-currency precision
-- Currency-checked arithmetic (`SafeAdd`/`SafeSub` return `ErrCurrencyMismatch`)
+- Currency-checked arithmetic: `Add`/`Sub` panic on a currency mismatch (like the decimal engine does on overflow); `TryAdd`/`TrySub` return `ErrCurrencyMismatch` instead
 - Penny-exact allocation: split amounts by ratios or evenly without losing a cent (`Allocate`, `AllocateEvenly`)
 - Currency conversion with explicit exchange rates (`Convert`, `ConvertFloat64`)
 
@@ -90,7 +90,7 @@ See [`FEATURES.md`](FEATURES.md) for the full roadmap of proposed and in-progres
 ### Installation
 
 ```bash
-go get github.com/yeferson59/gofinance
+go get github.com/yeferson59/gofinance/v2
 ```
 
 ### Quick Example: Money Management
@@ -101,7 +101,7 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/money"
+    "github.com/yeferson59/gofinance/v2/money"
 )
 
 func main() {
@@ -135,7 +135,7 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/decimal"
+    "github.com/yeferson59/gofinance/v2/decimal"
 )
 
 func main() {
@@ -162,8 +162,8 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/finance/compoundinterest"
-    "github.com/yeferson59/gofinance/money"
+    "github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+    "github.com/yeferson59/gofinance/v2/money"
 )
 
 func main() {
@@ -191,8 +191,8 @@ package main
 import (
     "fmt"
 
-    "github.com/yeferson59/gofinance/finance/annuities"
-    "github.com/yeferson59/gofinance/money"
+    "github.com/yeferson59/gofinance/v2/finance/annuities"
+    "github.com/yeferson59/gofinance/v2/money"
 )
 
 func main() {

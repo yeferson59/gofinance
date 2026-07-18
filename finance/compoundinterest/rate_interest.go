@@ -1,6 +1,6 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/decimal"
+import "github.com/yeferson59/gofinance/v2/decimal"
 
 // Interest calculates the periodic interest rate given present value, future value, and number of periods.
 // This method derives the interest rate from the compound interest formula.

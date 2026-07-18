@@ -3,7 +3,7 @@ package simpleinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 func (s SimpleInterest) RateInterest() (decimal.Decimal, error) {

@@ -3,7 +3,7 @@ package compoundinterest
 import (
 	"errors"
 
-	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // getOrderTime returns the temporal ordering weight for a compounding
