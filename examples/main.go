@@ -4,13 +4,20 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/types"
 	"github.com/yeferson59/gofinance/finance/annuities"
+	"github.com/yeferson59/gofinance/finance/bonds"
 	"github.com/yeferson59/gofinance/finance/charts"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
+	"github.com/yeferson59/gofinance/finance/daycount"
+	"github.com/yeferson59/gofinance/finance/depreciation"
+	dcf "github.com/yeferson59/gofinance/finance/investment"
+	"github.com/yeferson59/gofinance/finance/returns"
 	"github.com/yeferson59/gofinance/finance/simpleinterest"
+	"github.com/yeferson59/gofinance/finance/tvm"
 	"github.com/yeferson59/gofinance/money"
 )
 
@@ -26,6 +33,177 @@ func main() {
 	growthExample()
 
 	investmentExample()
+
+	returnsExample()
+
+	dcfExample()
+
+	tvmExample()
+
+	daycountExample()
+
+	xirrExample()
+
+	perpetuityExample()
+
+	inflationExample()
+
+	depreciationExample()
+
+	bondExample()
+}
+
+// xirrExample shows date-based NPV/IRR over an irregular cash-flow stream.
+func xirrExample() {
+	fmt.Println("\n=== Dated Cash Flows (XNPV / XIRR) ===")
+
+	flows := []dcf.DatedCashFlow{
+		{Date: time.Date(2008, 1, 1, 0, 0, 0, 0, time.UTC), Amount: money.MustMoneyFromFloat64(-10000, money.USD)},
+		{Date: time.Date(2008, 3, 1, 0, 0, 0, 0, time.UTC), Amount: money.MustMoneyFromFloat64(2750, money.USD)},
+		{Date: time.Date(2008, 10, 30, 0, 0, 0, 0, time.UTC), Amount: money.MustMoneyFromFloat64(4250, money.USD)},
+		{Date: time.Date(2009, 2, 15, 0, 0, 0, 0, time.UTC), Amount: money.MustMoneyFromFloat64(3250, money.USD)},
+		{Date: time.Date(2009, 4, 1, 0, 0, 0, 0, time.UTC), Amount: money.MustMoneyFromFloat64(2750, money.USD)},
+	}
+
+	xnpv := dcf.MustXNPV(money.MustFromFloat64(0.09), flows)
+	xirr := dcf.MustXIRR(flows)
+
+	fmt.Println("XNPV @ 9%:", xnpv.RoundBankString(2))
+	fmt.Println("XIRR:", xirr.RoundBank(6).StringFixed(6))
+}
+
+// perpetuityExample shows level and growing (Gordon) perpetuities.
+func perpetuityExample() {
+	fmt.Println("\n=== Perpetuities ===")
+
+	level := dcf.MustPerpetuity(money.MustMoneyFromFloat64(100, money.USD), money.MustFromFloat64(0.05))
+	growing := dcf.MustGrowingPerpetuity(money.MustMoneyFromFloat64(100, money.USD), money.MustFromFloat64(0.08), money.MustFromFloat64(0.03))
+
+	fmt.Println("$100/yr at 5%:", level.RoundBankString(2))
+	fmt.Println("$100/yr, 8% discount, 3% growth:", growing.RoundBankString(2))
+}
+
+// inflationExample shows real vs nominal value and the Fisher real rate.
+func inflationExample() {
+	fmt.Println("\n=== Inflation ===")
+
+	realAmount := returns.MustRealValue(money.MustMoneyFromFloat64(1000, money.USD), money.MustFromFloat64(0.03), money.MustFromFloat64(10))
+	realRate := returns.MustRealRate(money.MustFromFloat64(0.08), money.MustFromFloat64(0.03))
+
+	fmt.Println("$1,000 in 10 years at 3% inflation (today's money):", realAmount.RoundBankString(2))
+	fmt.Println("Real rate (8% nominal, 3% inflation):", realRate.RoundBank(6).StringFixed(6))
+}
+
+// depreciationExample shows straight-line and MACRS depreciation schedules.
+func depreciationExample() {
+	fmt.Println("\n=== Depreciation ===")
+
+	cost := money.MustMoneyFromFloat64(10000, money.USD)
+	salvage := money.MustMoneyFromFloat64(1000, money.USD)
+
+	sl := depreciation.MustStraightLine(cost, salvage, 5)
+	macrs := depreciation.MustMACRS(cost, 5)
+
+	fmt.Println("$10,000 asset, $1,000 salvage, 5-year life")
+	fmt.Println("Straight-line year 1:", sl[0].Depreciation.RoundBankString(2), "| ending book:", sl[len(sl)-1].BookValue.RoundBankString(2))
+	fmt.Println("MACRS 5-year year 1:", macrs[0].Depreciation.RoundBankString(2), "| rows:", len(macrs))
+}
+
+// bondExample shows bond pricing, yield to maturity, and risk measures.
+func bondExample() {
+	fmt.Println("\n=== Bonds ===")
+
+	bond := bonds.NewBond().
+		Face(1000, money.USD).
+		CouponRate(0.05).
+		Frequency(2).
+		Periods(10).
+		Yield(0.06)
+
+	price := bond.MustPrice()
+	ytm := bonds.NewBond().Face(1000, money.USD).CouponRate(0.05).Frequency(2).Periods(10).
+		MarketPrice(price.InexactFloat64()).MustYTM()
+
+	fmt.Println("5-year 5% semiannual bond at 6% yield")
+	fmt.Println("Clean price:", price.RoundBankString(2))
+	fmt.Println("YTM from price:", ytm.RoundBank(6).StringFixed(6))
+	fmt.Println("Macaulay duration:", bond.MustMacaulayDuration().RoundBank(4).StringFixed(4))
+	fmt.Println("Modified duration:", bond.MustModifiedDuration().RoundBank(4).StringFixed(4))
+	fmt.Println("Convexity:", bond.MustConvexity().RoundBank(4).StringFixed(4))
+}
+
+// returnsExample shows the finance/returns metrics: CAGR, ROI, and
+// annualizing a cumulative return.
+func returnsExample() {
+	fmt.Println("\n=== Returns ===")
+
+	begin := money.MustMoneyFromFloat64(1000, money.USD)
+	end := money.MustMoneyFromFloat64(2000, money.USD)
+
+	cagr := returns.MustCAGR(begin, end, money.MustFromFloat64(5))
+	roi := returns.MustROI(begin, end)
+
+	fmt.Println("$1,000 → $2,000 over 5 years")
+	fmt.Println("CAGR:", cagr.RoundBank(4).StringFixed(4))
+	fmt.Println("ROI:", roi.RoundBank(4).StringFixed(4))
+}
+
+// dcfExample shows the finance/investment discounted cash-flow metrics: net
+// present value and internal rate of return over a stream of cash flows.
+func dcfExample() {
+	fmt.Println("\n=== Investment (NPV / IRR) ===")
+
+	flows := []money.Money{
+		money.MustMoneyFromFloat64(-1000, money.USD), // outflow today
+		money.MustMoneyFromFloat64(400, money.USD),
+		money.MustMoneyFromFloat64(400, money.USD),
+		money.MustMoneyFromFloat64(400, money.USD),
+	}
+
+	npv := dcf.MustNPV(money.MustFromFloat64(0.10), flows)
+	irr := dcf.MustIRR(flows)
+
+	fmt.Println("Cash flows: -1000, 400, 400, 400")
+	fmt.Println("NPV @ 10%:", npv.RoundBankString(2))
+	fmt.Println("IRR:", irr.RoundBank(4).StringFixed(4))
+}
+
+// tvmExample shows the finance/tvm solver recovering the monthly payment of a
+// loan from the other four time-value-of-money variables.
+func tvmExample() {
+	fmt.Println("\n=== Time Value of Money ===")
+
+	payment := tvm.NewTVM().
+		PV(300000).
+		Rate(0.06 / 12).
+		N(360).
+		MustSolvePMT()
+
+	fmt.Println("$300,000 loan at 6%/yr over 360 months")
+	fmt.Println("Monthly payment:", payment.RoundBank(2).StringFixed(2))
+}
+
+// daycountExample shows the finance/daycount year fractions between two dates
+// under different conventions.
+func daycountExample() {
+	fmt.Println("\n=== Day Count ===")
+
+	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+
+	for _, conv := range []daycount.Convention{
+		daycount.Thirty360,
+		daycount.Actual365Fixed,
+		daycount.ActualActualISDA,
+	} {
+		yf, err := daycount.YearFraction(start, end, conv)
+		if err != nil {
+			fmt.Println("daycount error:", err)
+			return
+		}
+
+		fmt.Printf("%-20s %s\n", conv, yf.RoundBank(6).StringFixed(6))
+	}
 }
 
 func compoundExample() {
