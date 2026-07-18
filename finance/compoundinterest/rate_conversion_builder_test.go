@@ -64,7 +64,7 @@ func TestRateConversionToPeriodicAt(t *testing.T) {
 		Rate(0.01).
 		Periodic().
 		Monthly().
-		ToPeriodicAt(QuarterlyOne)
+		ToPeriodicAt(Quarterly)
 
 	assertRate(t, quarterly, err, math.Pow(1.01, 3)-1)
 }
@@ -74,7 +74,7 @@ func TestRateConversionToNominalAt(t *testing.T) {
 		Rate(0.01).
 		Periodic().
 		Monthly().
-		ToNominalAt(QuarterlyOne)
+		ToNominalAt(Quarterly)
 
 	assertRate(t, nominalQuarterly, err, (math.Pow(1.01, 3)-1)*4)
 }
@@ -119,14 +119,14 @@ func TestRateConversionConfigSetters(t *testing.T) {
 
 	config := NewRateConversion().
 		RateDecimal(rate).
-		Frequency(QuarterlyOne).
+		Frequency(Quarterly).
 		RateType(RateEffectyNominal)
 
 	if !config.rate.Equal(rate) {
 		t.Errorf("expected rate %v, got %v", rate, config.rate)
 	}
-	if config.frequency != QuarterlyOne {
-		t.Errorf("expected QuarterlyOne, got %v", config.frequency)
+	if config.frequency != Quarterly {
+		t.Errorf("expected Quarterly, got %v", config.frequency)
 	}
 	if config.rateType != RateEffectyNominal {
 		t.Errorf("expected RateEffectyNominal, got %v", config.rateType)
@@ -140,7 +140,7 @@ func TestRateConversionFrequencyConvenienceMethods(t *testing.T) {
 		expected CompoundingFrequency
 	}{
 		{"daily", NewRateConversion().Daily(), Daily},
-		{"quarterly", NewRateConversion().Quarterly(), QuarterlyOne},
+		{"quarterly", NewRateConversion().Quarterly(), Quarterly},
 		{"semiannually", NewRateConversion().SemiAnnually(), SemiAnnually},
 		{"annually", NewRateConversion().Annually(), Annually},
 	}

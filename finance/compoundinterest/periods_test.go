@@ -86,7 +86,7 @@ func TestPeriodsWithAnnuallyRate(t *testing.T) {
 
 func TestPeriodsWithQuarterlyCompounding(t *testing.T) {
 	// 12% nominal quarterly => i = 0.03, n = ln(1.1268) / ln(1.03) = 4.0388
-	ci := newPeriodsCase(t, 100000, 112680, 0.12, QuarterlyOne, RateEffectyNominal)
+	ci := newPeriodsCase(t, 100000, 112680, 0.12, Quarterly, RateEffectyNominal)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -163,7 +163,7 @@ func TestPeriodsWithMultipleDataSets(t *testing.T) {
 			present:  2000,
 			future:   2342.7,
 			rate:     0.02,
-			freq:     QuarterlyOne,
+			freq:     Quarterly,
 			typeRate: RateEffectyPeriodic,
 			// 2342.70 loses a cent to float truncation when stored (2342.69):
 			// n = ln(2342.69/2000) / ln(1.02) = 7.9864

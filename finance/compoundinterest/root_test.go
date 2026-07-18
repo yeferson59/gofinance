@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewPeriodSuccess(t *testing.T) {
-	period, err := NewPeriod(decimal.MustFromFloat64(2), QuarterlyTwo)
+	period, err := NewPeriod(decimal.MustFromFloat64(2), FourMonthly)
 
 	tx := assert.New(t)
 
@@ -19,7 +19,7 @@ func TestNewPeriodSuccess(t *testing.T) {
 
 func TestGetValuePeriod(t *testing.T) {
 	numberPeriod := 2.0
-	period, err := NewPeriod(decimal.MustFromFloat64(numberPeriod), QuarterlyTwo)
+	period, err := NewPeriod(decimal.MustFromFloat64(numberPeriod), FourMonthly)
 
 	tx := assert.New(t)
 
@@ -35,7 +35,7 @@ func TestGetValuePeriod(t *testing.T) {
 
 func TestNewPeriodZeroValueIsValid(t *testing.T) {
 	// A zero period is allowed: it signals that the period should be derived.
-	period, err := NewPeriod(decimal.MustFromFloat64(0), QuarterlyTwo)
+	period, err := NewPeriod(decimal.MustFromFloat64(0), FourMonthly)
 
 	tx := assert.New(t)
 
@@ -65,11 +65,11 @@ func TestNewPeriodWithDifferentsValues(t *testing.T) {
 		},
 		{
 			value:                1,
-			compoundingFrequency: QuarterlyOne,
+			compoundingFrequency: Quarterly,
 		},
 		{
 			value:                3,
-			compoundingFrequency: QuarterlyTwo,
+			compoundingFrequency: FourMonthly,
 		},
 		{
 			value:                11,

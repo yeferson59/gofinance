@@ -225,7 +225,7 @@ func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
 	}{
 		{"daily", compoundinterest.Daily, 11974.3955, 10039.5235},
 		{"monthly", compoundinterest.Monthly, 11255.0775, 11268.2503},
-		{"quarterly", compoundinterest.QuarterlyOne, 9954.0040, 14257.6089},
+		{"quarterly", compoundinterest.Quarterly, 9954.0040, 14257.6089},
 		{"annually", compoundinterest.Annually, 6194.3742, 38959.7599},
 	}
 

@@ -92,10 +92,10 @@ func TestPresentWithDailyCompounding(t *testing.T) {
 }
 
 func TestPresentWithQuarterlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), QuarterlyOne, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Quarterly, RateEffectyNominal)
 	require.NoError(t, err)
 
-	period, err := NewPeriod(decimal.MustFromFloat64(4), QuarterlyOne)
+	period, err := NewPeriod(decimal.MustFromFloat64(4), Quarterly)
 	require.NoError(t, err)
 
 	presentMoney, err := money.New(0, 2, money.USD)
@@ -187,7 +187,7 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 			name:     "quarterly compounding",
 			future:   2342.7,
 			rate:     0.02,
-			freq:     QuarterlyOne,
+			freq:     Quarterly,
 			typeRate: RateEffectyPeriodic,
 			periods:  8,
 			// PV = 2342.70 / 1.02^8 = 1999.4719

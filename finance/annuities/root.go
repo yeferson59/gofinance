@@ -8,7 +8,7 @@ import (
 )
 
 type Annuity struct {
-	value             money.Money
+	value            money.Money
 	compoundInterest compoundinterest.CompoundInterest
 }
 
@@ -19,7 +19,7 @@ func New(value, present, future money.Money, period compoundinterest.Period, rat
 	}
 
 	return Annuity{
-		value:             value,
+		value:            value,
 		compoundInterest: ci,
 	}, nil
 }

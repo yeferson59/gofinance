@@ -137,9 +137,9 @@ func (a AnnuityConfig) Years(n int) AnnuityConfig {
 		periodsPerYear = 365
 	case compoundinterest.Bimonthly:
 		periodsPerYear = 6
-	case compoundinterest.QuarterlyOne:
+	case compoundinterest.Quarterly:
 		periodsPerYear = 4
-	case compoundinterest.QuarterlyTwo:
+	case compoundinterest.FourMonthly:
 		periodsPerYear = 3
 	case compoundinterest.SemiAnnually:
 		periodsPerYear = 2
@@ -193,9 +193,9 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 		divisor = 365.0
 	case compoundinterest.Bimonthly:
 		divisor = 6.0
-	case compoundinterest.QuarterlyOne:
+	case compoundinterest.Quarterly:
 		divisor = 4.0
-	case compoundinterest.QuarterlyTwo:
+	case compoundinterest.FourMonthly:
 		divisor = 3.0
 	case compoundinterest.SemiAnnually:
 		divisor = 2.0
@@ -260,7 +260,7 @@ func (a AnnuityConfig) Annually() AnnuityConfig {
 //
 //	.NewAnnuity().Quarterly()
 func (a AnnuityConfig) Quarterly() AnnuityConfig {
-	a.frequency = compoundinterest.QuarterlyOne
+	a.frequency = compoundinterest.Quarterly
 
 	return a
 }

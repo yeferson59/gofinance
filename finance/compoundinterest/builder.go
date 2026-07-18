@@ -132,7 +132,7 @@ func (c CompoundConfig) Periods(n int) CompoundConfig {
 // Frequency sets the compounding frequency using a CompoundingFrequency value.
 //
 // Parameters:
-//   - f: The compounding frequency (Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually)
+//   - f: The compounding frequency (Daily, Monthly, Bimonthly, Quarterly, FourMonthly, SemiAnnually, Annually)
 //
 // Example:
 //
@@ -182,7 +182,7 @@ func (c CompoundConfig) Annually() CompoundConfig {
 }
 
 // Quarterly sets the compounding frequency to quarterly (4 periods per year).
-// This is a convenience method equivalent to calling Frequency(QuarterlyOne).
+// This is a convenience method equivalent to calling Frequency(Quarterly).
 //
 // Use this for quarterly compounding calculations.
 //
@@ -190,7 +190,7 @@ func (c CompoundConfig) Annually() CompoundConfig {
 //
 //	.NewCompound().Quarterly()
 func (c CompoundConfig) Quarterly() CompoundConfig {
-	c.frequency = QuarterlyOne
+	c.frequency = Quarterly
 	return c
 }
 

@@ -61,8 +61,8 @@ func (r RateConversionConfig) RateDecimal(rate decimal.Decimal) RateConversionCo
 // Frequency sets the compounding frequency of the source rate.
 //
 // Parameters:
-//   - f: The compounding frequency (Daily, Monthly, Bimonthly, QuarterlyOne,
-//     QuarterlyTwo, SemiAnnually, Annually)
+//   - f: The compounding frequency (Daily, Monthly, Bimonthly, Quarterly,
+//     FourMonthly, SemiAnnually, Annually)
 func (r RateConversionConfig) Frequency(f CompoundingFrequency) RateConversionConfig {
 	r.frequency = f
 	return r
@@ -82,7 +82,7 @@ func (r RateConversionConfig) Monthly() RateConversionConfig {
 
 // Quarterly sets the compounding frequency of the source rate to quarterly (4 periods per year).
 func (r RateConversionConfig) Quarterly() RateConversionConfig {
-	r.frequency = QuarterlyOne
+	r.frequency = Quarterly
 	return r
 }
 
@@ -253,7 +253,7 @@ func (r RateConversionConfig) ToAnticipatedNominal() (decimal.Decimal, error) {
 // Example:
 //
 //	// Convert a 1% monthly periodic rate to its quarterly equivalent
-//	quarterly, err := NewRateConversion().Rate(0.01).Periodic().Monthly().ToPeriodicAt(QuarterlyOne)
+//	quarterly, err := NewRateConversion().Rate(0.01).Periodic().Monthly().ToPeriodicAt(Quarterly)
 func (r RateConversionConfig) ToPeriodicAt(newFrequency CompoundingFrequency) (decimal.Decimal, error) {
 	rt, err := r.Build()
 	if err != nil {

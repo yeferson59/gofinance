@@ -180,7 +180,7 @@ func TestAnnuityPeriodsWithPresentAcrossFrequencies(t *testing.T) {
 	}{
 		{"daily", compoundinterest.Daily, 11974.3955},
 		{"monthly", compoundinterest.Monthly, 11255.0775},
-		{"quarterly", compoundinterest.QuarterlyOne, 9954.0040},
+		{"quarterly", compoundinterest.Quarterly, 9954.0040},
 		{"annually", compoundinterest.Annually, 6194.3742},
 	}
 
@@ -218,7 +218,7 @@ func TestAnnuityPeriodsWithFutureAcrossFrequencies(t *testing.T) {
 	}{
 		{"daily", compoundinterest.Daily, 12021.7224},
 		{"monthly", compoundinterest.Monthly, 12682.5030},
-		{"quarterly", compoundinterest.QuarterlyOne, 14192.0296},
+		{"quarterly", compoundinterest.Quarterly, 14192.0296},
 		{"annually", compoundinterest.Annually, 24133.1333},
 	}
 

@@ -19,7 +19,7 @@ func (rt RateInterest) RatePeriodic() (decimal.Decimal, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -66,7 +66,7 @@ func (rt RateInterest) RateNominal() (decimal.Decimal, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -96,7 +96,7 @@ func (rt RateInterest) RateEffectyAnnually() (decimal.Decimal, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -128,19 +128,19 @@ func (rt RateInterest) RateEffectyAnnually() (decimal.Decimal, error) {
 // Example:
 //
 //	rate, _ := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
-//	quarterlyRate, _ := rate.RatePeriodicToPeriodic(QuarterlyOne)
+//	quarterlyRate, _ := rate.RatePeriodicToPeriodic(Quarterly)
 func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (decimal.Decimal, error) {
 	currentPeriodicRate, err := rt.RatePeriodic()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	newPeriodsPerYear, err := newCompoundingFrequency.getCompoundingFrequency()
+	newPeriodsPerYear, err := newCompoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	currentPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
+	currentPeriodsPerYear, err := rt.compoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -186,7 +186,7 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (decimal.Decimal, error) 
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -215,7 +215,7 @@ func (rt RateInterest) RateAnticipateNominal() (decimal.Decimal, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -249,7 +249,7 @@ func (rt RateInterest) RateAnticipatePeriodic() (decimal.Decimal, error) {
 		return rt.value, nil
 	}
 
-	compoundingPeriodsPerYear, err := rt.compoundingFrequency.getCompoundingFrequency()
+	compoundingPeriodsPerYear, err := rt.compoundingFrequency.PeriodsPerYear()
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

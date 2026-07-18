@@ -87,7 +87,7 @@ func TestInterestWithAnnuallyRate(t *testing.T) {
 
 func TestInterestWithQuarterlyCompounding(t *testing.T) {
 	// r = (1126.80/1000)^(1/4) - 1 = 0.0302953
-	ci := newInterestCase(t, 100000, 112680, QuarterlyOne, RateEffectyNominal, 4)
+	ci := newInterestCase(t, 100000, 112680, Quarterly, RateEffectyNominal, 4)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -161,7 +161,7 @@ func TestInterestWithMultipleDataSets(t *testing.T) {
 			name:     "quarterly compounding",
 			present:  2000,
 			future:   2342.7,
-			freq:     QuarterlyOne,
+			freq:     Quarterly,
 			typeRate: RateEffectyPeriodic,
 			periods:  8,
 			// 2342.70 loses a cent to float truncation when stored (2342.69):

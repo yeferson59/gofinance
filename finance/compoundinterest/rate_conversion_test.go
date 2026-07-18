@@ -106,7 +106,7 @@ func TestRatePeriodicToPeriodicMonthlyToQuarterly(t *testing.T) {
 	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
 	require.NoError(t, err)
 
-	newRatePeriodic, err := rateInterest.RatePeriodicToPeriodic(QuarterlyOne)
+	newRatePeriodic, err := rateInterest.RatePeriodicToPeriodic(Quarterly)
 	require.NoError(t, err)
 
 	// r = 1.01^3 - 1 = 0.030301
@@ -138,7 +138,7 @@ func TestRateNominalToNominalMonthlyToQuarterly(t *testing.T) {
 	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
-	newRateNominal, err := rateInterest.RateNominalToNominal(QuarterlyOne)
+	newRateNominal, err := rateInterest.RateNominalToNominal(Quarterly)
 	require.NoError(t, err)
 
 	// quarterly periodic = 1.01^3 - 1 = 0.030301, nominal = 0.030301 × 4 = 0.121204
@@ -317,7 +317,7 @@ func TestRateConversionWithDifferentFrequencies(t *testing.T) {
 		// r = 1.01^(12/365) - 1
 		{"monthly to daily", 0.01, Monthly, RateEffectyPeriodic, Daily, 0.0003272},
 		// r = 1.03^(4/12) - 1
-		{"quarterly to monthly", 0.03, QuarterlyOne, RateEffectyPeriodic, Monthly, 0.0099016},
+		{"quarterly to monthly", 0.03, Quarterly, RateEffectyPeriodic, Monthly, 0.0099016},
 		// r = 1.10^(1/2) - 1
 		{"annual to semiannual", 0.10, Annually, RateEffectyPeriodic, SemiAnnually, 0.0488088},
 	}
@@ -355,10 +355,10 @@ func TestRateConversionConsistency(t *testing.T) {
 	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
 	require.NoError(t, err)
 
-	rateQuarterly, err := rateInterest.RateNominalToNominal(QuarterlyOne)
+	rateQuarterly, err := rateInterest.RateNominalToNominal(Quarterly)
 	require.NoError(t, err)
 
-	rateInterest2, err := NewRateInterest(rateQuarterly, QuarterlyOne, RateEffectyNominal)
+	rateInterest2, err := NewRateInterest(rateQuarterly, Quarterly, RateEffectyNominal)
 	require.NoError(t, err)
 
 	rateMonthly, err := rateInterest2.RateNominalToNominal(Monthly)

@@ -1,18 +1,33 @@
 package compoundinterest
 
-import "errors"
+import (
+	"errors"
 
-// Compounding frequencies of interest per year.
-// These constants define how many times interest compounds in a one-year period.
-const (
-	Daily        CompoundingFrequency = "daily"        // 365 times per year
-	Monthly      CompoundingFrequency = "monthly"      // 12 times per year
-	Bimonthly    CompoundingFrequency = "bimonthly"    // 6 times per year
-	QuarterlyOne CompoundingFrequency = "quarterlyOne" // 4 times per year
-	QuarterlyTwo CompoundingFrequency = "quarterlyTwo" // 3 times per year
-	SemiAnnually CompoundingFrequency = "semiAnnually" // 2 times per year
-	Annually     CompoundingFrequency = "annually"     // 1 time per year
+	"github.com/yeferson59/gofinance/finance/term"
 )
+
+// Compounding frequencies of interest per year, re-exported from the shared
+// finance/term vocabulary. These constants define how many times interest
+// compounds in a one-year period.
+const (
+	Daily        = term.Daily        // 365 times per year
+	Monthly      = term.Monthly      // 12 times per year
+	Bimonthly    = term.Bimonthly    // 6 times per year
+	Quarterly    = term.Quarterly    // 4 times per year
+	FourMonthly  = term.FourMonthly  // 3 times per year (every four months)
+	SemiAnnually = term.SemiAnnually // 2 times per year
+	Annually     = term.Annually     // 1 time per year
+)
+
+// QuarterlyOne is the historical name for quarterly compounding.
+//
+// Deprecated: use Quarterly (4 compounding periods per year).
+const QuarterlyOne = term.Quarterly
+
+// QuarterlyTwo is the historical name for every-four-months compounding.
+//
+// Deprecated: use FourMonthly (3 compounding periods per year).
+const QuarterlyTwo = term.FourMonthly
 
 // Types of interest rates.
 // Ordinary rates (charged at the end of the period):

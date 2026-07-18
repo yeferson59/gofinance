@@ -28,7 +28,7 @@ func TestYearsRespectsFrequency(t *testing.T) {
 		{"annually", NewAnnuity().Annually().Years(30), 30},
 		{"daily", withFrequency(NewAnnuity(), compoundinterest.Daily).Years(1), 365},
 		{"bimonthly", withFrequency(NewAnnuity(), compoundinterest.Bimonthly).Years(1), 6},
-		{"quarterlyTwo", withFrequency(NewAnnuity(), compoundinterest.QuarterlyTwo).Years(1), 3},
+		{"quarterlyTwo", withFrequency(NewAnnuity(), compoundinterest.FourMonthly).Years(1), 3},
 		{"semiAnnually", withFrequency(NewAnnuity(), compoundinterest.SemiAnnually).Years(1), 2},
 	}
 
@@ -50,8 +50,8 @@ func TestAnnualRateRespectsFrequency(t *testing.T) {
 		{"monthly", NewAnnuity().Monthly().AnnualRate(0.12), 0.01},
 		{"daily", withFrequency(NewAnnuity(), compoundinterest.Daily).AnnualRate(0.365), 0.001},
 		{"bimonthly", withFrequency(NewAnnuity(), compoundinterest.Bimonthly).AnnualRate(0.06), 0.01},
-		{"quarterlyOne", withFrequency(NewAnnuity(), compoundinterest.QuarterlyOne).AnnualRate(0.04), 0.01},
-		{"quarterlyTwo", withFrequency(NewAnnuity(), compoundinterest.QuarterlyTwo).AnnualRate(0.03), 0.01},
+		{"quarterlyOne", withFrequency(NewAnnuity(), compoundinterest.Quarterly).AnnualRate(0.04), 0.01},
+		{"quarterlyTwo", withFrequency(NewAnnuity(), compoundinterest.FourMonthly).AnnualRate(0.03), 0.01},
 		{"semiAnnually", withFrequency(NewAnnuity(), compoundinterest.SemiAnnually).AnnualRate(0.02), 0.01},
 		{"annually", withFrequency(NewAnnuity(), compoundinterest.Annually).AnnualRate(0.01), 0.01},
 	}

@@ -112,7 +112,7 @@ func TestAnnuityRateWithPresentAcrossFrequencies(t *testing.T) {
 	}{
 		{"daily", compoundinterest.Daily, 11974.3955, 0.12 / 365},
 		{"monthly", compoundinterest.Monthly, 11255.0775, 0.01},
-		{"quarterly", compoundinterest.QuarterlyOne, 9954.0040, 0.03},
+		{"quarterly", compoundinterest.Quarterly, 9954.0040, 0.03},
 		{"annually", compoundinterest.Annually, 6194.3742, 0.12},
 	}
 

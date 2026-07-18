@@ -77,7 +77,7 @@ func TestCompoundConfigFrequencyConvenienceMethods(t *testing.T) {
 		expected CompoundingFrequency
 	}{
 		{"annually", NewCompound().Annually(), Annually},
-		{"quarterly", NewCompound().Quarterly(), QuarterlyOne},
+		{"quarterly", NewCompound().Quarterly(), Quarterly},
 		{"daily", NewCompound().Daily(), Daily},
 	}
 

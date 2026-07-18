@@ -7,11 +7,14 @@ import (
 	"errors"
 
 	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/finance/term"
 	"github.com/yeferson59/gofinance/money"
 )
 
 // Periods represents the time unit for periods (days, weeks, months, years).
-type Periods string
+// It is an alias of term.Unit, the shared vocabulary across the finance
+// packages.
+type Periods = term.Unit
 
 // Period holds the value for different time periods.
 // Exactly one of days, weeks, months, or years should be non-zero,

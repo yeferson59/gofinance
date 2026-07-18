@@ -13,7 +13,8 @@
 //   - Daily (365 periods per year)
 //   - Monthly (12 periods per year)
 //   - Bimonthly (6 periods per year)
-//   - Quarterly (4 or 3 periods per year)
+//   - Quarterly (4 periods per year)
+//   - FourMonthly (3 periods per year)
 //   - Semi-annually (2 periods per year)
 //   - Annually (1 period per year)
 //
@@ -37,13 +38,15 @@ import (
 	"errors"
 
 	"github.com/yeferson59/gofinance/decimal"
+	"github.com/yeferson59/gofinance/finance/term"
 	"github.com/yeferson59/gofinance/money"
 )
 
-// CompoundingFrequency defines the frequency of interest compounding in a year.
-// Valid values are: Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo,
-// SemiAnnually, Annually.
-type CompoundingFrequency string
+// CompoundingFrequency defines the frequency of interest compounding in a
+// year. It is an alias of term.Frequency, the shared vocabulary across the
+// finance packages. Valid values are: Daily, Monthly, Bimonthly, Quarterly,
+// FourMonthly, SemiAnnually, Annually.
+type CompoundingFrequency = term.Frequency
 
 // TypeRate defines the type of interest rate to use in calculations.
 // Valid values include discount rates (anticipated) and ordinary rates.
@@ -79,15 +82,14 @@ func NewPeriod(value decimal.Decimal, compoundingFrequency CompoundingFrequency)
 		return Period{}, errors.New("value periods must be greater or equal to zero")
 	}
 
-	switch compoundingFrequency {
-	case Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually:
-		return Period{
-			value:     value,
-			frequency: compoundingFrequency,
-		}, nil
-	default:
+	if !compoundingFrequency.Valid() {
 		return Period{}, errors.New("invalid compounding frequency")
 	}
+
+	return Period{
+		value:     value,
+		frequency: compoundingFrequency,
+	}, nil
 }
 
 // getPeriod extracts the period value and its associated frequency from the Period structure.
@@ -97,13 +99,11 @@ func NewPeriod(value decimal.Decimal, compoundingFrequency CompoundingFrequency)
 //   - The corresponding compounding frequency
 //   - An error if the frequency is invalid or uninitialized
 func (p *Period) getPeriod() (decimal.Decimal, CompoundingFrequency, error) {
-	// Direct lookup via frequency field
-	switch p.frequency {
-	case Daily, Monthly, Bimonthly, QuarterlyOne, QuarterlyTwo, SemiAnnually, Annually:
-		return p.value, p.frequency, nil
-	default:
+	if !p.frequency.Valid() {
 		return decimal.Decimal{}, "", errors.New("failed to get valid periods")
 	}
+
+	return p.value, p.frequency, nil
 }
 
 // RateInterest represents an interest rate with its compounding frequency and type.
@@ -216,22 +216,22 @@ func (c CompoundInterest) GetEqualsRateInterestPeriods() (decimal.Decimal, decim
 	}
 
 	if compoundingFrequency != c.rateInterest.compoundingFrequency {
-		periodsInMonths, err := compoundingFrequency.getCompoundingFrequencytoMonths()
+		periodsInMonths, err := compoundingFrequency.MonthsPerPeriod()
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		rateFrequencyInMonths, err := c.rateInterest.compoundingFrequency.getCompoundingFrequencytoMonths()
+		rateFrequencyInMonths, err := c.rateInterest.compoundingFrequency.MonthsPerPeriod()
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		periodWeight, err := compoundingFrequency.getOrderTime()
+		periodWeight, err := getOrderTime(compoundingFrequency)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		rateWeight, err := c.rateInterest.compoundingFrequency.getOrderTime()
+		rateWeight, err := getOrderTime(c.rateInterest.compoundingFrequency)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
