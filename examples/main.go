@@ -8,10 +8,10 @@ import (
 
 	echartslib "github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/types"
+	"github.com/yeferson59/gofinance/charts"
 	"github.com/yeferson59/gofinance/decimal"
 	"github.com/yeferson59/gofinance/finance/annuities"
 	"github.com/yeferson59/gofinance/finance/bonds"
-	"github.com/yeferson59/gofinance/charts"
 	"github.com/yeferson59/gofinance/finance/compositeinterest"
 	"github.com/yeferson59/gofinance/finance/daycount"
 	"github.com/yeferson59/gofinance/finance/depreciation"

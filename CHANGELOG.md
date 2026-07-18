@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Breaking**: `money.Decimal` is now a type alias of `decimal.Decimal` instead of a wrapper type. The full arithmetic API comes directly from the `decimal` package; `money`'s `NewFrom*`/`MustFrom*` decimal constructors and `money.Zero`/`money.One` remain as deprecated forwarders. `Decimal.ToMoney` was removed — use the new `money.FromDecimal(d, currency)`
+- **Breaking**: the chart rendering package moved from `finance/charts` to the separate `charts` Go module (`github.com/yeferson59/gofinance/charts`); the root library module now has zero external runtime dependencies. `examples/` is also its own module
+- All `finance/*` packages now use `decimal.Decimal` directly for rates, factors and periods; `finance/tvm` and `finance/daycount` no longer depend on `money`
+- `Money.Scan` now defaults the currency to USD (matching `UnmarshalJSON`) instead of leaving it unset
+- Repository layering rules are documented in `ARCHITECTURE.md`
+
 ### Added
+- `money.FromDecimal(d, currency)` to turn a computed decimal into a monetary amount
+- Dimensionally-correct `Money.MulDecimal`, `Money.DivDecimal` and `Money.MustDivDecimal` for amount×rate / amount÷rate math without attaching a placeholder currency
+- `annuities.WriteCSVTo(io.Writer, ...)` so schedule CSV export is destination-agnostic; `WriteCSV` remains as a file convenience wrapper
 - `finance/investment`: date-based `XNPV`/`XIRR` for irregular cash flows (`DatedCashFlow`, Actual/365 basis) and `Perpetuity`/`GrowingPerpetuity` (Gordon model), all with `Must*` variants and typed errors (`ErrDatesBeforeBase`, `ErrNonPositiveRate`, `ErrRateBelowGrowth`)
 - New `finance/bonds` package: fluent `NewBond()` builder with clean `Price` from yield, `YTM` from price (bracketed bisection), `MacaulayDuration`/`ModifiedDuration`/`Convexity`, `CouponPayment`, and `AccruedInterest` (reusing `finance/daycount`)
 - New `finance/depreciation` package: `StraightLine`, `DecliningBalance`, `DoubleDecliningBalance` (with straight-line switchover), `SumOfYearsDigits`, and `MACRS` (GDS half-year tables for 3/5/7/10/15/20-year recovery), each returning a year-by-year `Schedule`

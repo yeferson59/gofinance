@@ -124,10 +124,10 @@ tooling items (CLI, schedule export).
   tolerance/max-iterations and return a typed error (e.g. `ErrNoConvergence`) rather
   than silently returning zero.
 - **Money vs Decimal:** cash amounts stay `money.Money` (currency-checked); rates,
-  factors, and ratios stay `money.Decimal` / `decimal.Decimal` — consistent with how
+  factors, and ratios stay `decimal.Decimal` — consistent with how
   `annuities.BuildSchedule` already separates them.
 - **Zero dependencies:** keep new core packages stdlib-only; anything needing
-  `go-echarts` or HTTP frameworks lives in optional packages (like `finance/charts`
+  `go-echarts` or HTTP frameworks lives in separate modules (like `charts`
   today).
 - **Changelog:** record each accepted feature under `[Unreleased]` in `CHANGELOG.md`,
   following the existing Keep a Changelog format.

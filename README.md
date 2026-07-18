@@ -42,7 +42,7 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 - Payment, present/future value, rate, and period calculations
 - Full amortization schedule generation (`BuildSchedule`)
-- Optional chart rendering of schedules via `finance/charts` (go-echarts)
+- Optional chart rendering of schedules via the separate `charts` module (go-echarts)
 
 ### 📊 **Returns** (`finance/returns`)
 
@@ -248,7 +248,7 @@ gofinance/
 │   ├── currency.go                # ISO 4217 currencies, symbols, precision
 │   ├── allocate.go                # Penny-exact allocation
 │   ├── convert.go                 # Currency conversion
-│   └── decimal.go                 # money.Decimal wrapper for rates/factors
+│   └── decimal.go                 # Deprecated aliases into decimal + FromDecimal
 │
 ├── finance/
 │   ├── simpleinterest/            # Simple interest (fluent builder)
@@ -259,14 +259,20 @@ gofinance/
 │   ├── bonds/                     # Bond pricing, YTM, duration, convexity
 │   ├── depreciation/              # Straight-line, declining balance, MACRS
 │   ├── tvm/                       # General time-value-of-money solver
-│   ├── daycount/                  # Day-count conventions (30/360, Actual/*, …)
-│   └── charts/                    # Amortization chart rendering (go-echarts)
+│   └── daycount/                  # Day-count conventions (30/360, Actual/*, …)
 │
+├── charts/                         # Separate module: chart rendering (go-echarts)
 ├── benchmarks/                     # Cross-package benchmark suites
-├── examples/                       # Runnable usage examples
+├── examples/                       # Separate module: runnable usage examples
+├── ARCHITECTURE.md                 # Layering rules and design decisions
 ├── Makefile                        # Development tasks
 └── .golangci.yaml                  # Linting configuration
 ```
+
+The repository hosts three Go modules: the root library module (zero
+runtime dependencies), `charts` (opt-in go-echarts rendering), and
+`examples` (a runnable showcase). See [`ARCHITECTURE.md`](ARCHITECTURE.md)
+for the layering rules between `decimal`, `money`, and `finance/*`.
 
 ---
 
@@ -354,9 +360,9 @@ An annuity is a series of equal payments made at regular intervals. Useful for l
 
 ## 📖 Dependencies
 
-The core packages (`decimal`, `money`, `finance/...`) depend only on the Go standard library.
+The library module (`decimal`, `money`, `finance/...`) depends only on the Go standard library at runtime.
 
-- **github.com/go-echarts/go-echarts/v2** — used exclusively by the optional `finance/charts` package
+- **github.com/go-echarts/go-echarts/v2** — used exclusively by the optional `charts` module
 - **github.com/stretchr/testify** — testing utilities (dev dependency)
 
 ---
