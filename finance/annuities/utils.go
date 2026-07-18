@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"errors"
+	"io"
 	"os"
 
 	"github.com/yeferson59/gofinance/decimal"
@@ -77,9 +78,8 @@ func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, np
 	return rows, nil
 }
 
-// WriteCSV writes rows to filenamePath as CSV, rounding each monetary
-// column to its own currency's standard precision (e.g. 0 decimals for
-// JPY, 3 for BHD) rather than assuming two decimal places.
+// WriteCSV writes rows to filenamePath as CSV. It is a convenience wrapper
+// around WriteCSVTo for the common file-on-disk case.
 func WriteCSV(filenamePath string, headers []string, rows []Schedule) (err error) {
 	f, err := os.Create(filenamePath)
 	if err != nil {
@@ -91,7 +91,16 @@ func WriteCSV(filenamePath string, headers []string, rows []Schedule) (err error
 		}
 	}()
 
-	bw := bufio.NewWriterSize(f, 65536)
+	return WriteCSVTo(f, headers, rows)
+}
+
+// WriteCSVTo writes rows to out as CSV, rounding each monetary column to
+// its own currency's standard precision (e.g. 0 decimals for JPY, 3 for
+// BHD) rather than assuming two decimal places. Callers choose the
+// destination — a file, an HTTP response, a buffer — so the schedule
+// domain logic stays free of filesystem concerns.
+func WriteCSVTo(out io.Writer, headers []string, rows []Schedule) (err error) {
+	bw := bufio.NewWriterSize(out, 65536)
 	defer func() {
 		if ferr := bw.Flush(); err == nil {
 			err = ferr

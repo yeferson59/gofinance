@@ -453,6 +453,9 @@ func (m *Money) Scan(src any) error {
 	}
 
 	m.value = dec
+	// A plain SQL numeric carries no currency; default to USD, matching
+	// UnmarshalJSON's behavior for bare numbers.
+	m.currency = USD
 
 	return nil
 }
