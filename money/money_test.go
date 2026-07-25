@@ -7,53 +7,6 @@ import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
-func TestSafeAddSameCurrency(t *testing.T) {
-	a := MustMoneyFromFloat64(10, USD)
-	b := MustMoneyFromFloat64(2.5, USD)
-
-	sum, err := a.SafeAdd(b)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	if sum.String() != "12.5" {
-		t.Errorf("expected 12.5, got %s", sum.String())
-	}
-	if sum.Currency() != USD {
-		t.Errorf("expected USD currency, got %v", sum.Currency())
-	}
-}
-
-func TestSafeAddCurrencyMismatch(t *testing.T) {
-	a := MustMoneyFromFloat64(10, USD)
-	b := MustMoneyFromFloat64(5, EUR)
-
-	if _, err := a.SafeAdd(b); !errors.Is(err, ErrCurrencyMismatch) {
-		t.Errorf("expected ErrCurrencyMismatch, got %v", err)
-	}
-}
-
-func TestSafeSubSameCurrency(t *testing.T) {
-	a := MustMoneyFromFloat64(10, USD)
-	b := MustMoneyFromFloat64(2.5, USD)
-
-	diff, err := a.SafeSub(b)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	if diff.String() != "7.5" {
-		t.Errorf("expected 7.5, got %s", diff.String())
-	}
-}
-
-func TestSafeSubCurrencyMismatch(t *testing.T) {
-	a := MustMoneyFromFloat64(10, USD)
-	b := MustMoneyFromFloat64(5, EUR)
-
-	if _, err := a.SafeSub(b); !errors.Is(err, ErrCurrencyMismatch) {
-		t.Errorf("expected ErrCurrencyMismatch, got %v", err)
-	}
-}
-
 func TestMoneyConstantsCurrency(t *testing.T) {
 	if MoneyZero.Currency() != USD {
 		t.Errorf("expected MoneyZero currency to be USD, got %v", MoneyZero.Currency())

@@ -1,6 +1,10 @@
 package money
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/yeferson59/gofinance/v2/decimal"
+)
 
 // ErrInvalidExchangeRate is returned by Convert when given a rate that is
 // zero or negative.
@@ -13,7 +17,7 @@ var ErrInvalidExchangeRate = errors.New("money: exchange rate must be positive")
 //
 //	usd := money.MustMoneyFromFloat64(100, money.USD)
 //	eur, err := usd.Convert(money.EUR, money.MustFromFloat64(0.92))
-func (m Money) Convert(to Currency, rate Decimal) (Money, error) {
+func (m Money) Convert(to Currency, rate decimal.Decimal) (Money, error) {
 	if !rate.IsPos() {
 		return Money{}, ErrInvalidExchangeRate
 	}
@@ -35,7 +39,7 @@ func (m Money) Convert(to Currency, rate Decimal) (Money, error) {
 }
 
 // MustConvert is like Convert but panics on error.
-func (m Money) MustConvert(to Currency, rate Decimal) Money {
+func (m Money) MustConvert(to Currency, rate decimal.Decimal) Money {
 	converted, err := m.Convert(to, rate)
 	if err != nil {
 		panic(err)
@@ -47,7 +51,7 @@ func (m Money) MustConvert(to Currency, rate Decimal) Money {
 // ConvertFloat64 is like Convert but takes rate as a float64, for
 // convenience when the rate isn't already a Decimal.
 func (m Money) ConvertFloat64(to Currency, rate float64) (Money, error) {
-	rateDec, err := NewFromFloat64(rate)
+	rateDec, err := decimal.NewFromFloat64(rate)
 	if err != nil {
 		return Money{}, err
 	}

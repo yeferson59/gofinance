@@ -11,7 +11,7 @@ import (
 func TestConvertAppliesRateAndCurrency(t *testing.T) {
 	usd := MustMoneyFromFloat64(100, USD)
 
-	eur, err := usd.Convert(EUR, MustFromFloat64(0.92))
+	eur, err := usd.Convert(EUR, decimal.MustFromFloat64(0.92))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -27,7 +27,7 @@ func TestConvertRoundsToTargetPrecision(t *testing.T) {
 	usd := MustMoneyFromFloat64(10, USD)
 
 	// JPY has zero decimal places.
-	jpy, err := usd.Convert(JPY, MustFromFloat64(150.4))
+	jpy, err := usd.Convert(JPY, decimal.MustFromFloat64(150.4))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -39,11 +39,11 @@ func TestConvertRoundsToTargetPrecision(t *testing.T) {
 func TestConvertInvalidRate(t *testing.T) {
 	usd := MustMoneyFromFloat64(10, USD)
 
-	if _, err := usd.Convert(EUR, Zero); !errors.Is(err, ErrInvalidExchangeRate) {
+	if _, err := usd.Convert(EUR, decimal.Zero); !errors.Is(err, ErrInvalidExchangeRate) {
 		t.Errorf("expected ErrInvalidExchangeRate for zero rate, got %v", err)
 	}
 
-	negRate := MustFromFloat64(-1)
+	negRate := decimal.MustFromFloat64(-1)
 	if _, err := usd.Convert(EUR, negRate); !errors.Is(err, ErrInvalidExchangeRate) {
 		t.Errorf("expected ErrInvalidExchangeRate for negative rate, got %v", err)
 	}
@@ -52,7 +52,7 @@ func TestConvertInvalidRate(t *testing.T) {
 func TestConvertUnknownTargetCurrency(t *testing.T) {
 	usd := MustMoneyFromFloat64(10, USD)
 
-	if _, err := usd.Convert(Currency(9999), One); err == nil {
+	if _, err := usd.Convert(Currency(9999), decimal.One); err == nil {
 		t.Error("expected error for unknown target currency")
 	}
 }
@@ -78,7 +78,7 @@ func TestConvertOverflow(t *testing.T) {
 		currency: USD,
 	}
 
-	if _, err := huge.Convert(EUR, MustFromFloat64(1e30)); !errors.Is(err, decimal.ErrOverflow) {
+	if _, err := huge.Convert(EUR, decimal.MustFromFloat64(1e30)); !errors.Is(err, decimal.ErrOverflow) {
 		t.Errorf("expected ErrOverflow, got %v", err)
 	}
 }
@@ -86,7 +86,7 @@ func TestConvertOverflow(t *testing.T) {
 func TestMustConvertSuccess(t *testing.T) {
 	usd := MustMoneyFromFloat64(100, USD)
 
-	eur := usd.MustConvert(EUR, MustFromFloat64(0.92))
+	eur := usd.MustConvert(EUR, decimal.MustFromFloat64(0.92))
 	if eur.Currency() != EUR {
 		t.Errorf("expected EUR, got %v", eur.Currency())
 	}
@@ -137,5 +137,5 @@ func TestMustConvertPanicsOnInvalidRate(t *testing.T) {
 	}()
 
 	usd := MustMoneyFromFloat64(10, USD)
-	usd.MustConvert(EUR, Zero)
+	usd.MustConvert(EUR, decimal.Zero)
 }

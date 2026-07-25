@@ -48,19 +48,6 @@ func TestMoneyToDecimal(t *testing.T) {
 	}
 }
 
-func TestMoneyMul(t *testing.T) {
-	price := MustMoneyFromString("9.99", USD)
-	qty := MustMoneyFromString("3", USD)
-
-	total := price.Mul(qty)
-	if total.StringFixed(2) != "29.97" {
-		t.Errorf("expected 29.97, got %s", total.StringFixed(2))
-	}
-	if total.Currency() != USD {
-		t.Errorf("expected currency to be preserved as USD, got %v", total.Currency())
-	}
-}
-
 func TestMoneySub(t *testing.T) {
 	a := MustMoneyFromString("10", USD)
 	b := MustMoneyFromString("3.5", USD)
@@ -115,36 +102,6 @@ func TestMoneyIsZero(t *testing.T) {
 	if MustMoneyFromString("0.01", USD).IsZero() {
 		t.Error("expected 0.01 to not be zero")
 	}
-}
-
-func TestMoneyDiv(t *testing.T) {
-	a := MustMoneyFromString("10", USD)
-	b := MustMoneyFromString("4", USD)
-
-	q, err := a.Div(b)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if q.String() != "2.5" {
-		t.Errorf("expected 2.5, got %s", q.String())
-	}
-
-	if _, err := a.Div(MoneyZero); !errors.Is(err, decimal.ErrDivideByZero) {
-		t.Errorf("expected ErrDivideByZero, got %v", err)
-	}
-
-	if got := a.MustDiv(b).String(); got != "2.5" {
-		t.Errorf("MustDiv: expected 2.5, got %s", got)
-	}
-}
-
-func TestMoneyMustDivPanicsOnDivideByZero(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("expected panic for division by zero")
-		}
-	}()
-	MustMoneyFromString("10", USD).MustDiv(MoneyZero)
 }
 
 func TestMoneyInexactFloat64(t *testing.T) {
@@ -366,19 +323,6 @@ func TestMoneySubOverflowPanics(t *testing.T) {
 	}()
 	m := hugeMoney(USD)
 	m.Sub(m.Neg())
-}
-
-func TestMoneyMulOverflowPanics(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("expected panic on Mul overflow")
-		}
-	}()
-	m := Money{
-		value:    decimal.MustFromHiLo(false, ^uint64(0)>>1, ^uint64(0), 0),
-		currency: USD,
-	}
-	m.Mul(m)
 }
 
 func TestMoneyMulInt64OverflowPanics(t *testing.T) {
