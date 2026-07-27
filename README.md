@@ -48,6 +48,14 @@ A robust, type-safe Go library for financial calculations and money management. 
 
 - Compound annual growth rate (`CAGR`), simple return on investment (`ROI`), holding-period return, and annualization of a cumulative return — all on the decimal engine
 - Inflation adjustment: real vs nominal value and the Fisher real rate (`RealValue`, `NominalValue`, `RealRate`)
+- Portfolio performance: time-weighted return over valuation subperiods (`TimeWeightedReturn`, `ChainReturns`) vs money-weighted return (`MoneyWeightedReturn`)
+- Risk metrics: sample and population variance/volatility, square-root-of-time annualization, and the Sharpe ratio (`Volatility`, `AnnualizedVolatility`, `SharpeRatio`, `AnnualizedSharpeRatio`)
+
+### 🏠 **Loans** (`finance/loans`)
+
+- Level payment, effective annual rate, and the fee-inclusive `APR`/`EffectiveAPR` solved from the loan's net proceeds
+- Extra payments and early payoff: how many payments are avoided and how much interest is never charged (`Payoff`, `Savings`)
+- Refinance comparator: payment delta, break-even period on closing costs, and the net present value of the switch (`Compare`)
 
 ### 💹 **Investment** (`finance/investment`)
 
@@ -258,8 +266,9 @@ gofinance/
 │   ├── simpleinterest/            # Simple interest (fluent builder)
 │   ├── compoundinterest/         # Compound interest and rate conversions
 │   ├── annuities/                 # Annuities and amortization schedules
-│   ├── returns/                   # CAGR, ROI, returns & inflation adjustment
+│   ├── returns/                   # CAGR, ROI, inflation, TWR/MWR, volatility
 │   ├── investment/                # NPV/IRR, XNPV/XIRR, perpetuities
+│   ├── loans/                     # APR with fees, early payoff, refinancing
 │   ├── bonds/                     # Bond pricing, YTM, duration, convexity
 │   ├── depreciation/              # Straight-line, declining balance, MACRS
 │   ├── tvm/                       # General time-value-of-money solver

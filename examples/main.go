@@ -16,6 +16,7 @@ import (
 	"github.com/yeferson59/gofinance/v2/finance/daycount"
 	"github.com/yeferson59/gofinance/v2/finance/depreciation"
 	dcf "github.com/yeferson59/gofinance/v2/finance/investment"
+	"github.com/yeferson59/gofinance/v2/finance/loans"
 	"github.com/yeferson59/gofinance/v2/finance/returns"
 	"github.com/yeferson59/gofinance/v2/finance/simpleinterest"
 	"github.com/yeferson59/gofinance/v2/finance/tvm"
@@ -52,6 +53,123 @@ func main() {
 	depreciationExample()
 
 	bondExample()
+
+	aprExample()
+
+	prepaymentExample()
+
+	refinanceExample()
+
+	portfolioExample()
+
+	riskExample()
+}
+
+// aprExample shows what up-front fees do to the true annual cost of a loan.
+func aprExample() {
+	fmt.Println("\n=== Loans (APR) ===")
+
+	loan := loans.NewLoan().
+		Principal(250000, money.USD).
+		AnnualRate(0.065).
+		Years(30).
+		Monthly().
+		Fees(3500)
+
+	fmt.Println("$250,000 at 6.5% nominal over 30 years, $3,500 in fees")
+	fmt.Println("Monthly payment:", loan.MustPayment().RoundBankString(2))
+	fmt.Println("Cash received:", loan.MustNetProceeds().RoundBankString(2))
+	fmt.Println("APR:", loan.MustAPR().RoundBank(6).StringFixed(6))
+	fmt.Println("Effective APR:", loan.MustEffectiveAPR().RoundBank(6).StringFixed(6))
+	fmt.Println("Effective rate without fees:", loan.MustEffectiveAnnualRate().RoundBank(6).StringFixed(6))
+}
+
+// prepaymentExample shows what paying more than the schedule demands saves.
+func prepaymentExample() {
+	fmt.Println("\n=== Loans (Extra Payments) ===")
+
+	savings := loans.NewLoan().
+		Principal(250000, money.USD).
+		AnnualRate(0.065).
+		Years(30).
+		Monthly().
+		ExtraPayment(200).
+		MustSavings()
+
+	fmt.Println("$250,000 at 6.5% over 30 years, paying $200 extra each month")
+	fmt.Println("Payments scheduled:", savings.Scheduled.Periods, "| actually made:", savings.Accelerated.Periods)
+	fmt.Println("Payments avoided:", savings.PeriodsSaved)
+	fmt.Println("Interest saved:", savings.InterestSaved.RoundBankString(2))
+	fmt.Println("Final payment:", savings.Accelerated.FinalPayment.RoundBankString(2))
+}
+
+// refinanceExample weighs a refinance offer against the loan being paid.
+func refinanceExample() {
+	fmt.Println("\n=== Loans (Refinance) ===")
+
+	current := loans.NewLoan().Principal(220000, money.USD).AnnualRate(0.065).Years(25).Monthly()
+	offer := loans.NewLoan().Principal(220000, money.USD).AnnualRate(0.0525).Years(25).Monthly().Fees(4000)
+
+	comparison := loans.MustCompare(current, offer)
+
+	fmt.Println("$220,000 left at 6.5% vs. a 5.25% offer costing $4,000 to take")
+	fmt.Println("Payment now:", comparison.CurrentPayment.RoundBankString(2), "→", comparison.OfferPayment.RoundBankString(2))
+	fmt.Println("Saved each month:", comparison.PaymentSavings.RoundBankString(2))
+	fmt.Println("Break-even after", comparison.BreakEvenPeriods, "payments")
+	fmt.Println("Interest saved over the term:", comparison.InterestSaved.RoundBankString(2))
+	fmt.Println("Net present value of refinancing:", comparison.NetPresentValue.RoundBankString(2))
+}
+
+// portfolioExample contrasts the time-weighted return (the manager's record)
+// with the money-weighted one (the investor's own experience).
+func portfolioExample() {
+	fmt.Println("\n=== Portfolio Returns (TWR vs MWR) ===")
+
+	subperiods := []returns.Subperiod{
+		{Begin: money.MustMoneyFromFloat64(100000, money.USD), End: money.MustMoneyFromFloat64(110000, money.USD)},
+		{
+			Begin: money.MustMoneyFromFloat64(110000, money.USD),
+			Flow:  money.MustMoneyFromFloat64(50000, money.USD),
+			End:   money.MustMoneyFromFloat64(180000, money.USD),
+		},
+	}
+
+	twr := returns.MustTimeWeightedReturn(subperiods)
+	mwr := returns.MustMoneyWeightedReturn(
+		money.MustMoneyFromFloat64(100000, money.USD),
+		[]money.Money{money.MustMoneyFromFloat64(50000, money.USD)},
+		money.MustMoneyFromFloat64(180000, money.USD),
+	)
+
+	fmt.Println("$100k → $110k, then $50k added and $160k → $180k")
+	fmt.Println("Time-weighted return:", twr.RoundBank(6).StringFixed(6))
+	fmt.Println("Money-weighted return (per period):", mwr.RoundBank(6).StringFixed(6))
+}
+
+// riskExample shows volatility and the Sharpe ratio over a series of monthly
+// returns.
+func riskExample() {
+	fmt.Println("\n=== Risk (Volatility & Sharpe) ===")
+
+	monthly := []decimal.Decimal{
+		decimal.MustFromString("0.02"),
+		decimal.MustFromString("-0.01"),
+		decimal.MustFromString("0.03"),
+		decimal.MustFromString("0.005"),
+		decimal.MustFromString("0.015"),
+	}
+
+	twelve := decimal.MustFromInt64(12, 0)
+	riskFree := decimal.MustFromString("0.002")
+
+	volatility := returns.MustVolatility(monthly)
+
+	fmt.Println("Five monthly returns: 2%, −1%, 3%, 0.5%, 1.5%")
+	fmt.Println("Mean:", returns.MustMean(monthly).RoundBank(6).StringFixed(6))
+	fmt.Println("Volatility (monthly):", volatility.RoundBank(6).StringFixed(6))
+	fmt.Println("Volatility (annualized):", returns.MustAnnualizedVolatility(volatility, twelve).RoundBank(6).StringFixed(6))
+	fmt.Println("Sharpe ratio (monthly):", returns.MustSharpeRatio(monthly, riskFree).RoundBank(4).StringFixed(4))
+	fmt.Println("Sharpe ratio (annualized):", returns.MustAnnualizedSharpeRatio(monthly, riskFree, twelve).RoundBank(4).StringFixed(4))
 }
 
 // xirrExample shows date-based NPV/IRR over an irregular cash-flow stream.

@@ -48,14 +48,15 @@ Proposed home: a new `finance/investment` package (plus `finance/bonds`).
 
 ## 2. 🏦 Loans & accounting
 
-Proposed home: extend `finance/annuities`; add `finance/depreciation`.
+Proposed home: `finance/loans` (borrower-side cost of an amortizing loan, built
+on `annuities.Schedule`) and `finance/depreciation`.
 
 | # | Feature | What it does | Reuses | Priority | Effort |
 |---|---------|--------------|--------|----------|--------|
 | 3.1 | ✅ **Day-count conventions** | 30/360, Actual/365, Actual/360, Actual/Actual — precise interest by calendar dates | shared utility → **unblocks** XIRR (1.3), bonds (1.5), date-based interest | 🟢 High | M |
-| 3.2 | **APR / effective annual rate** | Effective APR from a nominal rate plus fees/points | `compoundinterest` rate conversions (`NewRateConversion()`) | 🟡 Medium | S |
-| 3.3 | **Extra payments / early payoff** | Interest saved and term shortened when overpaying a loan | extends `annuities.BuildSchedule` (`finance/annuities/utils.go`) | 🟡 Medium | M |
-| 3.4 | **Refinance comparator** | Break-even point between two loan offers | 3.2, 3.3, NPV (1.1) | ⚪ Low | S |
+| 3.2 | ✅ **APR / effective annual rate** | Effective APR from a nominal rate plus fees/points | `compoundinterest` rate conversions (`NewRateConversion()`) → `finance/loans` | 🟡 Medium | S |
+| 3.3 | ✅ **Extra payments / early payoff** | Interest saved and term shortened when overpaying a loan | extends `annuities.BuildSchedule` (`finance/annuities/utils.go`) | 🟡 Medium | M |
+| 3.4 | ✅ **Refinance comparator** | Break-even point between two loan offers | 3.2, 3.3, NPV (1.1) | ⚪ Low | S |
 | 3.5 | ✅ **Depreciation** | Straight-line, declining balance (single/double), sum-of-years'-digits, MACRS | `decimal` arithmetic → `finance/depreciation` | 🟡 Medium | M |
 
 > **Why day-count first in this section:** it's a small shared utility that several
@@ -73,8 +74,8 @@ Proposed home: a new `finance/returns` package.
 | 4.1 | ✅ **CAGR / annualized return** | Compound annual growth rate from start value, end value, and horizon | `decimal.Pow` (fractional exponent already supported) | 🟢 High | S |
 | 4.2 | ✅ **ROI / holding-period return** | Simple return over a period, with/without income | `money.Money`, `decimal.Div` | 🟢 High | S |
 | 4.3 | ✅ **Inflation adjustment** | Real vs nominal values; future/present purchasing power | `decimal.Pow` | 🟡 Medium | S |
-| 4.4 | **TWR vs MWR** | Time-weighted vs money-weighted returns for a portfolio | 4.1, IRR (1.2) | ⚪ Low | M |
-| 4.5 | **Volatility & Sharpe ratio** | Std. deviation of returns and risk-adjusted return | `decimal.Sqrt` (already available, correctly rounded) | ⚪ Low | M |
+| 4.4 | ✅ **TWR vs MWR** | Time-weighted vs money-weighted returns for a portfolio | 4.1, IRR (1.2) | ⚪ Low | M |
+| 4.5 | ✅ **Volatility & Sharpe ratio** | Std. deviation of returns and risk-adjusted return | `decimal.Sqrt` (already available, correctly rounded) | ⚪ Low | M |
 
 > **Why CAGR/ROI first:** tiny, universally useful, and they showcase the fractional
 > `decimal.Pow` and `decimal.Sqrt` kernels the library already ships.
@@ -109,9 +110,13 @@ The best value-to-effort ratio, roughly in order — **all shipped ✅**:
 
 The follow-up batch is also shipped: ✅ XNPV/XIRR (1.3), ✅ perpetuities (1.4),
 ✅ inflation adjustment (4.3), ✅ depreciation (3.5), and ✅ bond valuation (1.5).
-Remaining candidates worth picking up next: APR/effective rate (3.2), extra
-payments / early payoff (3.3), TWR/MWR (4.4), volatility & Sharpe (4.5), and the
-tooling items (CLI, schedule export).
+
+So is the batch after it: ✅ APR/effective rate (3.2), ✅ extra payments / early
+payoff (3.3), ✅ refinance comparator (3.4), ✅ TWR/MWR (4.4), and ✅ volatility
+& Sharpe (4.5) — the loan items in the new `finance/loans` package, the return
+metrics in `finance/returns`. Every financial-math candidate on this list is now
+implemented; what remains is tooling: the CLI (5.2), a first-class schedule
+export API (5.3), more runnable examples (5.4), and the optional web API (5.5).
 
 ---
 
