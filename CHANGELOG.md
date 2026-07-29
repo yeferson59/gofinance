@@ -24,6 +24,9 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - Repository layering rules are documented in `ARCHITECTURE.md`
 
 ### Added
+- New `finance/loans` package: a fluent `NewLoan()` builder for an amortizing loan, with the level `Payment`, `EffectiveAnnualRate`, fee-inclusive `APR`/`PeriodicAPR`/`EffectiveAPR` solved from the loan's `NetProceeds` by bracketed bisection, `Payoff`/`Savings` for extra payments and early payoff (interest saved and payments avoided), and `Compare` for weighing a refinance offer — payment delta, break-even period on the closing costs, interest saved, and the net present value of the switch. Payoff schedules are `annuities.Schedule` rows, so they export through `annuities.WriteCSVTo` unchanged
+- `finance/returns`: portfolio performance metrics — `TimeWeightedReturn` over valuation `Subperiod`s, `ChainReturns` for geometric linking of known per-period returns, and `MoneyWeightedReturn` (the IRR of the investor's own flows), with `Must*` variants and the typed errors `ErrNoSubperiods`/`ErrNoReturns`
+- `finance/returns`: risk metrics — `Mean`, sample and population `Variance`/`Volatility`, `AnnualizedVolatility` (square-root-of-time), `SharpeRatio` and `AnnualizedSharpeRatio`, all with `Must*` variants and the typed errors `ErrInsufficientReturns`/`ErrZeroVolatility`
 - New `finance/term` package: the shared time vocabulary (`Unit`, `Frequency`, `PeriodsPerYear`, `MonthsPerPeriod`) used by the interest packages
 - `money.FromDecimal(d, currency)` to turn a computed decimal into a monetary amount
 - Dimensionally-correct `Money.MulDecimal`, `Money.DivDecimal` and `Money.MustDivDecimal` for amount×rate / amount÷rate math without attaching a placeholder currency
@@ -32,6 +35,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - New `finance/bonds` package: fluent `NewBond()` builder with clean `Price` from yield, `YTM` from price (bracketed bisection), `MacaulayDuration`/`ModifiedDuration`/`Convexity`, `CouponPayment`, and `AccruedInterest` (reusing `finance/daycount`)
 - New `finance/depreciation` package: `StraightLine`, `DecliningBalance`, `DoubleDecliningBalance` (with straight-line switchover), `SumOfYearsDigits`, and `MACRS` (GDS half-year tables for 3/5/7/10/15/20-year recovery), each returning a year-by-year `Schedule`
 - `finance/returns`: inflation adjustment `RealValue`, `NominalValue`, and Fisher `RealRate` (with `Must*` variants and `ErrInvalidInflationRate`)
+- Runnable examples for loans (APR, extra payments, refinancing) and portfolio/risk metrics in `examples/main.go`
 - Runnable examples for the new instruments in `examples/main.go`
 - New `finance/returns` package: `CAGR`, `ROI`, `HoldingPeriodReturn`, and `Annualized` return metrics (with `Must*` variants), computed on the decimal engine
 - New `finance/investment` package: `NPV` of a periodic cash-flow stream at a discount rate, and `IRR` via Newton–Raphson with a bracketed-bisection fallback (with `Must*` variants); typed errors `ErrNoCashFlows`, `ErrInvalidRate`, `ErrNoSignChange`, `ErrNoConvergence`

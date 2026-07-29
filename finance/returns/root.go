@@ -32,4 +32,21 @@ var (
 	// than −1, which would make the price-level factor (1+inflation) zero or
 	// negative.
 	ErrInvalidInflationRate = errors.New("returns: inflation rate must be greater than -1")
+
+	// ErrNoSubperiods is returned when a time-weighted return is asked for
+	// without a single valuation subperiod to link.
+	ErrNoSubperiods = errors.New("returns: at least one subperiod is required")
+
+	// ErrNoReturns is returned when a statistic is asked for over an empty
+	// series of returns.
+	ErrNoReturns = errors.New("returns: at least one return is required")
+
+	// ErrInsufficientReturns is returned when a dispersion measure that needs
+	// more than one observation (a sample variance, volatility, or Sharpe
+	// ratio) is given a single return.
+	ErrInsufficientReturns = errors.New("returns: at least two returns are required")
+
+	// ErrZeroVolatility is returned by the Sharpe ratio when the returns never
+	// vary, leaving no risk to divide the excess return by.
+	ErrZeroVolatility = errors.New("returns: volatility is zero")
 )

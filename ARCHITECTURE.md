@@ -53,6 +53,15 @@ The rules, from the bottom up:
    edges: `charts` renders schedules, and CSV export is written against
    `io.Writer` (`annuities.WriteCSVTo`), with the file-on-disk variant kept
    only as a thin convenience wrapper.
+5. **`finance/*` packages may build on each other, never in a cycle.** A
+   package that needs an existing primitive imports it instead of restating
+   the formula: `loans` discounts its refinance savings with
+   `investment.NPV` and returns `annuities.Schedule` rows so the existing
+   exporter and charts take them unchanged; `returns` gets its
+   money-weighted return from `investment.IRR`; `annuities` and `gradients`
+   build on `compoundinterest`. Root-finding is the deliberate exception:
+   each package keeps its own bracketing search in `root.go` or next to the
+   solve it serves, because the residual being bisected is domain-specific.
 
 ## History: what the 2026-07 restructuring changed
 
