@@ -24,7 +24,12 @@ func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Deci
 		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, ErrInvalidYield
 	}
 
-	coupon, err := b.face.ToDecimal().Mul(b.couponRate).Div(decimal.MustFromInt64(int64(b.freq), 0))
+	annualCoupon, err := b.face.ToDecimal().TryMul(b.couponRate)
+	if err != nil {
+		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+	}
+
+	coupon, err := annualCoupon.Div(decimal.MustFromInt64(int64(b.freq), 0))
 	if err != nil {
 		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
 	}
@@ -38,8 +43,14 @@ func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Deci
 
 	for t := 1; t <= b.periods; t++ {
 		cashflow := coupon
+
 		if t == b.periods {
-			cashflow = cashflow.Add(face)
+			// The redemption lands on top of the final coupon, which can
+			// overflow when the face value is near the decimal engine's limit.
+			cashflow, err = cashflow.TryAdd(face)
+			if err != nil {
+				return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+			}
 		}
 
 		pv, err := cashflow.Div(factor)

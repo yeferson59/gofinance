@@ -77,7 +77,10 @@ func (b Config) priceDiff(annualYield decimal.Decimal) (decimal.Decimal, error) 
 		return decimal.Decimal{}, err
 	}
 
-	return price.Sub(b.price), nil
+	// TrySub rather than Sub: at the extremes of the candidate sweep the
+	// modelled price and the target can sit far enough apart to overflow, and
+	// the scan needs that reported so it can skip the candidate.
+	return price.TrySub(b.price)
 }
 
 // bisectYield narrows the bracket [lo, hi], across which the price difference

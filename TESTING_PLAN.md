@@ -275,6 +275,37 @@ uno tiene una prueba que lo fija, para que cambiarlo sea visible.
   la API pública. Lo correcto sería delegar en `term`, según la regla 5 de
   `ARCHITECTURE.md`.
 
+### 2.10 Hallazgos de la Fase 3
+
+**a) `money.Allocate` no siempre sumaba el monto original.** Su documentación
+prometía que las partes «siempre» suman exactamente `m`, y no era cierto.
+Reparte el residuo de redondeo unidad a unidad, pero el bucle seguía más allá
+del cero cuando el monto llevaba más precisión de la que su moneda puede
+expresar: yenes fraccionarios, o un importe calculado a partir de una tasa y
+todavía sin redondear a céntimos. Repartir ¥−1234,56 entre tres daba partes que
+sumaban ¥−1236.
+
+La raíz no es `Allocate` sino que `Money` no fuerza la precisión de su moneda
+—deliberadamente, para poder llevar resultados intermedios— así que el arreglo
+respeta ese diseño: se reparten unidades enteras mientras quede una entera que
+dar, y el residuo sub-unitario va a la primera parte. Para importes ya a la
+precisión de su moneda no cambia nada.
+
+**b) Seis pánicos más del patrón de §2.8.** El barrido de robustez los buscó
+activamente en vez de esperar a tropezarlos, y aparecieron en
+`bonds.CouponPayment`, el flujo de amortización de `bonds.Price`/`YTM`,
+`returns.ROI`, `returns.HoldingPeriodReturn`, `returns.NominalValue` y
+`tvm.SolveN`. `finance/loans` y `finance/returns` no se habían auditado nunca
+para este patrón; `loans` salió limpio.
+
+Detalle que conviene fijar: el barrido **no** exige que los setters `float64`
+de los builders (`Face`, `PMT`, `ExtraPayment`) dejen de entrar en pánico.
+Devuelven un `Config`, no un `error`, así que un valor que el motor decimal no
+puede representar no tiene otro canal que el pánico — que es el contrato
+documentado de los constructores `Must*` que hay detrás. La regla es más
+estrecha y más honesta: *una función que devuelve `error` nunca puede entrar en
+pánico*.
+
 ## 3. Estrategia: seis tipos de prueba, no uno
 
 Las pruebas actuales son casi todas del tipo 1. Los defectos de la sección 2 se
@@ -556,10 +587,28 @@ Funciones sin cobertura alguna: de 39 a 13. Las 13 restantes están en `money`,
 `decimal`, `returns`, `loans` y el builder de `annuities` — todo P2, es decir
 Fase 4.
 
-**Fase 3 — Invariantes y reciprocidad transversales.**
+**Fase 3 — Invariantes y reciprocidad transversales. ✅ Hecha.**
 Las propiedades de la sección 3 aplicadas a todos los paquetes, más las pruebas
-de coherencia entre paquetes (`tvm` ↔ `annuities` ↔ `loans`,
-`gradients` ↔ `annuities`, `XIRR` ↔ `IRR`).
+de coherencia entre paquetes. Viven en el paquete `invariants/`, que no
+contiene código de producción: cada comprobación importa dos o más paquetes de
+finanzas y no pertenece a ninguno.
+
+Se agrupan en tres familias:
+
+- **Acuerdo.** Dos paquetes que modelan lo mismo tienen que dar el mismo
+  número: la cuota de un préstamo por `tvm`, `annuities` y `loans`; el precio
+  de un bono como VPN de sus propios flujos y su TIR como rendimiento
+  periódico; un gradiente sin gradiente como anualidad ordinaria; el
+  rendimiento ponderado por dinero como TIR del inversor.
+- **Cierre.** Una tabla tiene que cuadrar: el cuadro de amortización termina en
+  saldo cero y el capital suma el principal; `Allocate` suma el monto original.
+- **Robustez.** Ninguna función que devuelva `error` puede entrar en pánico.
+
+Cobertura total con `-coverpkg` (la métrica que reporta CI): **91.8 %**.
+Funciones sin cobertura alguna: 10.
+
+El barrido de robustez encontró **seis defectos más**, todos del patrón de
+§2.8, y uno independiente en `money.Allocate`. Van en §2.10.
 
 **Fase 4 — Fuzzing, ejemplos y consolidación (P2).**
 `decimal`, `money`, ejemplos de godoc, benchmarks para los paquetes que aún no

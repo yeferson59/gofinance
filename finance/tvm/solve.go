@@ -166,7 +166,12 @@ func (t Config) SolveN() (decimal.Decimal, error) {
 			return decimal.Decimal{}, ErrNoSolution
 		}
 
-		return t.pv.Add(t.fv).Neg().Div(t.pmt)
+		balance, err := t.pv.TryAdd(t.fv)
+		if err != nil {
+			return decimal.Decimal{}, err
+		}
+
+		return balance.Neg().Div(t.pmt)
 	}
 
 	onePlus := decimal.One.Add(t.rate)
@@ -181,17 +186,31 @@ func (t Config) SolveN() (decimal.Decimal, error) {
 
 	// k = PMT·typeFactor / i, so the equation PV·powᴺ + PMT·coef + FV = 0
 	// rearranges to (1+i)ᴺ = (k − FV)/(PV + k).
-	k, err := t.pmt.Mul(typeFactor).Div(t.rate)
+	scaledPayment, err := t.pmt.TryMul(typeFactor)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	denominator := t.pv.Add(k)
+	k, err := scaledPayment.Div(t.rate)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	denominator, err := t.pv.TryAdd(k)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
 	if denominator.IsZero() {
 		return decimal.Decimal{}, ErrNoSolution
 	}
 
-	pow, err := k.Sub(t.fv).Div(denominator)
+	numerator, err := k.TrySub(t.fv)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	pow, err := numerator.Div(denominator)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

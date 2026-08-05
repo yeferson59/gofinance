@@ -78,7 +78,13 @@ func ROI(initial, final money.Money) (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrNonPositiveValue
 	}
 
-	profit := final.Sub(initial)
+	// TrySub rather than Sub: with amounts at opposite ends of the decimal
+	// range the difference can overflow, and a function that returns an error
+	// must report that rather than panic.
+	profit, err := final.TrySub(initial)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
 
 	return profit.ToDecimal().Div(initial.ToDecimal())
 }
@@ -113,7 +119,18 @@ func HoldingPeriodReturn(initial, final, income money.Money) (decimal.Decimal, e
 		return decimal.Decimal{}, ErrNonPositiveValue
 	}
 
-	total := final.Sub(initial).Add(income)
+	// The Try variants rather than Sub/Add: with amounts at opposite ends of
+	// the decimal range the gain can overflow, and a function that returns an
+	// error must report that rather than panic.
+	gain, err := final.TrySub(initial)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	total, err := gain.TryAdd(income)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
 
 	return total.ToDecimal().Div(initial.ToDecimal())
 }
