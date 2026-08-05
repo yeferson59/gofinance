@@ -22,36 +22,33 @@ func (b Config) YTM() (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrNonPositivePrice
 	}
 
-	candidates := yieldCandidates()
+	var (
+		prevYield decimal.Decimal
+		prevDiff  decimal.Decimal
+		bracketed bool
+	)
 
-	prevYield := candidates[0]
-
-	prevDiff, err := b.priceDiff(prevYield)
-	if err != nil {
-		return decimal.Decimal{}, err
-	}
-
-	for i := 1; i < len(candidates); i++ {
-		curYield := candidates[i]
-
+	for _, curYield := range yieldCandidates() {
 		curDiff, err := b.priceDiff(curYield)
 		if err != nil {
-			return decimal.Decimal{}, err
-		}
+			// At the top of the candidate range the discount factor of a
+			// long bond overflows. That says nothing about where the yield
+			// is, so skip the candidate and start a fresh pair after the gap
+			// rather than abandoning the search.
+			bracketed = false
 
-		if prevDiff.IsZero() {
-			return prevYield, nil
+			continue
 		}
 
 		if curDiff.IsZero() {
 			return curYield, nil
 		}
 
-		if prevDiff.Sign() != curDiff.Sign() {
+		if bracketed && prevDiff.Sign() != curDiff.Sign() {
 			return b.bisectYield(prevYield, curYield, prevDiff)
 		}
 
-		prevYield, prevDiff = curYield, curDiff
+		prevYield, prevDiff, bracketed = curYield, curDiff, true
 	}
 
 	return decimal.Decimal{}, ErrNoConvergence

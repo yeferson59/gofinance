@@ -44,7 +44,32 @@ func (t Config) SolveFV() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	return t.pv.Mul(pow).Add(t.pmt.Mul(pmtCoef)).Neg(), nil
+	balance, err := t.balance(pow, pmtCoef)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return balance.Neg(), nil
+}
+
+// balance returns PV·(1+i)ᴺ + PMT·coef, the part of the TVM equation shared by
+// SolveFV and the rate solver's residual.
+//
+// Every step uses the Try variants: with a large principal or payment the
+// products overflow, and a function that returns an error must report that
+// rather than panic.
+func (t Config) balance(pow, pmtCoef decimal.Decimal) (decimal.Decimal, error) {
+	grown, err := t.pv.TryMul(pow)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	payments, err := t.pmt.TryMul(pmtCoef)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return grown.TryAdd(payments)
 }
 
 // MustSolveFV is like SolveFV but panics on error.
@@ -66,9 +91,17 @@ func (t Config) SolvePV() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	numerator := t.fv.Add(t.pmt.Mul(pmtCoef)).Neg()
+	payments, err := t.pmt.TryMul(pmtCoef)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
 
-	return numerator.Div(pow)
+	numerator, err := t.fv.TryAdd(payments)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return numerator.Neg().Div(pow)
 }
 
 // MustSolvePV is like SolvePV but panics on error.
@@ -97,9 +130,17 @@ func (t Config) SolvePMT() (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrNoSolution
 	}
 
-	numerator := t.pv.Mul(pow).Add(t.fv).Neg()
+	grown, err := t.pv.TryMul(pow)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
 
-	return numerator.Div(pmtCoef)
+	numerator, err := grown.TryAdd(t.fv)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return numerator.Neg().Div(pmtCoef)
 }
 
 // MustSolvePMT is like SolvePMT but panics on error.

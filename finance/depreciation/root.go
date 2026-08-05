@@ -3,9 +3,16 @@
 // declining balance with a switch to straight-line), sum-of-the-years'-digits,
 // and MACRS (the US tax system's GDS tables).
 //
-// Every amount is a money.Money on the decimal engine, so schedules stay exact
-// and each method's depreciation sums to the depreciable base (cost − salvage;
-// or the full cost for MACRS, which ignores salvage).
+// Every amount is a money.Money on the decimal engine, so schedules stay exact.
+// StraightLine, DoubleDecliningBalance and SumOfYearsDigits depreciate down to
+// exactly the salvage value, so their charges sum to the depreciable base
+// (cost − salvage); MACRS recovers the full cost, since it ignores salvage.
+//
+// DecliningBalance is the exception: the pure declining-balance form approaches
+// salvage geometrically without reaching it, so unless the clamp at salvage
+// binds it leaves some book value behind and its charges sum to less than the
+// depreciable base. DoubleDecliningBalance exists precisely because it adds the
+// straight-line switchover that closes that gap.
 //
 // Basic usage:
 //

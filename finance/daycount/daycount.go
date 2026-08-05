@@ -48,11 +48,49 @@ func fraction(num, den int) (decimal.Decimal, error) {
 	return n.Div(d)
 }
 
-// thirty360Days returns the 30/360 (US Bond Basis) day count between two
-// normalized dates, applying the standard end-of-month adjustments.
+// isLastDayOfFebruary reports whether t falls on the final day of February,
+// which the US 30/360 convention treats as a month end.
+func isLastDayOfFebruary(t time.Time) bool {
+	_, month, day := t.Date()
+	if month != time.February {
+		return false
+	}
+
+	if isLeap(t.Year()) {
+		return day == 29
+	}
+
+	return day == 28
+}
+
+// thirty360Days returns the 30/360 (US Bond Basis, NASD) day count between two
+// normalized dates, applying the convention's four end-of-month adjustments in
+// order:
+//
+//  1. If the start date is the last day of February, treat it as the 30th.
+//  2. If both dates are the last day of February, treat the end date as the
+//     30th too.
+//  3. If the start date is the 31st, treat it as the 30th.
+//  4. If the end date is the 31st and the start date is (now) the 30th, treat
+//     the end date as the 30th.
+//
+// Rules 1 and 2 are what make a period ending on a month end measure a whole
+// number of 30-day months when it starts at the end of February: 29 February
+// to 31 August 2024 counts 180 days, matching the bond market and spreadsheet
+// DAYS360 with the US method.
 func thirty360Days(start, end time.Time) int {
 	y1, m1, d1 := start.Date()
 	y2, m2, d2 := end.Date()
+
+	startIsFebruaryEnd := isLastDayOfFebruary(start)
+
+	if startIsFebruaryEnd && isLastDayOfFebruary(end) {
+		d2 = 30
+	}
+
+	if startIsFebruaryEnd {
+		d1 = 30
+	}
 
 	if d1 == 31 {
 		d1 = 30

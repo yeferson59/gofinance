@@ -402,7 +402,14 @@ func TestMoreExampleFuture(t *testing.T) {
 		future, err := cr.Future()
 		tx.NoError(err)
 
-		expected := 4_718_420.985860214
+		// 912.5 days is exactly 2.5 years, so 30 monthly periods at
+		// 0.18/12 = 1.5%: 3,000,000 × 1.015^30 = 4,689,240.6615.
+		//
+		// This previously expected 4,718,420.99, which came from
+		// term.Daily.MonthsPerPeriod returning 1/30 — a thirty-day month —
+		// while PeriodsPerYear returned 365. That stretched 912.5 days into
+		// 30.4167 months (TESTING_PLAN.md §2.4).
+		expected := 4_689_240.661472568
 
 		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
 	})

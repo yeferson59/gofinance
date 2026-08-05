@@ -57,9 +57,13 @@ Otros datos del inventario:
 Estos no son riesgos hipotéticos. Cada uno se reprodujo ejecutando la librería.
 Son la evidencia de por qué el plan está ordenado como está.
 
-> **Estado:** §2.1 y §2.2 están **corregidos** (Fase 1). El texto de cada uno
-> describe el defecto tal como se encontró; al final se anota la corrección y
-> las pruebas que la fijan. §2.3 a §2.7 siguen pendientes.
+> **Estado:** §2.1 a §2.5 están **corregidos** (Fases 1 y 2). El texto de cada
+> uno describe el defecto tal como se encontró; al final se anota la corrección
+> y las pruebas que la fijan. §2.6 y §2.7 quedan documentados con pruebas que
+> fijan el comportamiento actual, sin cambiarlo.
+>
+> La Fase 2 destapó además cuatro defectos que **no** estaban en este
+> inventario, todos en las rutas que nunca se habían ejecutado. Van en §2.8.
 
 ### 2.1 Pánico en funciones que devuelven `error` (tasa 0 %) — crítico ✅ corregido
 
@@ -150,7 +154,7 @@ convierte a cero; independencia de la forma de cotización; reciprocidad
 vencida/anticipada; ida y vuelta entre formas; valores cruzados calculados a
 mano; y los dos casos de error.
 
-### 2.3 Series de gradientes al 0 % — importante
+### 2.3 Series de gradientes al 0 % — importante ✅ corregido
 
 `gradients.Arithmetic.Present()` y `.Future()` devuelven `division by zero` con
 una tasa del 0 %. Aquí no hay pánico, pero el límite analítico existe
@@ -158,14 +162,32 @@ una tasa del 0 %. Aquí no hay pánico, pero el límite analítico existe
 caso legítimo. `Geometric` sí trata su singularidad (`g == i`); `Arithmetic` no
 trata la suya.
 
-### 2.4 `term.Daily.MonthsPerPeriod()` es inconsistente consigo mismo — importante
+**Corregido.** `Arithmetic` devuelve el límite `A×n + G×n(n−1)/2` en `Present`
+y `Future`. Se comprobó que `Geometric` ya era correcto al 0 % —su denominador
+es `(i−g)`, que no se anula— y se fijó con pruebas en vez de tocarlo.
+
+Pruebas: `finance/gradients/gradients_edge_test.go` — límites al 0 % (serie
+creciente y decreciente), `g` por encima y por debajo de `i`, un solo período,
+y contraste contra la definición descontando pago a pago.
+
+### 2.4 `term.Daily.MonthsPerPeriod()` es inconsistente consigo mismo — importante ✅ corregido
 
 `term.Daily.PeriodsPerYear()` devuelve 365, pero `MonthsPerPeriod()` devuelve
 la constante escrita a mano `0.03333333` (es decir, 1/30). El valor coherente
 con 365 períodos al año es `12/365 = 0.032876712…`. Un error relativo del 1.4 %
 que se cuela en cualquier cálculo diario que mezcle ambas funciones.
 
-### 2.5 Regla de fin de mes en 30/360 — a decidir
+**Corregido.** `MonthsPerPeriod` se deriva ahora de `PeriodsPerYear`, así que
+las dos no pueden separarse. La prueba de tabla que ya existía **omitía
+`Daily`**, que es exactamente por qué nadie lo detectó; la prueba nueva recorre
+todas las frecuencias afirmando `MonthsPerPeriod × PeriodsPerYear = 12`.
+
+El arreglo cambió un resultado de `compoundinterest` que estaba fijado con el
+valor equivocado: 912.5 días son exactamente 2.5 años = 30 meses, así que
+`3.000.000 × 1.015³⁰ = 4.689.240,66`. El test esperaba 4.718.420,99, que salía
+de estirar 912.5 días a 30.4167 meses tratando el día como 1/30 de mes.
+
+### 2.5 Regla de fin de mes en 30/360 ✅ corregido
 
 `daycount.thirty360Days` documenta que aplica «los ajustes estándar de fin de
 mes», pero sólo implementa la regla del día 31. La convención US (NASD)
@@ -176,7 +198,14 @@ No está claro que sea un bug — depende de qué variante se quiera ofrecer —
 pero el código y la documentación no dicen lo mismo, y ninguna prueba fija el
 comportamiento.
 
-### 2.6 `IRR` con varias raíces devuelve una sola, sin avisar — a decidir
+**Decidido: implementar la regla completa.** Se aplican las cuatro reglas de la
+convención US (NASD) en orden, incluidas las dos de febrero. 29-feb-2024 a
+31-ago-2024 mide ahora 180 días, coincidiendo con el mercado de bonos y con
+`DAYS360` en su método US. Es un cambio de comportamiento: cualquier interés
+devengado o fracción de año que cruce un fin de febrero da una cifra distinta,
+y así queda anunciado en el CHANGELOG.
+
+### 2.6 `IRR` con varias raíces devuelve una sola, sin avisar — documentado
 
 Con flujos `[-1000, 6000, -11000, 6000]` (dos cambios de signo, varias TIR
 matemáticamente válidas), `IRR` devuelve ~0 sin ninguna señal de que la
@@ -190,7 +219,61 @@ en producción.
 rechaza (`ErrInvalidPeriods`) o se documenta el truncamiento; hoy no se hace
 ninguna de las dos cosas.
 
+### 2.8 Hallazgos de la Fase 2: pánicos y abandonos en los solucionadores
+
+Ninguno estaba en el inventario original. Los cuatro aparecieron al ejercitar
+por primera vez las rutas de respaldo, que es justo lo que el plan predijo que
+pasaría. Todos están corregidos.
+
+**a) `bonds.YTM` entraba en pánico para cualquier bono de más de ~11 años.**
+El más grave de todo el repositorio. El barrido prueba rendimientos hasta el
+10000 %, y a esos rendimientos el factor de descuento `(1+y/f)ⁿ` de un bono
+largo desborda el motor decimal (`51²³` ya desborda). El desbordamiento se
+lanzaba con los ayudantes `Add`/`Mul` que entran en pánico, y además el barrido
+abandonaba en cuanto un candidato fallaba. Resultado: un bono a 30 años
+semestral —el instrumento más común que existe— reventaba al calcular su TIR.
+
+**b) `NPV`, `IRR` y `XIRR` entraban en pánico con series largas.** La suma
+acumulada y el factor de descuento usaban `Add`/`Mul`. El factor crece
+geométricamente, así que una serie suficientemente larga desbordaba dentro de
+funciones que devuelven `error`.
+
+**c) Los barridos de bisección abandonaban si fallaba el *primer* candidato.**
+En `irrBisection`, `xirrBisection` y `YTM` el primer candidato era fatal
+mientras que todos los siguientes se saltaban. En los extremos del rango los
+factores de descuento desbordan o se subdesbordan en series largas, así que un
+flujo de 400 períodos no podía calcular su TIR en absoluto. Un candidato que no
+se puede evaluar no dice nada sobre dónde está la raíz: ahora se salta y el
+barrido continúa, reiniciando el par tras el hueco.
+
+**d) `tvm` entraba en pánico con principales o pagos grandes.** `SolveFV`,
+`SolvePV`, `SolvePMT` y `SolveRate` formaban `PV·(1+i)ᴺ` y `PMT·coef` con `Mul`.
+
+El patrón común es el mismo de §2.1: **ayudantes que entran en pánico dentro de
+funciones que devuelven `error`**. La lección para las fases siguientes es que
+ese patrón hay que buscarlo activamente, no esperar a tropezarlo.
+
 ---
+
+### 2.9 Cuestiones abiertas
+
+Casos donde el comportamiento actual es defendible pero no está decidido. Cada
+uno tiene una prueba que lo fija, para que cambiarlo sea visible.
+
+- **`tvm.SolveN` devuelve plazos negativos.** Cuando el pago apunta en la misma
+  dirección que el saldo, nada lo amortiza hacia adelante, pero la ecuación
+  sigue teniendo raíz en un plazo negativo: el momento del pasado en que el
+  saldo habría sido cero. `SolveN` la devuelve sin comentario. ¿Debería un
+  solucionador entregar un número negativo de períodos, o informar de que no
+  existe plazo futuro?
+- **`annuities.BuildSchedule` trunca `nper` fraccionario** (§2.7).
+- **`IRR` con varias raíces** devuelve una sola (§2.6).
+- **`gradients.annualRateDivisor` tiene ramas inalcanzables.** Reimplementa lo
+  que ya hace `term.Frequency.PeriodsPerYear` y contempla frecuencias que el
+  builder no expone (`Daily`, `Bimonthly`, `FourMonthly`), además de un `default`
+  silencioso de 12. Es la misma forma que §2.2 pero hoy no es alcanzable desde
+  la API pública. Lo correcto sería delegar en `term`, según la regla 5 de
+  `ARCHITECTURE.md`.
 
 ## 3. Estrategia: seis tipos de prueba, no uno
 
@@ -403,6 +486,10 @@ Cobertura ya alta (90 %, 85 %, 97 %); consolidar:
   `Mean`/`variance`, rendimiento −100 %, TWR con un flujo intermedio que anula
   la cartera.
 - `simpleinterest`: `Present`/`PresentWithFuture` cuando `1 + i·n ≤ 0`.
+- **Barrido de pánicos.** A la luz de §2.8, recorrer los tres paquetes con
+  montos y plazos extremos afirmando que ninguna función que devuelva `error`
+  entra en pánico. `loans` y `returns` no se han auditado todavía para ese
+  patrón.
 
 ### `charts` (módulo aparte) — P2
 
@@ -447,10 +534,27 @@ y varias de esas ramas sólo se alcanzan con entradas que hoy no se prueban. El
 código quedó más correcto y el porcentaje bajó — justamente por eso la
 cobertura va al final de los criterios de aceptación.
 
-**Fase 2 — Paquetes con menor cobertura (P1).**
-`gradients`, `investment`, `bonds`, `tvm`, `depreciation`. Incluye ejecutar por
-primera vez las rutas de bisección y las funciones `Must*` sin cobertura, y
-decidir §2.3, §2.4 y §2.5.
+**Fase 2 — Paquetes con menor cobertura (P1). ✅ Hecha.**
+`gradients`, `investment`, `bonds`, `tvm`, `depreciation`, más `daycount` y
+`term`. Se ejecutaron por primera vez las cuatro rutas de bisección y las
+funciones `Must*` sin cobertura, y se decidieron §2.3, §2.4 y §2.5.
+
+Cobertura por paquete tras la fase:
+
+| Paquete | Antes | Después |
+| --- | ---: | ---: |
+| `finance/gradients` | 61.3 % | 87.7 % |
+| `finance/investment` | 63.6 % | 88.4 % |
+| `finance/tvm` | 73.3 % | 92.8 % |
+| `finance/bonds` | 74.3 % | 89.3 % |
+| `finance/depreciation` | 80.2 % | 95.9 % |
+| `finance/daycount` | 84.4 % | 93.3 % |
+| `finance/term` | 95.7 % | 100 % |
+| **Total del repositorio** | **85.2 %** | **90.6 %** |
+
+Funciones sin cobertura alguna: de 39 a 13. Las 13 restantes están en `money`,
+`decimal`, `returns`, `loans` y el builder de `annuities` — todo P2, es decir
+Fase 4.
 
 **Fase 3 — Invariantes y reciprocidad transversales.**
 Las propiedades de la sección 3 aplicadas a todos los paquetes, más las pruebas
