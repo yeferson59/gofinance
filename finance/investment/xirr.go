@@ -75,30 +75,37 @@ func xnpvAndDerivative(rate decimal.Decimal, amounts, times []decimal.Decimal) (
 	fPrime := decimal.Zero
 
 	for i, amount := range amounts {
+		discounted, err := discountToBase(amount, onePlus, times[i])
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		f, err = f.TryAdd(discounted)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		// A flow at the base date is not discounted, so it does not move with
+		// the rate and contributes nothing to the derivative.
 		if times[i].IsZero() {
-			f = f.Add(amount)
 			continue
 		}
 
-		factor, err := onePlus.Pow(times[i])
-		if err != nil {
-			return decimal.Decimal{}, decimal.Decimal{}, err
-		}
-
-		discounted, err := amount.Div(factor)
-		if err != nil {
-			return decimal.Decimal{}, decimal.Decimal{}, err
-		}
-
-		f = f.Add(discounted)
-
 		// d/dr [ a·(1+r)^-t ] = −t·a·(1+r)^-(t+1) = −t·discounted / (1+r)
-		dTerm, err := times[i].Mul(discounted).Div(onePlus)
+		scaled, err := times[i].TryMul(discounted)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		fPrime = fPrime.Sub(dTerm)
+		dTerm, err := scaled.Div(onePlus)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		fPrime, err = fPrime.TrySub(dTerm)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
 	}
 
 	return f, fPrime, nil
@@ -106,37 +113,34 @@ func xnpvAndDerivative(rate decimal.Decimal, amounts, times []decimal.Decimal) (
 
 // xirrBisection scans the candidate annual rates for a sign change in XNPV and
 // bisects to the root once one is bracketed.
+//
+// Like irrBisection, a candidate whose discount factors overflow or underflow
+// is skipped rather than aborting the scan: it says nothing about where the
+// root is.
 func xirrBisection(amounts, times []decimal.Decimal) (decimal.Decimal, error) {
-	candidates := irrCandidates()
+	var (
+		prevRate  decimal.Decimal
+		prevNPV   decimal.Decimal
+		bracketed bool
+	)
 
-	prevRate := candidates[0]
-
-	prevNPV, err := xnpvDecimal(prevRate, amounts, times)
-	if err != nil {
-		return decimal.Decimal{}, err
-	}
-
-	for i := 1; i < len(candidates); i++ {
-		curRate := candidates[i]
-
+	for _, curRate := range irrCandidates() {
 		curNPV, err := xnpvDecimal(curRate, amounts, times)
 		if err != nil {
-			continue
-		}
+			bracketed = false
 
-		if prevNPV.IsZero() {
-			return prevRate, nil
+			continue
 		}
 
 		if curNPV.IsZero() {
 			return curRate, nil
 		}
 
-		if prevNPV.Sign() != curNPV.Sign() {
+		if bracketed && prevNPV.Sign() != curNPV.Sign() {
 			return xbisect(prevRate, curRate, prevNPV, amounts, times)
 		}
 
-		prevRate, prevNPV = curRate, curNPV
+		prevRate, prevNPV, bracketed = curRate, curNPV, true
 	}
 
 	return decimal.Decimal{}, ErrNoConvergence

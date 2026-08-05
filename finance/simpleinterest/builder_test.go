@@ -53,10 +53,72 @@ func TestAnnualRateRespectsPeriodType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.config.rate.InexactFloat64(); math.Abs(got-tt.expected) > 1e-9 {
+			if got := tt.config.periodicRate().InexactFloat64(); math.Abs(got-tt.expected) > 1e-9 {
 				t.Errorf("expected rate %v, got %v", tt.expected, got)
 			}
 		})
+	}
+}
+
+// TestAnnualRateIsOrderIndependent checks that the period type is honoured
+// whichever order the builder methods are called in.
+//
+// AnnualRate used to divide the moment it was called, reading whatever period
+// type had been set so far — Months by default. Setting the rate before the
+// period type therefore produced a monthly rate silently, so
+// AnnualRate(0.06).Years() charged 0.5% a year instead of 6%, with no error.
+// The conversion now happens at Build, from the period type the builder ends
+// up with.
+func TestAnnualRateIsOrderIndependent(t *testing.T) {
+	pairs := []struct {
+		name     string
+		before   SimpleConfig
+		after    SimpleConfig
+		expected float64
+	}{
+		{
+			"years", NewSimple().Years().AnnualRate(0.06), NewSimple().AnnualRate(0.06).Years(), 0.06,
+		},
+		{
+			"days", NewSimple().Days().AnnualRate(0.365), NewSimple().AnnualRate(0.365).Days(), 0.001,
+		},
+		{
+			"weeks", NewSimple().Weeks().AnnualRate(0.52), NewSimple().AnnualRate(0.52).Weeks(), 0.01,
+		},
+		{
+			"months", NewSimple().Months().AnnualRate(0.12), NewSimple().AnnualRate(0.12).Months(), 0.01,
+		},
+	}
+
+	for _, pair := range pairs {
+		t.Run(pair.name, func(t *testing.T) {
+			before := pair.before.periodicRate().InexactFloat64()
+			after := pair.after.periodicRate().InexactFloat64()
+
+			if math.Abs(before-after) > 1e-9 {
+				t.Errorf("order changed the rate: %v before the period type, %v after", before, after)
+			}
+
+			if math.Abs(before-pair.expected) > 1e-9 {
+				t.Errorf("expected rate %v, got %v", pair.expected, before)
+			}
+		})
+	}
+}
+
+// TestRateOverridesAnnualRate checks the two setters replace each other rather
+// than compounding.
+func TestRateOverridesAnnualRate(t *testing.T) {
+	// A periodic rate set last must be used as given, not divided again.
+	periodic := NewSimple().Years().AnnualRate(0.12).Rate(0.02).periodicRate()
+	if got := periodic.InexactFloat64(); math.Abs(got-0.02) > 1e-9 {
+		t.Errorf("expected 0.02, got %v", got)
+	}
+
+	// And an annual rate set last must be converted.
+	annual := NewSimple().Months().Rate(0.02).AnnualRate(0.12).periodicRate()
+	if got := annual.InexactFloat64(); math.Abs(got-0.01) > 1e-9 {
+		t.Errorf("expected 0.01, got %v", got)
 	}
 }
 

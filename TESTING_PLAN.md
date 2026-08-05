@@ -1,0 +1,763 @@
+# Plan de pruebas y cobertura de casos de uso
+
+Este documento planifica el trabajo de testing de la librería: qué falta, qué
+bugs ya salieron a la luz al analizarla, y en qué orden atacarlos.
+
+El objetivo no es subir el porcentaje de cobertura: es que ninguna combinación
+razonable de entradas produzca un resultado silenciosamente incorrecto, un
+pánico, o un error donde debería haber un número.
+
+---
+
+## 1. Estado actual (medido, no estimado)
+
+Cobertura por paquete, con `go test -cover ./...`:
+
+| Paquete | Cobertura | Tests | Funciones exportadas | Tests / API |
+| --- | ---: | ---: | ---: | ---: |
+| `finance/gradients` | **61.3 %** | 11 | 47 | 0.23 |
+| `finance/investment` | **63.6 %** | 18 | 30 | 0.60 |
+| `finance/tvm` | **73.3 %** | 11 | 29 | 0.38 |
+| `finance/bonds` | **74.3 %** | 9 | 28 | 0.32 |
+| `finance/depreciation` | **80.2 %** | 8 | 18 | 0.44 |
+| `finance/daycount` | 84.4 % | 14 | 17 | 0.82 |
+| `finance/annuities` | 84.7 % | 90 | 149 | 0.60 |
+| `finance/returns` | 85.4 % | 42 | 78 | 0.54 |
+| `finance/compoundinterest` | 85.9 % | 152 | 213 | 0.71 |
+| `charts` (módulo aparte) | 86.3 % | 6 | — | — |
+| `finance/loans` | 90.1 % | 26 | 60 | 0.43 |
+| `money` | 90.9 % | 82 | 139 | 0.59 |
+| `finance/term` | 95.7 % | 4 | 8 | 0.50 |
+| `decimal` | 96.6 % | 156 | 230 | 0.68 |
+| `finance/simpleinterest` | 97.0 % | 29 | 59 | 0.49 |
+| **Total** | **85.2 %** | 632 | ~1 105 | |
+
+Otros datos del inventario:
+
+- **39 funciones con 0 % de cobertura.** Entre ellas la ruta completa de
+  respaldo de los solucionadores: `irrBisection`, `bisect`, `irrCandidates`,
+  `xirrBisection`, `xbisect`. Es decir: el camino que se ejecuta *precisamente
+  cuando Newton-Raphson falla* nunca se ha ejecutado en una prueba.
+- **0 tests de tipo `Example`.** Para una librería pública esto es una pérdida
+  doble: no hay ejemplos ejecutables en godoc y los fragmentos de código de los
+  comentarios no se compilan, así que pueden quedar desactualizados sin que
+  nadie se entere.
+- **0 objetivos de fuzzing**, pese a que hay un motor decimal de 128 bits y
+  varios parsers (`FromString`, JSON, SQL) que son candidatos naturales.
+- **Benchmarks sólo en 3 paquetes de dominio** (`annuities`,
+  `compoundinterest`, `simpleinterest`) más `decimal` y `money`.
+- El grueso de las pruebas verifica el **camino feliz con un solo juego de
+  números**. Casi no hay pruebas de invariantes, de reciprocidad entre
+  funciones, ni de coherencia entre paquetes.
+
+---
+
+## 2. Hallazgos: defectos reales detectados durante el análisis
+
+Estos no son riesgos hipotéticos. Cada uno se reprodujo ejecutando la librería.
+Son la evidencia de por qué el plan está ordenado como está.
+
+> **Estado:** todo lo de esta sección está cerrado. §2.1 a §2.5, §2.8, §2.10 y
+> §2.11 están **corregidos**; §2.6 queda documentado con pruebas, tras
+> decidirse deliberadamente no cambiarlo; §2.7 y el resto de §2.9 se resolvieron
+> rechazando la entrada ambigua en vez de tratarla en silencio.
+>
+> Cada fase destapó defectos que **no** estaban en este inventario inicial,
+> siempre en el terreno que la fase abría: §2.8 son los cuatro que salieron al
+> ejecutar por primera vez las rutas de bisección, §2.10 los siete del barrido
+> de robustez transversal, y §2.11 los dos que salieron al escribir ejemplos
+> que usan la API pública desde fuera. §2.12 lo reportó un usuario y ninguna
+> fase lo habría encontrado: recorrían montos extremos, no campos sin poner.
+
+### 2.1 Pánico en funciones que devuelven `error` (tasa 0 %) — crítico ✅ corregido
+
+Las cuatro funciones de pago de `finance/annuities` entran en pánico
+(`division by zero`) con una tasa de interés del 0 %, en lugar de devolver el
+error que su firma promete:
+
+```
+PaymentFromPresentValue             -> PANIC: division by zero
+PaymentFromFutureValue              -> PANIC: division by zero
+AnticipatePaymentFromPresentValue   -> PANIC: division by zero
+AnticipatePaymentFromFutureValue    -> PANIC: division by zero
+```
+
+Causa: `finance/annuities/root.go` y `deferred.go` usan los ayudantes que
+entran en pánico (`MustPow`, `MustDiv`) dentro de funciones que sí devuelven
+`error`. Con `i = 0`, el denominador `(1+i)^n − 1` vale cero y `MustDiv`
+explota.
+
+Un préstamo o un plan de ahorro al 0 % (financiación promocional, préstamo
+entre familiares, aporte sin rendimiento) es un caso de uso corriente, y el
+resultado analítico existe y es trivial: `pago = valor / n`.
+
+Hay 39 llamadas a ayudantes `Must*` repartidas por `finance/` y `money/`. Cada
+una es un pánico potencial dentro de una API que devuelve errores.
+
+**Corregido.** Las cinco funciones de pago propagan el error en lugar de entrar
+en pánico, y devuelven el límite analítico (`valor / n`) cuando la tasa es 0 %.
+`Present`, `AnticipatePresent`, `Future`, `AnticipateFuture` y las variantes
+`WithContributions` devuelven la suma de los pagos en vez de un error de
+división por cero. La lógica repetida en las cuatro funciones de pago se unificó
+en los ayudantes `paymentFactor` y `sinkingFundFactor`, que tratan el caso
+degenerado en un solo sitio. Se auditaron las llamadas `Must*` restantes en
+código de librería: las seis que quedan dividen por constantes literales (100,
+2), así que no pueden fallar.
+
+Pruebas: `finance/annuities/zero_rate_test.go` — barrido de toda la API de pago
+afirmando que ninguna función entra en pánico, los valores límite, el término
+que desborda, el caso de cero períodos y el cierre del cuadro de amortización
+al 0 %.
+
+Seis pruebas existentes afirmaban el comportamiento defectuoso
+(«con tasa cero la fórmula divide por cero, así que debe devolver error»).
+Describían la limitación de la implementación, no un requisito financiero, y se
+actualizaron al comportamiento correcto.
+
+### 2.2 Ceros silenciosos en la conversión de tasas — crítico ✅ corregido
+
+`finance/compoundinterest` convierte entre cinco tipos de tasa. La matriz de
+conversión (valor 0.12, capitalización mensual) da esto:
+
+| tipo origen | `RatePeriodic` | `RateNominal` | `RateEffectyAnnually` | `RateAnticipateNominal` | `RateAnticipatePeriodic` |
+| --- | --- | --- | --- | --- | --- |
+| `periodic` | 0.12 | 1.44 | 2.8959… | **0** | **0** |
+| `annual` | 0.00948… | 0.11386… | 0.12 | 0.11279… | 0.00939… |
+| `nominal` | 0.01 | 0.12 | 0.12682… | **0** | **0** |
+| `anticipatePeriodic` | **0** | **0** | **0** | 1.44 | 0.12 |
+| `anticipateNominal` | **0** | **0** | **0** | 0.12 | 0.01 |
+
+**12 de 25 combinaciones devuelven `0` con `err == nil`.** Las funciones están
+escritas como una cadena de `if` sin `else` ni caso por defecto: cuando el tipo
+de tasa no coincide con ninguna rama, la variable de resultado se queda en su
+valor cero y se devuelve como si fuera un cálculo válido.
+
+Pasar de una tasa vencida a una anticipada está perfectamente definido
+(`d = i/(1+i)`), así que aquí no falta una validación: falta la conversión, y
+en su lugar se propaga un 0 hacia todo lo que dependa de esa tasa.
+
+Es el peor tipo de fallo posible en una librería financiera: no rompe nada,
+sólo devuelve una cifra equivocada.
+
+**Corregido.** Todas las conversiones pasan ahora por un embudo canónico: la
+tasa periódica efectiva. Un ayudante interno (`periodicEffective`) reduce
+cualquiera de las cinco formas a ese par (tasa periódica, períodos por año)
+mediante un `switch` con caso por defecto, y cada conversión pública se deriva
+de él. Las dos familias se conectan por `d = i/(1+i)` y su inversa
+`i = d/(1−d)`. Las 25 combinaciones dan un valor correcto; un tipo desconocido
+devuelve `ErrInvalidTypeRate` y una tasa anticipada ≥ 100 % (sin equivalente
+vencido finito) devuelve `ErrInvalidAnticipatedRate`.
+
+`RateAnticipateEffectyAnnually` y las cuatro funciones `To*` quedaron como
+delegaciones documentadas: la tasa efectiva anual es una sola magnitud
+independientemente de cómo se cotice, y el embudo ya acepta todos los tipos.
+
+Pruebas: `finance/compoundinterest/rate_conversion_matrix_test.go` — barrido de
+5 tipos × 7 frecuencias × 10 conversiones afirmando que una tasa positiva nunca
+convierte a cero; independencia de la forma de cotización; reciprocidad
+vencida/anticipada; ida y vuelta entre formas; valores cruzados calculados a
+mano; y los dos casos de error.
+
+### 2.3 Series de gradientes al 0 % — importante ✅ corregido
+
+`gradients.Arithmetic.Present()` y `.Future()` devuelven `division by zero` con
+una tasa del 0 %. Aquí no hay pánico, pero el límite analítico existe
+(`PV = Σ pagos`) y devolver un error obliga al usuario a resolver a mano un
+caso legítimo. `Geometric` sí trata su singularidad (`g == i`); `Arithmetic` no
+trata la suya.
+
+**Corregido.** `Arithmetic` devuelve el límite `A×n + G×n(n−1)/2` en `Present`
+y `Future`. Se comprobó que `Geometric` ya era correcto al 0 % —su denominador
+es `(i−g)`, que no se anula— y se fijó con pruebas en vez de tocarlo.
+
+Pruebas: `finance/gradients/gradients_edge_test.go` — límites al 0 % (serie
+creciente y decreciente), `g` por encima y por debajo de `i`, un solo período,
+y contraste contra la definición descontando pago a pago.
+
+### 2.4 `term.Daily.MonthsPerPeriod()` es inconsistente consigo mismo — importante ✅ corregido
+
+`term.Daily.PeriodsPerYear()` devuelve 365, pero `MonthsPerPeriod()` devuelve
+la constante escrita a mano `0.03333333` (es decir, 1/30). El valor coherente
+con 365 períodos al año es `12/365 = 0.032876712…`. Un error relativo del 1.4 %
+que se cuela en cualquier cálculo diario que mezcle ambas funciones.
+
+**Corregido.** `MonthsPerPeriod` se deriva ahora de `PeriodsPerYear`, así que
+las dos no pueden separarse. La prueba de tabla que ya existía **omitía
+`Daily`**, que es exactamente por qué nadie lo detectó; la prueba nueva recorre
+todas las frecuencias afirmando `MonthsPerPeriod × PeriodsPerYear = 12`.
+
+El arreglo cambió un resultado de `compoundinterest` que estaba fijado con el
+valor equivocado: 912.5 días son exactamente 2.5 años = 30 meses, así que
+`3.000.000 × 1.015³⁰ = 4.689.240,66`. El test esperaba 4.718.420,99, que salía
+de estirar 912.5 días a 30.4167 meses tratando el día como 1/30 de mes.
+
+### 2.5 Regla de fin de mes en 30/360 ✅ corregido
+
+`daycount.thirty360Days` documenta que aplica «los ajustes estándar de fin de
+mes», pero sólo implementa la regla del día 31. La convención US (NASD)
+30/360 también trata febrero: del 29-feb-2024 al 31-ago-2024 la librería
+devuelve 182 días, mientras que la convención con regla de febrero da 180.
+
+No está claro que sea un bug — depende de qué variante se quiera ofrecer —
+pero el código y la documentación no dicen lo mismo, y ninguna prueba fija el
+comportamiento.
+
+**Decidido: implementar la regla completa.** Se aplican las cuatro reglas de la
+convención US (NASD) en orden, incluidas las dos de febrero. 29-feb-2024 a
+31-ago-2024 mide ahora 180 días, coincidiendo con el mercado de bonos y con
+`DAYS360` en su método US. Es un cambio de comportamiento: cualquier interés
+devengado o fracción de año que cruce un fin de febrero da una cifra distinta,
+y así queda anunciado en el CHANGELOG.
+
+### 2.6 `IRR` con varias raíces devuelve una sola, sin avisar ✅ documentado
+
+Con flujos `[-1000, 6000, -11000, 6000]` (dos cambios de signo, varias TIR
+matemáticamente válidas), `IRR` devuelve ~0 sin ninguna señal de que la
+solución no es única. Es la limitación clásica de la TIR y es aceptable, pero
+debe quedar documentada y fijada por una prueba, no descubierta por un usuario
+en producción.
+
+### 2.7 `BuildSchedule` trunca los períodos fraccionarios en silencio ✅ corregido
+
+`annuities.BuildSchedule(..., nper = 5.7)` genera 5 períodos sin error. O se
+rechaza (`ErrInvalidPeriods`) o se documenta el truncamiento; hoy no se hace
+ninguna de las dos cosas.
+
+**Corregido:** se rechaza. Ver §2.9.
+
+### 2.8 Hallazgos de la Fase 2: pánicos y abandonos en los solucionadores
+
+Ninguno estaba en el inventario original. Los cuatro aparecieron al ejercitar
+por primera vez las rutas de respaldo, que es justo lo que el plan predijo que
+pasaría. Todos están corregidos.
+
+**a) `bonds.YTM` entraba en pánico para cualquier bono de más de ~11 años.**
+El más grave de todo el repositorio. El barrido prueba rendimientos hasta el
+10000 %, y a esos rendimientos el factor de descuento `(1+y/f)ⁿ` de un bono
+largo desborda el motor decimal (`51²³` ya desborda). El desbordamiento se
+lanzaba con los ayudantes `Add`/`Mul` que entran en pánico, y además el barrido
+abandonaba en cuanto un candidato fallaba. Resultado: un bono a 30 años
+semestral —el instrumento más común que existe— reventaba al calcular su TIR.
+
+**b) `NPV`, `IRR` y `XIRR` entraban en pánico con series largas.** La suma
+acumulada y el factor de descuento usaban `Add`/`Mul`. El factor crece
+geométricamente, así que una serie suficientemente larga desbordaba dentro de
+funciones que devuelven `error`.
+
+**c) Los barridos de bisección abandonaban si fallaba el *primer* candidato.**
+En `irrBisection`, `xirrBisection` y `YTM` el primer candidato era fatal
+mientras que todos los siguientes se saltaban. En los extremos del rango los
+factores de descuento desbordan o se subdesbordan en series largas, así que un
+flujo de 400 períodos no podía calcular su TIR en absoluto. Un candidato que no
+se puede evaluar no dice nada sobre dónde está la raíz: ahora se salta y el
+barrido continúa, reiniciando el par tras el hueco.
+
+**d) `tvm` entraba en pánico con principales o pagos grandes.** `SolveFV`,
+`SolvePV`, `SolvePMT` y `SolveRate` formaban `PV·(1+i)ᴺ` y `PMT·coef` con `Mul`.
+
+El patrón común es el mismo de §2.1: **ayudantes que entran en pánico dentro de
+funciones que devuelven `error`**. La lección para las fases siguientes es que
+ese patrón hay que buscarlo activamente, no esperar a tropezarlo.
+
+---
+
+### 2.9 Cuestiones abiertas ✅ cerradas
+
+Casos donde el comportamiento era defendible pero no estaba decidido. Las cinco
+están resueltas; cada una tiene prueba.
+
+- **`tvm.SolveN` devolvía plazos negativos.** Cuando el pago apunta en la misma
+  dirección que el saldo, nada lo amortiza hacia adelante, pero la ecuación
+  sigue teniendo raíz en un plazo negativo: el momento del pasado en que el
+  saldo habría sido cero. `SolveN` la devolvía sin comentario.
+
+  **Resuelto: se rechaza con `ErrNoSolution`.** Un plazo transcurre hacia
+  adelante; entregar «−10 períodos» como respuesta a «cuántos períodos» es un
+  número que nadie puede usar. El cero sigue siendo válido —significa que el
+  objetivo ya está cumplido— así que la comprobación es sobre el signo
+  negativo, no sobre la positividad.
+
+- **`annuities.BuildSchedule` truncaba `nper` fraccionario** (§2.7).
+
+  **Resuelto: se rechaza con `ErrInvalidPeriods`.** Una tabla tiene una fila por
+  pago, así que un plazo fraccionario no tiene sentido; convertir en silencio
+  una petición de 5.7 períodos en cinco filas responde a una pregunta distinta
+  de la que se hizo. Redondear o truncar es decisión de quien llama.
+
+- **`IRR` con varias raíces** devolvía una sola (§2.6).
+
+  **Resuelto: se documenta, no se cambia.** Es el comportamiento estándar de la
+  medida, no una limitación de esta implementación: con más de un cambio de
+  signo varias tasas anulan el VPN y ninguna regla financiera dice cuál es «la»
+  rentabilidad. La documentación de `IRR` lo dice ahora explícitamente y
+  recomienda usar `NPV` a una tasa elegida, que tiene una sola respuesta por
+  construcción. Lo que sí se garantiza y se prueba: lo que devuelva es
+  genuinamente una raíz.
+
+- **`annuities` no tenía un `PresentValue()` liso en su builder**, aunque sí
+  `FutureValue()` y `DeferredPresentValue()`. Había que pasar por
+  `Defer(0).DeferredPresentValue()`.
+
+  **Resuelto: se añaden `PresentValue`, `AnticipatePresentValue` y sus
+  variantes `Must`.**
+
+- **`money.Currency` no implementaba `String()`**, así que imprimirla daba su
+  número en vez del código ISO.
+
+  **Resuelto: `String()` devuelve el código ISO**, y `Currency(<n>)` para una
+  moneda desconocida — nombrar el problema en vez de esconderlo tras un entero.
+  `GetCurrencyISOCode` sigue devolviendo el error: `String` es para leer salida,
+  no un sustituto de la validación.
+
+### 2.10 Hallazgos de la Fase 3
+
+**a) `money.Allocate` no siempre sumaba el monto original.** Su documentación
+prometía que las partes «siempre» suman exactamente `m`, y no era cierto.
+Reparte el residuo de redondeo unidad a unidad, pero el bucle seguía más allá
+del cero cuando el monto llevaba más precisión de la que su moneda puede
+expresar: yenes fraccionarios, o un importe calculado a partir de una tasa y
+todavía sin redondear a céntimos. Repartir ¥−1234,56 entre tres daba partes que
+sumaban ¥−1236.
+
+La raíz no es `Allocate` sino que `Money` no fuerza la precisión de su moneda
+—deliberadamente, para poder llevar resultados intermedios— así que el arreglo
+respeta ese diseño: se reparten unidades enteras mientras quede una entera que
+dar, y el residuo sub-unitario va a la primera parte. Para importes ya a la
+precisión de su moneda no cambia nada.
+
+**b) Seis pánicos más del patrón de §2.8.** El barrido de robustez los buscó
+activamente en vez de esperar a tropezarlos, y aparecieron en
+`bonds.CouponPayment`, el flujo de amortización de `bonds.Price`/`YTM`,
+`returns.ROI`, `returns.HoldingPeriodReturn`, `returns.NominalValue` y
+`tvm.SolveN`. `finance/loans` y `finance/returns` no se habían auditado nunca
+para este patrón; `loans` salió limpio.
+
+Detalle que conviene fijar: el barrido **no** exige que los setters `float64`
+de los builders (`Face`, `PMT`, `ExtraPayment`) dejen de entrar en pánico.
+Devuelven un `Config`, no un `error`, así que un valor que el motor decimal no
+puede representar no tiene otro canal que el pánico — que es el contrato
+documentado de los constructores `Must*` que hay detrás. La regla es más
+estrecha y más honesta: *una función que devuelve `error` nunca puede entrar en
+pánico*.
+
+### 2.11 Hallazgos de la Fase 4: el orden de los builders cambiaba el resultado
+
+Escribir un ejemplo de `simpleinterest` dio 1010 donde debía dar 1120. La causa:
+
+```go
+NewSimple().Present(1000, money.USD).AnnualRate(0.06).Periods(2).Years()
+```
+
+`AnnualRate` dividía **en el momento de la llamada**, leyendo el tipo de
+período configurado *hasta ese punto* — que era el valor por defecto, meses. La
+cadena de arriba cobraba 0.5 % anual en vez de 6 %, sin error. Poner `Years()`
+antes de `AnnualRate` daba otro número. El propio ejemplo de la documentación
+del método sólo funcionaba porque usaba `Months()`, que es el defecto.
+
+Los dos builders de `gradients` tenían exactamente el mismo defecto con la
+frecuencia. `loans.AnnualRate`, en cambio, ya guardaba una bandera y convertía
+al construir, y lo documentaba: «whatever order the builder methods are called
+in». Es decir, la librería ya tenía la solución en un sitio y no en los otros
+dos.
+
+**Corregido** en los tres del mismo modo: guardar la tasa anual y convertirla al
+construir, desde el período o la frecuencia con que el builder termina.
+`Rate` y `AnnualRate` se reemplazan mutuamente en vez de dejar un valor a medio
+convertir. De paso, `gradients` dejó de tener su propia tabla de períodos por
+año —con un `default` silencioso de 12 para una frecuencia desconocida, la
+misma forma que §2.2— y ahora usa `term.Frequency.PeriodsPerYear`, cerrando la
+cuestión abierta de §2.9.
+
+Un test existente afirmaba la conversión anticipada inspeccionando el campo
+privado `rate`. Su intención —que se respete el tipo de período— se conserva y
+se refuerza; sólo se movió el momento en que se resuelve.
+
+### 2.12 Configuraciones parciales: la moneda sin poner
+
+Un usuario reportó un pánico calculando el valor futuro de una anualidad
+descrita con tasa, tiempo y valor presente:
+
+```go
+NewAnnuity().Present(1000, money.USD).AnnualRate(0.12).Periods(12).Monthly().FutureValue()
+// -> PANIC: money: currency mismatch
+```
+
+Toda la anualidad sacaba su moneda del **pago periódico**. Si se describe sólo
+con valor presente no hay pago: ese campo queda como el `money.Money` cero,
+cuya moneda es `XXX` —el código ISO de «sin moneda»— y sumar un cero en `XXX`
+a un principal en USD revienta.
+
+Lo importante no es el caso concreto sino que es un **diseño repetido**: todos
+los tipos que llevan varios importes opcionales pueden caer en lo mismo. Un
+barrido de configuraciones parciales lo encontró en dos sitios más:
+
+- **`simpleinterest`** (tres importes: futuro, presente, interés): cinco
+  pánicos y la mayoría de los cálculos devolviendo cero en `XXX`.
+- **`returns.HoldingPeriodReturn`**: rechazaba un `income` sin poner —una
+  acción que no pagó dividendo— como descuadre de monedas, en vez de leerlo
+  como cero.
+- **`compoundinterest`** salió limpio.
+
+**Corregido.** El resolutor vive ahora en `money.ResolveCurrency`, que es donde
+pertenece —es un concepto de dinero, no de cada paquete— y devuelve la moneda
+única de un conjunto de importes ignorando los no puestos, con
+`ErrCurrencyMismatch` si dos discrepan. `annuities` y `simpleinterest` la
+resuelven una vez y construyen todos sus resultados con ella; `annuities.New`
+además rechaza monedas mezcladas en vez de aplazar el fallo a un pánico dentro
+de un cálculo.
+
+La regla queda fijada en `invariants/partial_config_test.go`, que **enumera**
+las configuraciones parciales en vez de muestrearlas:
+
+> un valor configurado parcialmente calcula en la moneda que puso quien llama,
+> nunca en `XXX`, y nunca entra en pánico.
+
+Es un hueco del método de las fases anteriores que conviene anotar: el barrido
+de robustez de la Fase 3 probaba **montos extremos**, no **campos sin poner**.
+Dos ejes distintos; sólo se había recorrido uno.
+
+## 3. Estrategia: seis tipos de prueba, no uno
+
+Las pruebas actuales son casi todas del tipo 1. Los defectos de la sección 2 se
+encuentran con los tipos 2, 3 y 4.
+
+**1. Tabla de casos (lo que ya hay).** Entrada conocida → salida esperada.
+Sigue siendo la base; hay que ampliarla a los valores frontera de cada función:
+cero, negativo, un solo período, tasas extremas, monedas sin decimales.
+
+**2. Invariantes.** Propiedades que deben cumplirse para *cualquier* entrada
+válida, no para un número concreto:
+
+- Un cuadro de amortización cierra en saldo 0 y la suma de capital equivale al
+  principal.
+- La suma de una depreciación es exactamente `costo − residual`.
+- `Allocate` siempre suma el monto original, sin importar los ratios.
+- `NPV(IRR(flujos), flujos) ≈ 0`.
+- `Price(YTM(precio)) ≈ precio`.
+- La duración de un bono cupón cero es igual a su plazo.
+
+**3. Reciprocidad (ida y vuelta).** Cada par de funciones inversas debe cerrar
+el círculo: `PV → PMT → PV`, `nominal → efectiva → nominal`, `vencida →
+anticipada → vencida`, `Money → JSON → Money`, `decimal → string → decimal`.
+La sección 2.2 aparece sola en cuanto se escribe la prueba de ida y vuelta de
+tasas para las 25 combinaciones.
+
+**4. Barrido de la matriz de la API.** Cuando una función acepta un tipo
+enumerado (tipo de tasa, frecuencia, convención, moneda), la prueba recorre
+*todos* los valores del enumerado, no uno. Los 12 ceros silenciosos estaban en
+las celdas que ninguna prueba visitaba.
+
+**5. Ejemplos ejecutables (`Example…`).** Documentación que el compilador
+verifica. Un `Example` por concepto principal de cada paquete; los fragmentos
+que hoy viven en comentarios se convierten en ejemplos reales.
+
+**6. Fuzzing.** Para las fronteras que reciben texto o bytes arbitrarios:
+`decimal.FromString`, `UnmarshalJSON`, `Scan`/`Value` de SQL, y las rutinas
+aritméticas de 128/256 bits contra `math/big` como oráculo.
+
+---
+
+## 4. Plan por paquete
+
+Prioridad: **P0** desbloquea correcciones de bugs conocidos, **P1** es riesgo
+alto sin cobertura, **P2** es consolidación.
+
+### `finance/compoundinterest` — P0
+
+El paquete del que dependen `annuities`, `gradients` y buena parte del resto.
+Un error aquí contamina todo lo demás.
+
+- Matriz de conversión completa: 5 tipos de tasa × 5 conversiones × 7
+  frecuencias. Cada celda debe dar un valor correcto o un error explícito —
+  nunca un cero silencioso (§2.2).
+- Ida y vuelta de conversiones: `X → Y → X` recupera el valor inicial dentro de
+  la tolerancia.
+- Equivalencia financiera: una tasa nominal del 12 % capitalizable mensualmente
+  y su efectiva anual del 12.6825 % deben producir el mismo valor futuro.
+- Coherencia anticipada/vencida: `d = i/(1+i)` verificada en ambos sentidos.
+- Frontera: tasa 0 %, tasa negativa (tipos de interés negativos existen), tasa
+  anticipada ≥ 100 % (degenerada: debe dar error), 1 período, períodos
+  fraccionarios.
+- `GetEqualsRateInterestPeriods` con cada combinación de frecuencia de tasa y
+  de período (mensual con período anual, etc.).
+
+### `finance/annuities` — P0
+
+- Tasa 0 % en las cuatro funciones de pago, las diferidas, las de valor
+  presente/futuro y las de número de períodos (§2.1). Resultado esperado
+  analítico, no pánico.
+- Auditar las 39 llamadas a `Must*` en código de librería: cada una dentro de
+  una función que devuelve `error` debe convertirse en propagación de error.
+  La prueba que lo fija: recorrer la API pública con entradas degeneradas y
+  afirmar que **ninguna** llamada entra en pánico.
+- Invariantes del cuadro de amortización: saldo final 0, Σ capital = principal,
+  Σ interés = Σ pago − principal, saldo monótono decreciente.
+- Reciprocidad ordinaria/anticipada: `pago_anticipado = pago_vencido / (1+i)`.
+- `BuildSchedule` con `nper` fraccionario, negativo, cero y muy grande (§2.7).
+- `WriteCSVTo` con un `io.Writer` que falla, para cubrir la ruta de error.
+
+### `finance/gradients` — P1 (cobertura más baja: 61.3 %)
+
+- Tasa 0 % en `Arithmetic.Present`/`Future` (§2.3).
+- `Geometric` con `g == i` (ya tratado en el código, sin prueba), `g > i`,
+  `g < 0`, `i < 0`.
+- Constructores de `builder.go`: `AnnualRate`, `Monthly`, `Quarterly`,
+  `MustBuild`, `MustPresent` están a 0 % en ambos constructores.
+- Descuadre de monedas entre `firstPayment` y `gradient`.
+- Invariante contra `annuities`: un gradiente con `gradient = 0` debe dar
+  exactamente lo mismo que una anualidad ordinaria; un geométrico con
+  `g = 0`, igual.
+- Invariante contra la suma directa: para n pequeño, el VP calculado debe
+  coincidir con descontar los pagos uno a uno.
+
+### `finance/investment` — P1 (rutas de respaldo a 0 %)
+
+- **Forzar la bisección.** Construir flujos donde Newton-Raphson diverja o se
+  salga del dominio (−1, ∞) para ejecutar `irrBisection`, `bisect`,
+  `irrCandidates`, `xirrBisection`, `xbisect`.
+- TIR múltiple: fijar el comportamiento documentado (§2.6).
+- TIR sin raíz real → `ErrNoConvergence`; sin cambio de signo →
+  `ErrNoSignChange`; flujos vacíos, monedas mezcladas.
+- TIR muy negativa (cerca de −99 %) y muy alta (> 1000 %), en los extremos de
+  la lista de candidatos.
+- `XIRR`/`XNPV`: fechas desordenadas, fechas repetidas, un solo flujo, años
+  bisiestos, huecos de más de un año.
+- Invariante: `NPV(IRR(f), f) ≈ 0` y `XNPV(XIRR(f), f) ≈ 0` sobre un conjunto
+  variado de flujos.
+- Coherencia: para flujos con fechas separadas exactamente un año, `XIRR` debe
+  coincidir con `IRR`.
+- Perpetuidades: `g ≥ r` (divergente, debe dar error), `r = 0`, `g` negativa.
+
+### `finance/bonds` — P1 (9 tests para 28 funciones exportadas)
+
+- Precio: a la par (cupón = rendimiento → precio = valor nominal), con prima,
+  con descuento, cupón cero, rendimiento negativo, un solo período restante.
+- Ida y vuelta `Price` ↔ `YTM` en una rejilla de cupones, plazos y frecuencias.
+- Duración: la Macaulay de un cupón cero es su plazo (verificado: correcto —
+  conviene fijarlo con una prueba); duración modificada = Macaulay/(1+y/f);
+  duración menor que el plazo para bonos con cupón.
+- Convexidad positiva; la aproximación de segundo orden con duración y
+  convexidad debe acercarse al cambio real de precio ante un desplazamiento
+  pequeño del rendimiento.
+- `MustMacaulayDuration`, `MustModifiedDuration`, `MustConvexity` están a 0 %:
+  probar que devuelven el valor y que entran en pánico ante términos inválidos.
+- `AccruedInterest`: liquidación en la fecha del cupón (0), en la fecha del
+  siguiente cupón (cupón completo), fuera del período, con las cuatro
+  convenciones de conteo de días.
+- Errores: frecuencia 0, períodos 0, rendimiento ≤ −frecuencia, precio ≤ 0.
+
+### `finance/tvm` — P1
+
+- Las cinco incógnitas (`FV`, `PV`, `PMT`, `N`, `Rate`) resueltas en círculo:
+  fijar cuatro variables, resolver la quinta, volver a resolver la primera.
+- `Ordinary` (0 % de cobertura) y anualidades anticipadas: `debido` frente a
+  `vencido` en las cinco funciones.
+- Tasa 0 % en las cinco (las fórmulas se degeneran).
+- `SolveN` cuando no hay solución (el pago no cubre ni el interés) →
+  comportamiento definido y probado.
+- `SolveRate`: forzar `bisectRate`, señales de no convergencia, tasas
+  negativas.
+- `MustSolveRate`, `MustSolvePV`, `MustSolveN` (0 %): valor y pánico.
+- Coherencia con `annuities` y `loans`: el mismo préstamo resuelto con
+  `tvm.SolvePMT` y con `annuities.PaymentFromPresentValue` debe dar la misma
+  cuota.
+
+### `finance/depreciation` — P1
+
+- Invariante en los cuatro métodos: `Σ depreciación == costo − residual` y
+  `valor en libros final == residual`. (Verificado en línea recta, DDB y SYD;
+  falta fijarlo con pruebas y comprobar MACRS.)
+- El valor en libros nunca cae por debajo del residual en ningún año
+  intermedio.
+- Saldo decreciente: el año exacto del cambio a línea recta en DDB.
+- MACRS: todos los períodos de recuperación soportados, la convención de medio
+  año, y `ErrUnsupportedRecovery` para los no soportados.
+- `MustDecliningBalance`, `MustDoubleDecliningBalance`, `MustSumOfYearsDigits`
+  están a 0 %.
+- Frontera: vida útil de 1 año, residual = 0, residual = costo, residual >
+  costo (error, ya verificado), monedas distintas entre costo y residual.
+
+### `finance/daycount` y `finance/term` — P1
+
+- Decidir y fijar la regla de febrero en 30/360 (§2.5): o se implementa la
+  variante US completa, o se cambia la documentación y se prueba el
+  comportamiento actual.
+- Corregir `Daily.MonthsPerPeriod` (§2.4) y añadir la prueba de coherencia
+  interna: `MonthsPerPeriod × PeriodsPerYear == 12` para toda frecuencia.
+- Las cuatro convenciones × períodos que cruzan años bisiestos, años completos,
+  el mismo día, fin de mes, 29 de febrero.
+- Actual/Actual ISDA sobre períodos de varios años que empiezan y terminan en
+  años bisiestos.
+- Entradas con zona horaria y hora del día distintas de medianoche, para
+  confirmar que `normalize` las neutraliza.
+- `Convention.String()` (50 % de cobertura) para todos los valores, incluido
+  uno inválido.
+
+### `money` — P2
+
+- `Allocate`: ya se comprobó que suma correctamente con montos negativos y con
+  residuos; falta fijarlo. Añadir: residuo mayor que el número de partes,
+  ratios con ceros intercalados, una sola parte, monedas sin decimales (JPY,
+  verificado: 1000/3 → 334+333+333) y de tres decimales (BHD, KWD).
+- `MulDecimal`, `DivDecimal`, `MustDivDecimal`, `RoundBank` están a 0 % pese a
+  ser el puente central entre tasas y montos según `ARCHITECTURE.md`.
+- Redondeo bancario en los casos de empate (.5) positivos y negativos.
+- Ida y vuelta JSON y SQL, incluida la entrada malformada.
+- Descuadre de monedas en toda operación binaria.
+- Desbordamiento en `Add`/`Sub`/`Mul` con montos cercanos al límite.
+
+### `decimal` — P2 (ya al 96.6 %, pero es el cimiento)
+
+- Fuzzing de `FromString` y de la aritmética contra `math/big` como oráculo.
+- `InexactFloat64` está a 0 % y lo usan casi todas las pruebas del repositorio.
+- Rutas de desbordamiento en `Div`, `QuoRem`, `RoundBank`, `divRound`,
+  `shr120Round`, `bitAt`, `div3by2`.
+- `Pow` con exponentes fraccionarios grandes, bases cercanas a cero,
+  exponentes negativos.
+- `Log`/`Ln`/`expFpToDec` en los extremos del rango.
+
+### `finance/loans`, `finance/returns`, `finance/simpleinterest` — P2
+
+Cobertura ya alta (90 %, 85 %, 97 %); consolidar:
+
+- `loans`: `SemiAnnually` y `Annually` (0 %), pago anticipado que cancela el
+  préstamo antes de tiempo, comparación de refinanciación donde no conviene
+  refinanciar, APR con comisiones que superan el principal.
+- `returns`: `Must*` sin cobertura, series vacías o de un solo elemento en
+  `Mean`/`variance`, rendimiento −100 %, TWR con un flujo intermedio que anula
+  la cartera.
+- `simpleinterest`: `Present`/`PresentWithFuture` cuando `1 + i·n ≤ 0`.
+- **Barrido de pánicos.** A la luz de §2.8, recorrer los tres paquetes con
+  montos y plazos extremos afirmando que ninguna función que devuelva `error`
+  entra en pánico. `loans` y `returns` no se han auditado todavía para ese
+  patrón.
+
+### `charts` (módulo aparte) — P2
+
+Renderizado con series vacías, con un solo punto, y con valores negativos.
+
+---
+
+## 5. Infraestructura de pruebas
+
+Lo que hay que construir antes o en paralelo, para que escribir cada prueba
+nueva cueste poco:
+
+1. **Paquete de ayudantes compartido** (`internal/testutil`): constructores
+   `usd(1000)`, comparación de decimales con tolerancia, aserción de que un
+   cuadro de amortización cierra, aserción de que una función no entra en
+   pánico.
+2. **Umbral de cobertura en CI.** El flujo ya calcula `coverage.out`; añadir un
+   paso que falle si la cobertura total baja del umbral acordado (empezar en
+   el 85 % actual y subirlo por fases) y publicar el desglose por paquete.
+3. **`make test-fuzz`** con una duración corta, más una ejecución larga
+   programada (nocturna o semanal) en CI.
+4. **Corpus de regresión.** Cada bug de la sección 2 aporta su caso a un
+   archivo de pruebas de regresión con referencia a este documento, para que no
+   vuelva a aparecer.
+5. **`Example` en godoc.** Convertir los fragmentos de los comentarios de
+   paquete en ejemplos ejecutables, empezando por `bonds`, `gradients`,
+   `investment` y `tvm`.
+
+---
+
+## 6. Fases
+
+**Fase 1 — Corregir lo que ya está roto (P0). ✅ Hecha.**
+Los pánicos con tasa 0 % (§2.1) y los ceros silenciosos de conversión de tasas
+(§2.2). Cada corrección entró junto a la prueba que la fija. Fue lo primero
+porque eran fallos que devolvían cifras equivocadas a quien usara la librería.
+
+Efecto en la cobertura: `compoundinterest` sube de 85.9 % a 88.4 %;
+`annuities` baja de 84.7 % a 83.8 %. La bajada es real y esperada: sustituir
+expresiones que entraban en pánico por ramas `if err != nil` añade sentencias,
+y varias de esas ramas sólo se alcanzan con entradas que hoy no se prueban. El
+código quedó más correcto y el porcentaje bajó — justamente por eso la
+cobertura va al final de los criterios de aceptación.
+
+**Fase 2 — Paquetes con menor cobertura (P1). ✅ Hecha.**
+`gradients`, `investment`, `bonds`, `tvm`, `depreciation`, más `daycount` y
+`term`. Se ejecutaron por primera vez las cuatro rutas de bisección y las
+funciones `Must*` sin cobertura, y se decidieron §2.3, §2.4 y §2.5.
+
+Cobertura por paquete tras la fase:
+
+| Paquete | Antes | Después |
+| --- | ---: | ---: |
+| `finance/gradients` | 61.3 % | 87.7 % |
+| `finance/investment` | 63.6 % | 88.4 % |
+| `finance/tvm` | 73.3 % | 92.8 % |
+| `finance/bonds` | 74.3 % | 89.3 % |
+| `finance/depreciation` | 80.2 % | 95.9 % |
+| `finance/daycount` | 84.4 % | 93.3 % |
+| `finance/term` | 95.7 % | 100 % |
+| **Total del repositorio** | **85.2 %** | **90.6 %** |
+
+Funciones sin cobertura alguna: de 39 a 13. Las 13 restantes están en `money`,
+`decimal`, `returns`, `loans` y el builder de `annuities` — todo P2, es decir
+Fase 4.
+
+**Fase 3 — Invariantes y reciprocidad transversales. ✅ Hecha.**
+Las propiedades de la sección 3 aplicadas a todos los paquetes, más las pruebas
+de coherencia entre paquetes. Viven en el paquete `invariants/`, que no
+contiene código de producción: cada comprobación importa dos o más paquetes de
+finanzas y no pertenece a ninguno.
+
+Se agrupan en tres familias:
+
+- **Acuerdo.** Dos paquetes que modelan lo mismo tienen que dar el mismo
+  número: la cuota de un préstamo por `tvm`, `annuities` y `loans`; el precio
+  de un bono como VPN de sus propios flujos y su TIR como rendimiento
+  periódico; un gradiente sin gradiente como anualidad ordinaria; el
+  rendimiento ponderado por dinero como TIR del inversor.
+- **Cierre.** Una tabla tiene que cuadrar: el cuadro de amortización termina en
+  saldo cero y el capital suma el principal; `Allocate` suma el monto original.
+- **Robustez.** Ninguna función que devuelva `error` puede entrar en pánico.
+
+Cobertura total con `-coverpkg` (la métrica que reporta CI): **91.8 %**.
+Funciones sin cobertura alguna: 10.
+
+El barrido de robustez encontró **seis defectos más**, todos del patrón de
+§2.8, y uno independiente en `money.Allocate`. Van en §2.10.
+
+**Fase 4 — Fuzzing, ejemplos y consolidación (P2). ✅ Hecha.**
+
+- **15 objetivos de fuzzing.** En `decimal`: el parser, la aritmética
+  contrastada contra `math/big`, las comparaciones y el redondeo. En `money`:
+  los códecs JSON y SQL, el reparto y el manejo de monedas. Ninguno encontró un
+  fallo, lo cual es información: el motor decimal aguanta, y el arreglo de
+  `Allocate` de la Fase 3 se sostiene sobre todo el espacio de entradas, no sólo
+  sobre la tabla escrita a mano que lo destapó.
+- **Ejemplos ejecutables** en trece paquetes. Se compilan y se les comprueba la
+  salida en cada ejecución de tests, así que los fragmentos de la documentación
+  no pueden separarse de lo que hace el código.
+- **Umbral de cobertura en CI** (`scripts/check_coverage.sh`, mínimo 90 %) y
+  objetivos `make cover`, `make fuzz` y `make fuzz-long`. CI corre el barrido
+  corto en cada cambio y un workflow nocturno el largo.
+
+Cobertura total: **92.6 %**. Funciones sin cobertura alguna: **0**.
+
+Escribir los ejemplos destapó dos defectos más (§2.11), que era justo lo que se
+esperaba de ellos: obligan a usar la API pública como la usaría un tercero.
+
+---
+
+## 7. Criterios de aceptación
+
+El plan está terminado cuando:
+
+- Ninguna función que devuelva `error` entra en pánico con entradas válidas
+  pero degeneradas (tasa 0, un período, monto 0, series vacías).
+- Ninguna función devuelve el valor cero con `err == nil` por no haber entrado
+  en ninguna rama: todo camino termina en un resultado calculado o en un error
+  explícito.
+- Todos los tipos enumerados públicos están recorridos por completo en las
+  pruebas de su función.
+- Ninguna función exportada queda en 0 % de cobertura.
+- Las rutas de respaldo de los solucionadores (bisección) se ejecutan al menos
+  una vez en las pruebas.
+- Cada paquete tiene al menos un `Example` ejecutable.
+- Cobertura total ≥ 92 %, sin ningún paquete por debajo del 85 %.
+
+La cobertura va al final de la lista a propósito: es la consecuencia de haber
+cubierto los casos de uso, no la meta.

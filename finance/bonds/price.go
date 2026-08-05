@@ -24,7 +24,12 @@ func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Deci
 		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, ErrInvalidYield
 	}
 
-	coupon, err := b.face.ToDecimal().Mul(b.couponRate).Div(decimal.MustFromInt64(int64(b.freq), 0))
+	annualCoupon, err := b.face.ToDecimal().TryMul(b.couponRate)
+	if err != nil {
+		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+	}
+
+	coupon, err := annualCoupon.Div(decimal.MustFromInt64(int64(b.freq), 0))
 	if err != nil {
 		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
 	}
@@ -38,8 +43,14 @@ func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Deci
 
 	for t := 1; t <= b.periods; t++ {
 		cashflow := coupon
+
 		if t == b.periods {
-			cashflow = cashflow.Add(face)
+			// The redemption lands on top of the final coupon, which can
+			// overflow when the face value is near the decimal engine's limit.
+			cashflow, err = cashflow.TryAdd(face)
+			if err != nil {
+				return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+			}
 		}
 
 		pv, err := cashflow.Div(factor)
@@ -49,11 +60,46 @@ func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Deci
 
 		tDec := decimal.MustFromInt64(int64(t), 0)
 
-		price = price.Add(pv)
-		sumT = sumT.Add(pv.Mul(tDec))
-		sumTT = sumTT.Add(pv.Mul(tDec.Mul(tDec.Add(decimal.One))))
+		// Every accumulation below can overflow at an extreme yield, so the
+		// Try variants report it instead of panicking inside a function that
+		// returns an error. The yield search relies on this: it scans
+		// candidates up to 10000%, where the discount factor of a long bond
+		// overflows, and needs to skip those rather than crash.
+		price, err = price.TryAdd(pv)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+		}
 
-		factor = factor.Mul(onePlus)
+		weighted, err := pv.TryMul(tDec)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		sumT, err = sumT.TryAdd(weighted)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		convexityWeight, err := pv.TryMul(tDec.Mul(tDec.Add(decimal.One)))
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		sumTT, err = sumTT.TryAdd(convexityWeight)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		// The factor after the last cash flow is never used, so don't let it
+		// overflow a calculation that has otherwise succeeded.
+		if t == b.periods {
+			break
+		}
+
+		factor, err = factor.TryMul(onePlus)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
+		}
 	}
 
 	return price, sumT, sumTT, nil

@@ -160,13 +160,15 @@ func TestContributionsFuturePropagatesPowOverflow(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestContributionsFuturePropagatesDivideByZero(t *testing.T) {
-	// With rate = 0, (1+r)^n - 1 = 0, so dividing by the zero rate must
-	// return an error instead of a bogus value.
+func TestContributionsFutureWithZeroRate(t *testing.T) {
+	// With no interest the contributions never grow, so the future value is
+	// simply their sum: 1000 × 12 = 12000. The general formula divides by
+	// the rate, so the limit is returned directly (TESTING_PLAN.md §2.1).
 	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
 
-	_, err := annuity.contributionsFuture()
-	assert.Error(t, err)
+	future, err := annuity.contributionsFuture()
+	require.NoError(t, err)
+	assert.InDelta(t, 12000.0, future.InexactFloat64(), 1e-9)
 }
 
 func TestAnticipateFutureIgnoresPrincipal(t *testing.T) {
@@ -192,14 +194,15 @@ func TestPrincipalFutureReturnsCompoundedPrincipal(t *testing.T) {
 	assert.InDelta(t, 1126.8250, principal.InexactFloat64(), 0.01)
 }
 
-func TestContributionsAnticipateFuturePropagatesContributionsFutureError(t *testing.T) {
-	// contributionsAnticipateFuture calls contributionsFuture first, so any
-	// error from it (here, a zero rate causing a divide-by-zero) must
-	// propagate instead of being swallowed.
+func TestContributionsAnticipateFutureWithZeroRate(t *testing.T) {
+	// contributionsAnticipateFuture is contributionsFuture × (1+i), so at a
+	// zero rate it matches the ordinary value: 1000 × 12 = 12000
+	// (TESTING_PLAN.md §2.1).
 	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
 
-	_, err := annuity.contributionsAnticipateFuture()
-	assert.Error(t, err)
+	future, err := annuity.contributionsAnticipateFuture()
+	require.NoError(t, err)
+	assert.InDelta(t, 12000.0, future.InexactFloat64(), 1e-9)
 }
 
 func TestPrincipalFuturePropagatesNonInvalidOperationError(t *testing.T) {
@@ -213,20 +216,22 @@ func TestPrincipalFuturePropagatesNonInvalidOperationError(t *testing.T) {
 	assert.NotErrorIs(t, err, compoundinterest.ErrInvalidOperation)
 }
 
-func TestFutureWithContributionsPropagatesContributionsError(t *testing.T) {
-	// With rate = 0, contributionsFuture fails with a divide-by-zero error,
-	// so FutureWithContributions must surface it before even attempting to
-	// compute the principal's future value.
+func TestFutureWithContributionsWithZeroRate(t *testing.T) {
+	// No principal and no interest: the future value is the contributions'
+	// sum, 1000 × 12 = 12000 (TESTING_PLAN.md §2.1).
 	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
 
-	_, err := annuity.FutureWithContributions()
-	assert.Error(t, err)
+	future, err := annuity.FutureWithContributions()
+	require.NoError(t, err)
+	assert.InDelta(t, 12000.0, future.InexactFloat64(), 1e-9)
 }
 
-func TestAnticipateFutureWithContributionsPropagatesContributionsError(t *testing.T) {
-	// Same as above, but through the anticipated (annuity due) variant.
+func TestAnticipateFutureWithContributionsWithZeroRate(t *testing.T) {
+	// Same as above, but through the anticipated (annuity due) variant: at a
+	// zero rate the payment's timing inside the period makes no difference.
 	annuity := newMonthlyPeriodicAnnuity(t, 1000, 0, 0, 0)
 
-	_, err := annuity.AnticipateFutureWithContributions()
-	assert.Error(t, err)
+	future, err := annuity.AnticipateFutureWithContributions()
+	require.NoError(t, err)
+	assert.InDelta(t, 12000.0, future.InexactFloat64(), 1e-9)
 }

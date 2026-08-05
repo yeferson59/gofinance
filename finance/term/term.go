@@ -91,13 +91,21 @@ func (f Frequency) PeriodsPerYear() (decimal.Decimal, error) {
 	}
 }
 
+// dailyMonthsPerPeriod is 12/365, the length of one daily period in months.
+// It is derived from Daily's own 365 periods per year rather than written out
+// as a constant, so the two methods cannot drift apart.
+var dailyMonthsPerPeriod = decimal.MustFromInt64(12, 0).MustDiv(decimal.MustFromInt64(365, 0))
+
 // MonthsPerPeriod returns the length of one period of frequency f expressed
 // in months (e.g. 3 for Quarterly). It returns ErrInvalidFrequency for an
 // unknown frequency.
+//
+// The value is always 12 / PeriodsPerYear, so for Daily it is 12/365 ≈
+// 0.032876712, not 1/30.
 func (f Frequency) MonthsPerPeriod() (decimal.Decimal, error) {
 	switch f {
 	case Daily:
-		return decimal.MustFromFloat64(0.03333333), nil
+		return dailyMonthsPerPeriod, nil
 	case Monthly:
 		return decimal.MustFromInt64(1, 0), nil
 	case Bimonthly:

@@ -12,6 +12,7 @@ type seriesConfig struct {
 	firstPayment money.Money
 	periods      int
 	rate         float64
+	annual       bool
 	frequency    compoundinterest.CompoundingFrequency
 	rateType     compoundinterest.TypeRate
 }
@@ -23,29 +24,34 @@ func newSeriesConfig() seriesConfig {
 	}
 }
 
-// annualRateDivisor returns how many periods of frequency f fit in a year,
-// used to spread an annual rate evenly across periods.
-func annualRateDivisor(f compoundinterest.CompoundingFrequency) float64 {
-	switch f {
-	case compoundinterest.Daily:
-		return 365.0
-	case compoundinterest.Bimonthly:
-		return 6.0
-	case compoundinterest.Quarterly:
-		return 4.0
-	case compoundinterest.FourMonthly:
-		return 3.0
-	case compoundinterest.SemiAnnually:
-		return 2.0
-	case compoundinterest.Annually:
-		return 1.0
-	default:
-		return 12.0
+// periodicRate returns the rate per period, dividing an annual rate by the
+// configured frequency's periods per year. The division happens here rather
+// than in AnnualRate so it uses the frequency the builder ends up with,
+// whatever order the methods were called in.
+//
+// The periods per year come from the shared finance/term vocabulary rather
+// than a table of this package's own, so the two cannot disagree.
+func (c seriesConfig) periodicRate() (decimal.Decimal, error) {
+	rate := decimal.MustFromFloat64(c.rate)
+	if !c.annual {
+		return rate, nil
 	}
+
+	periodsPerYear, err := c.frequency.PeriodsPerYear()
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return rate.Div(periodsPerYear)
 }
 
 func (c seriesConfig) buildPeriodAndRate() (compoundinterest.Period, compoundinterest.RateInterest, error) {
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(c.rate), c.frequency, c.rateType)
+	periodic, err := c.periodicRate()
+	if err != nil {
+		return compoundinterest.Period{}, compoundinterest.RateInterest{}, err
+	}
+
+	rateInterest, err := compoundinterest.NewRateInterest(periodic, c.frequency, c.rateType)
 	if err != nil {
 		return compoundinterest.Period{}, compoundinterest.RateInterest{}, err
 	}
@@ -99,17 +105,24 @@ func (a ArithmeticConfig) Periods(n int) ArithmeticConfig {
 	return a
 }
 
-// Rate sets the periodic interest rate directly.
+// Rate sets the periodic interest rate directly. It replaces any rate set
+// with AnnualRate.
 func (a ArithmeticConfig) Rate(r float64) ArithmeticConfig {
 	a.rate = r
+	a.annual = false
+
 	return a
 }
 
-// AnnualRate sets the annual interest rate, converting it to the periodic
-// rate based on the configured frequency.
+// AnnualRate sets the annual interest rate, which is divided by the
+// configured frequency's periods per year to obtain the periodic rate,
+// whatever order the builder methods are called in. It replaces any rate set
+// with Rate.
 func (a ArithmeticConfig) AnnualRate(r float64) ArithmeticConfig {
-	a.rate = r / annualRateDivisor(a.frequency)
+	a.rate = r
+	a.annual = true
 	a.rateType = compoundinterest.RateEffectyPeriodic
+
 	return a
 }
 
@@ -232,17 +245,24 @@ func (g GeometricConfig) Periods(n int) GeometricConfig {
 	return g
 }
 
-// Rate sets the periodic interest rate directly.
+// Rate sets the periodic interest rate directly. It replaces any rate set
+// with AnnualRate.
 func (g GeometricConfig) Rate(r float64) GeometricConfig {
 	g.rate = r
+	g.annual = false
+
 	return g
 }
 
-// AnnualRate sets the annual interest rate, converting it to the periodic
-// rate based on the configured frequency.
+// AnnualRate sets the annual interest rate, which is divided by the
+// configured frequency's periods per year to obtain the periodic rate,
+// whatever order the builder methods are called in. It replaces any rate set
+// with Rate.
 func (g GeometricConfig) AnnualRate(r float64) GeometricConfig {
-	g.rate = r / annualRateDivisor(g.frequency)
+	g.rate = r
+	g.annual = true
 	g.rateType = compoundinterest.RateEffectyPeriodic
+
 	return g
 }
 

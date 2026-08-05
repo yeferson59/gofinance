@@ -118,7 +118,12 @@ func (b Config) CouponPayment() (money.Money, error) {
 		return money.Money{}, ErrInvalidFrequency
 	}
 
-	coupon, err := b.face.ToDecimal().Mul(b.couponRate).Div(decimal.MustFromInt64(int64(b.freq), 0))
+	annual, err := b.face.ToDecimal().TryMul(b.couponRate)
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	coupon, err := annual.Div(decimal.MustFromInt64(int64(b.freq), 0))
 	if err != nil {
 		return money.Money{}, err
 	}

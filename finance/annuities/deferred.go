@@ -78,11 +78,10 @@ func (a Annuity) PaymentFromPresentValueDeferred(deferPeriods int) (money.Money,
 
 	adjustedPresent := present.MulDecimal(deferGrowth)
 
-	growthFactor := rateInterest.Add(decimal.One)
-	growthPower := growthFactor.MustPow(periods)
+	factor, err := paymentFactor(rateInterest, periods)
+	if err != nil {
+		return money.Money{}, err
+	}
 
-	numerator := rateInterest.Mul(growthPower)
-	denominator := growthPower.Sub(decimal.One)
-
-	return adjustedPresent.MulDecimal(numerator.MustDiv(denominator)), nil
+	return adjustedPresent.MulDecimal(factor), nil
 }

@@ -18,7 +18,12 @@ func (t Config) residual(rate decimal.Decimal) (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	return t.pv.Mul(pow).Add(t.pmt.Mul(pmtCoef)).Add(t.fv), nil
+	balance, err := t.balance(pow, pmtCoef)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return balance.TryAdd(t.fv)
 }
 
 // SolveRate returns the per-period interest rate implied by the other four
@@ -30,36 +35,32 @@ func (t Config) residual(rate decimal.Decimal) (decimal.Decimal, error) {
 // It returns ErrNoConvergence when no rate in the searched range balances the
 // equation (which also happens when the cash flows never cross zero).
 func (t Config) SolveRate() (decimal.Decimal, error) {
-	candidates := rateCandidates()
+	var (
+		prevRate  decimal.Decimal
+		prevRes   decimal.Decimal
+		bracketed bool
+	)
 
-	prevRate := candidates[0]
-
-	prevRes, err := t.residual(prevRate)
-	if err != nil {
-		return decimal.Decimal{}, err
-	}
-
-	for i := 1; i < len(candidates); i++ {
-		curRate := candidates[i]
-
+	for _, curRate := range rateCandidates() {
 		curRes, err := t.residual(curRate)
 		if err != nil {
-			continue
-		}
+			// A candidate whose growth factor overflows or underflows says
+			// nothing about where the root is, so skip it and start a fresh
+			// pair after the gap instead of abandoning the search.
+			bracketed = false
 
-		if prevRes.IsZero() {
-			return prevRate, nil
+			continue
 		}
 
 		if curRes.IsZero() {
 			return curRate, nil
 		}
 
-		if prevRes.Sign() != curRes.Sign() {
+		if bracketed && prevRes.Sign() != curRes.Sign() {
 			return t.bisectRate(prevRate, curRate, prevRes)
 		}
 
-		prevRate, prevRes = curRate, curRes
+		prevRate, prevRes, bracketed = curRate, curRes, true
 	}
 
 	return decimal.Decimal{}, ErrNoConvergence

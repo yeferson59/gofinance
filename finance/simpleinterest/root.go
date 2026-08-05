@@ -87,6 +87,21 @@ type SimpleInterest struct {
 // New creates a new SimpleInterest instance with the provided values.
 // Parameters can be 0 if they will be calculated later.
 // periods can be an empty Period for calculations that do not need it.
+// currency returns the single currency the configured amounts are expressed
+// in, ignoring the ones a given calculation does not need.
+//
+// A simple interest configuration carries three amounts and a caller supplies
+// only some of them — a principal and a term, say, with the interest being
+// what is asked for. The unset ones are the zero money.Money, which carries no
+// currency, so building a result from whichever field a formula happens to
+// read produced an amount in XXX whenever that field was the unset one, and
+// combining two of them failed with a currency mismatch.
+//
+// It returns money.ErrCurrencyMismatch when two amounts that are set disagree.
+func (s SimpleInterest) currency() (money.Currency, error) {
+	return money.ResolveCurrency(s.future, s.present, s.interest)
+}
+
 func New(future, present, interest money.Money, rateInterest decimal.Decimal, periods Period) SimpleInterest {
 	return SimpleInterest{
 		future:       future,

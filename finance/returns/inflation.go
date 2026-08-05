@@ -54,7 +54,15 @@ func NominalValue(realAmount money.Money, inflation, periods decimal.Decimal) (m
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(realAmount.ToDecimal().Mul(factor), realAmount.Currency()), nil
+	// TryMul rather than Mul: a large amount compounded over a long horizon
+	// overflows, and RealValue's matching Div already reports that, so this
+	// direction must too.
+	nominal, err := realAmount.ToDecimal().TryMul(factor)
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return money.FromDecimal(nominal, realAmount.Currency()), nil
 }
 
 // MustNominalValue is like NominalValue but panics on error.

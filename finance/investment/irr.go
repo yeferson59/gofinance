@@ -27,6 +27,20 @@ var (
 // the valid domain or fails to converge, a bracketed bisection search takes
 // over.
 //
+// # More than one sign change
+//
+// A series that changes sign more than once can have several rates that zero
+// its net present value, and no rule of finance says which of them is "the"
+// return. IRR returns one of the roots — whichever the search reaches first —
+// without signalling that others exist. This is the standard behaviour of the
+// measure rather than a limitation of this implementation, and it is why the
+// internal rate of return is unreliable for such series.
+//
+// Whatever it returns is genuinely a root: NPV discounted at it comes back to
+// zero. But if the flows alternate sign — an investment that needs further
+// funding partway through, say — prefer NPV at a discount rate you choose
+// yourself, which has one answer by construction.
+//
 // It returns ErrNoCashFlows for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, ErrNoSignChange when no sign change is present, and
 // ErrNoConvergence if no root can be located.
@@ -122,7 +136,10 @@ func npvAndDerivative(rate decimal.Decimal, amounts []decimal.Decimal) (decimal.
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		f = f.Add(discounted)
+		f, err = f.TryAdd(discounted)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
 
 		// d/dr [ CFₜ (1+r)^-t ] = −t · CFₜ (1+r)^-(t+1) = −t · discounted / (1+r)
 		tDec, err := decimal.NewFromInt64(int64(t), 0)
@@ -130,13 +147,27 @@ func npvAndDerivative(rate decimal.Decimal, amounts []decimal.Decimal) (decimal.
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		dTerm, err := discounted.Mul(tDec).Div(onePlus)
+		scaled, err := discounted.TryMul(tDec)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
 		}
 
-		fPrime = fPrime.Sub(dTerm)
-		factor = factor.Mul(onePlus)
+		dTerm, err := scaled.Div(onePlus)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		fPrime, err = fPrime.TrySub(dTerm)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
+
+		// The factor grows geometrically, so a long enough series overflows
+		// it. TryMul reports that instead of panicking.
+		factor, err = factor.TryMul(onePlus)
+		if err != nil {
+			return decimal.Decimal{}, decimal.Decimal{}, err
+		}
 	}
 
 	return f, fPrime, nil
@@ -144,37 +175,37 @@ func npvAndDerivative(rate decimal.Decimal, amounts []decimal.Decimal) (decimal.
 
 // irrBisection scans a range of candidate rates for a change in the sign of
 // NPV and, once one is bracketed, bisects to locate the root.
+//
+// A candidate whose discount factors overflow or underflow — which happens at
+// the extreme ends of the range on long cash-flow series — says nothing about
+// where the root is, so it is skipped and the scan continues. Only a scan that
+// brackets nothing at all reports ErrNoConvergence.
 func irrBisection(amounts []decimal.Decimal) (decimal.Decimal, error) {
-	candidates := irrCandidates()
+	var (
+		prevRate  decimal.Decimal
+		prevNPV   decimal.Decimal
+		bracketed bool
+	)
 
-	prevRate := candidates[0]
-
-	prevNPV, err := npvDecimal(prevRate, amounts)
-	if err != nil {
-		return decimal.Decimal{}, err
-	}
-
-	for i := 1; i < len(candidates); i++ {
-		curRate := candidates[i]
-
+	for _, curRate := range irrCandidates() {
 		curNPV, err := npvDecimal(curRate, amounts)
 		if err != nil {
-			continue
-		}
+			// Without a value here the neighbouring pair can't be trusted to
+			// bracket a sign change, so start a fresh pair after the gap.
+			bracketed = false
 
-		if prevNPV.IsZero() {
-			return prevRate, nil
+			continue
 		}
 
 		if curNPV.IsZero() {
 			return curRate, nil
 		}
 
-		if prevNPV.Sign() != curNPV.Sign() {
+		if bracketed && prevNPV.Sign() != curNPV.Sign() {
 			return bisect(prevRate, curRate, prevNPV, amounts)
 		}
 
-		prevRate, prevNPV = curRate, curNPV
+		prevRate, prevNPV, bracketed = curRate, curNPV, true
 	}
 
 	return decimal.Decimal{}, ErrNoConvergence

@@ -44,7 +44,32 @@ func (t Config) SolveFV() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	return t.pv.Mul(pow).Add(t.pmt.Mul(pmtCoef)).Neg(), nil
+	balance, err := t.balance(pow, pmtCoef)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return balance.Neg(), nil
+}
+
+// balance returns PV·(1+i)ᴺ + PMT·coef, the part of the TVM equation shared by
+// SolveFV and the rate solver's residual.
+//
+// Every step uses the Try variants: with a large principal or payment the
+// products overflow, and a function that returns an error must report that
+// rather than panic.
+func (t Config) balance(pow, pmtCoef decimal.Decimal) (decimal.Decimal, error) {
+	grown, err := t.pv.TryMul(pow)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	payments, err := t.pmt.TryMul(pmtCoef)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return grown.TryAdd(payments)
 }
 
 // MustSolveFV is like SolveFV but panics on error.
@@ -66,9 +91,17 @@ func (t Config) SolvePV() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	numerator := t.fv.Add(t.pmt.Mul(pmtCoef)).Neg()
+	payments, err := t.pmt.TryMul(pmtCoef)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
 
-	return numerator.Div(pow)
+	numerator, err := t.fv.TryAdd(payments)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return numerator.Neg().Div(pow)
 }
 
 // MustSolvePV is like SolvePV but panics on error.
@@ -97,9 +130,17 @@ func (t Config) SolvePMT() (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrNoSolution
 	}
 
-	numerator := t.pv.Mul(pow).Add(t.fv).Neg()
+	grown, err := t.pv.TryMul(pow)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
 
-	return numerator.Div(pmtCoef)
+	numerator, err := grown.TryAdd(t.fv)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return numerator.Neg().Div(pmtCoef)
 }
 
 // MustSolvePMT is like SolvePMT but panics on error.
@@ -116,16 +157,44 @@ func (t Config) MustSolvePMT() decimal.Decimal {
 // At a zero rate it uses N = −(PV + FV)/PMT; otherwise it solves the equation
 // for (1+i)ᴺ and takes logarithms.
 //
+// A term must run forwards, so a negative result is reported as ErrNoSolution
+// rather than returned. The equation has a root at a negative N whenever the
+// payment points the same way as the balance — money going out on both sides
+// never repays anything — and that root describes a point in the past, not a
+// term anyone can enter into. Zero is allowed: it means the target is already
+// met.
+//
 // It returns ErrInvalidRate if 1+rate is not positive and ErrNoSolution when
 // the inputs admit no finite, positive-argument logarithm (for example a zero
-// payment at a zero rate, or values that force a non-positive growth factor).
+// payment at a zero rate, or values that force a non-positive growth factor),
+// or when the only root is negative.
 func (t Config) SolveN() (decimal.Decimal, error) {
+	periods, err := t.solveN()
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	if periods.IsNeg() {
+		return decimal.Decimal{}, ErrNoSolution
+	}
+
+	return periods, nil
+}
+
+// solveN is SolveN without the sign check, so the two branches below can
+// return their raw root.
+func (t Config) solveN() (decimal.Decimal, error) {
 	if t.rate.IsZero() {
 		if t.pmt.IsZero() {
 			return decimal.Decimal{}, ErrNoSolution
 		}
 
-		return t.pv.Add(t.fv).Neg().Div(t.pmt)
+		balance, err := t.pv.TryAdd(t.fv)
+		if err != nil {
+			return decimal.Decimal{}, err
+		}
+
+		return balance.Neg().Div(t.pmt)
 	}
 
 	onePlus := decimal.One.Add(t.rate)
@@ -140,17 +209,31 @@ func (t Config) SolveN() (decimal.Decimal, error) {
 
 	// k = PMT·typeFactor / i, so the equation PV·powᴺ + PMT·coef + FV = 0
 	// rearranges to (1+i)ᴺ = (k − FV)/(PV + k).
-	k, err := t.pmt.Mul(typeFactor).Div(t.rate)
+	scaledPayment, err := t.pmt.TryMul(typeFactor)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	denominator := t.pv.Add(k)
+	k, err := scaledPayment.Div(t.rate)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	denominator, err := t.pv.TryAdd(k)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
 	if denominator.IsZero() {
 		return decimal.Decimal{}, ErrNoSolution
 	}
 
-	pow, err := k.Sub(t.fv).Div(denominator)
+	numerator, err := k.TrySub(t.fv)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	pow, err := numerator.Div(denominator)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

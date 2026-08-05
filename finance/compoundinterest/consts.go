@@ -48,4 +48,14 @@ const (
 
 var (
 	ErrInvalidOperation = errors.New("invalid values for operation")
+
+	// ErrInvalidTypeRate is returned by the rate conversions when the rate's
+	// TypeRate is not one of the declared constants, so no conversion is
+	// defined for it.
+	ErrInvalidTypeRate = errors.New("compoundinterest: invalid rate type")
+
+	// ErrInvalidAnticipatedRate is returned when an anticipated (discount)
+	// periodic rate is 100% or more. Such a rate would discount a period's
+	// whole value or beyond, so it has no finite ordinary equivalent.
+	ErrInvalidAnticipatedRate = errors.New("compoundinterest: anticipated periodic rate must be less than 1")
 )

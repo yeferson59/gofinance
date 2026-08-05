@@ -5,23 +5,47 @@ import (
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
+// Future returns the future value as the principal plus the interest already
+// known: Future = Present + Interest.
+//
+// It returns money.ErrCurrencyMismatch if the configured amounts are not all
+// in one currency.
 func (s SimpleInterest) Future() (money.Money, error) {
-	future := s.present.Add(s.interest)
+	currency, err := s.currency()
+	if err != nil {
+		return money.Money{}, err
+	}
 
-	return future, nil
+	total, err := s.present.ToDecimal().TryAdd(s.interest.ToDecimal())
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return money.FromDecimal(total, currency), nil
 }
 
+// FutureWithRateInterest returns the future value from the principal, rate and
+// term: Future = Present × (1 + Periods × Rate).
+//
+// It returns money.ErrCurrencyMismatch if the configured amounts are not all
+// in one currency.
 func (s SimpleInterest) FutureWithRateInterest() (money.Money, error) {
+	currency, err := s.currency()
+	if err != nil {
+		return money.Money{}, err
+	}
+
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	periodRate := numberOfPeriods.Mul(s.rateInterest)
+	growth := numberOfPeriods.Mul(s.rateInterest).Add(decimal.One)
 
-	onePlusRate := periodRate.Add(decimal.One)
+	future, err := s.present.ToDecimal().TryMul(growth)
+	if err != nil {
+		return money.Money{}, err
+	}
 
-	future := s.present.MulDecimal(onePlusRate)
-
-	return future, nil
+	return money.FromDecimal(future, currency), nil
 }

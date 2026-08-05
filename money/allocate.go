@@ -25,6 +25,13 @@ var ErrInvalidAllocationCount = errors.New("money: allocation count must be posi
 // is the safe way to divide an amount (e.g. a shared bill or a profit
 // split) among several parties without losing or inventing money through
 // rounding.
+//
+// Money is not forced to its currency's precision, so m may carry a finer
+// amount than the currency can express — fractional yen, or an amount computed
+// from a rate and not yet rounded to cents. The parts still sum back to
+// exactly m in that case; the sub-unit residue goes to the first part, which
+// is therefore the only one that can end up finer than the currency's unit.
+// Round m first if every part must be a whole unit.
 func (m Money) Allocate(ratios ...uint32) ([]Money, error) {
 	if len(ratios) == 0 {
 		return nil, ErrNoAllocationRatios
@@ -90,13 +97,28 @@ func (m Money) Allocate(ratios ...uint32) ([]Money, error) {
 		unit = unit.Neg()
 	}
 
-	for i := 0; !remainder.IsZero() && i < len(results); i++ {
+	// Hand out one smallest currency unit at a time to the earliest ratios,
+	// for as long as a whole unit is left to give.
+	for i := 0; i < len(results) && remainder.Abs().GreaterThanOrEqual(unit.Abs()); i++ {
 		results[i].value, err = results[i].value.TryAdd(unit)
 		if err != nil {
 			return nil, err
 		}
 
 		remainder, err = remainder.TrySub(unit)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// An amount carrying finer precision than its own currency — fractional
+	// yen, or a computed amount not yet rounded to cents — leaves a residue
+	// smaller than one unit, which no whole unit can cover. Give it to the
+	// first part so the split still sums back to exactly m. For an amount
+	// already at its currency's precision this residue is zero and nothing
+	// happens here.
+	if !remainder.IsZero() {
+		results[0].value, err = results[0].value.TryAdd(remainder)
 		if err != nil {
 			return nil, err
 		}
