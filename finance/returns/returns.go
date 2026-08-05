@@ -111,8 +111,12 @@ func MustROI(initial, final money.Money) decimal.Decimal {
 // It returns money.ErrCurrencyMismatch on mixed currencies and
 // ErrNonPositiveValue if initial is not positive.
 func HoldingPeriodReturn(initial, final, income money.Money) (decimal.Decimal, error) {
-	if initial.Currency() != final.Currency() || initial.Currency() != income.Currency() {
-		return decimal.Decimal{}, money.ErrCurrencyMismatch
+	// ResolveCurrency rather than comparing the three directly: income is
+	// optional — a share that paid no dividend — and an unset money.Money
+	// carries no currency, so a direct comparison rejected the ordinary case
+	// of leaving it out.
+	if _, err := money.ResolveCurrency(initial, final, income); err != nil {
+		return decimal.Decimal{}, err
 	}
 
 	if !initial.IsPositive() {
@@ -122,17 +126,17 @@ func HoldingPeriodReturn(initial, final, income money.Money) (decimal.Decimal, e
 	// The Try variants rather than Sub/Add: with amounts at opposite ends of
 	// the decimal range the gain can overflow, and a function that returns an
 	// error must report that rather than panic.
-	gain, err := final.TrySub(initial)
+	gain, err := final.ToDecimal().TrySub(initial.ToDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	total, err := gain.TryAdd(income)
+	total, err := gain.TryAdd(income.ToDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	return total.ToDecimal().Div(initial.ToDecimal())
+	return total.Div(initial.ToDecimal())
 }
 
 // MustHoldingPeriodReturn is like HoldingPeriodReturn but panics on error.

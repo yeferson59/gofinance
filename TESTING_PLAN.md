@@ -66,7 +66,8 @@ Son la evidencia de por qué el plan está ordenado como está.
 > siempre en el terreno que la fase abría: §2.8 son los cuatro que salieron al
 > ejecutar por primera vez las rutas de bisección, §2.10 los siete del barrido
 > de robustez transversal, y §2.11 los dos que salieron al escribir ejemplos
-> que usan la API pública desde fuera.
+> que usan la API pública desde fuera. §2.12 lo reportó un usuario y ninguna
+> fase lo habría encontrado: recorrían montos extremos, no campos sin poner.
 
 ### 2.1 Pánico en funciones que devuelven `error` (tasa 0 %) — crítico ✅ corregido
 
@@ -370,6 +371,50 @@ cuestión abierta de §2.9.
 Un test existente afirmaba la conversión anticipada inspeccionando el campo
 privado `rate`. Su intención —que se respete el tipo de período— se conserva y
 se refuerza; sólo se movió el momento en que se resuelve.
+
+### 2.12 Configuraciones parciales: la moneda sin poner
+
+Un usuario reportó un pánico calculando el valor futuro de una anualidad
+descrita con tasa, tiempo y valor presente:
+
+```go
+NewAnnuity().Present(1000, money.USD).AnnualRate(0.12).Periods(12).Monthly().FutureValue()
+// -> PANIC: money: currency mismatch
+```
+
+Toda la anualidad sacaba su moneda del **pago periódico**. Si se describe sólo
+con valor presente no hay pago: ese campo queda como el `money.Money` cero,
+cuya moneda es `XXX` —el código ISO de «sin moneda»— y sumar un cero en `XXX`
+a un principal en USD revienta.
+
+Lo importante no es el caso concreto sino que es un **diseño repetido**: todos
+los tipos que llevan varios importes opcionales pueden caer en lo mismo. Un
+barrido de configuraciones parciales lo encontró en dos sitios más:
+
+- **`simpleinterest`** (tres importes: futuro, presente, interés): cinco
+  pánicos y la mayoría de los cálculos devolviendo cero en `XXX`.
+- **`returns.HoldingPeriodReturn`**: rechazaba un `income` sin poner —una
+  acción que no pagó dividendo— como descuadre de monedas, en vez de leerlo
+  como cero.
+- **`compoundinterest`** salió limpio.
+
+**Corregido.** El resolutor vive ahora en `money.ResolveCurrency`, que es donde
+pertenece —es un concepto de dinero, no de cada paquete— y devuelve la moneda
+única de un conjunto de importes ignorando los no puestos, con
+`ErrCurrencyMismatch` si dos discrepan. `annuities` y `simpleinterest` la
+resuelven una vez y construyen todos sus resultados con ella; `annuities.New`
+además rechaza monedas mezcladas en vez de aplazar el fallo a un pánico dentro
+de un cálculo.
+
+La regla queda fijada en `invariants/partial_config_test.go`, que **enumera**
+las configuraciones parciales en vez de muestrearlas:
+
+> un valor configurado parcialmente calcula en la moneda que puso quien llama,
+> nunca en `XXX`, y nunca entra en pánico.
+
+Es un hueco del método de las fases anteriores que conviene anotar: el barrido
+de robustez de la Fase 3 probaba **montos extremos**, no **campos sin poner**.
+Dos ejes distintos; sólo se había recorrido uno.
 
 ## 3. Estrategia: seis tipos de prueba, no uno
 

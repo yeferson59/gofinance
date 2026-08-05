@@ -432,6 +432,39 @@ func (c Currency) Symbol() (string, error) {
 	return isoCode, nil
 }
 
+// ResolveCurrency returns the single currency the given amounts are expressed
+// in, ignoring any that were never set.
+//
+// It exists for the types that carry several optional amounts — a simple or
+// compound interest configuration, an annuity — where a caller supplies only
+// the ones the calculation needs. An unset Money is the zero value, which
+// carries XXX, the ISO 4217 code for "no currency". Deriving a result's
+// currency from one particular field therefore yields XXX whenever that field
+// is the unset one, and combining such a result with a real amount fails with
+// a currency mismatch. Resolving across every field instead keeps a partially
+// configured value in one currency.
+//
+// It returns ErrCurrencyMismatch when two amounts that are set disagree, and
+// XXX with no error when none of them is set.
+func ResolveCurrency(amounts ...Money) (Currency, error) {
+	resolved := XXX
+
+	for _, amount := range amounts {
+		currency := amount.Currency()
+		if currency == XXX {
+			continue
+		}
+
+		if resolved != XXX && currency != resolved {
+			return XXX, ErrCurrencyMismatch
+		}
+
+		resolved = currency
+	}
+
+	return resolved, nil
+}
+
 // String returns c's ISO 4217 code, so a Currency prints as "USD" rather than
 // as the number behind it. An unrecognised currency prints as
 // "Currency(<n>)", which names the problem instead of hiding it behind a bare
