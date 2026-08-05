@@ -54,23 +54,33 @@ func xnpvDecimal(rate decimal.Decimal, amounts, times []decimal.Decimal) (decima
 	sum := decimal.Zero
 
 	for i, amount := range amounts {
-		if times[i].IsZero() {
-			sum = sum.Add(amount)
-			continue
-		}
-
-		factor, err := onePlus.Pow(times[i])
+		term, err := discountToBase(amount, onePlus, times[i])
 		if err != nil {
 			return decimal.Decimal{}, err
 		}
 
-		discounted, err := amount.Div(factor)
+		// The running sum can overflow at an extreme rate, so report that
+		// instead of panicking inside a function that returns an error.
+		sum, err = sum.TryAdd(term)
 		if err != nil {
 			return decimal.Decimal{}, err
 		}
-
-		sum = sum.Add(discounted)
 	}
 
 	return sum, nil
+}
+
+// discountToBase discounts amount back to the base date by (1+rate) raised to
+// its year offset. A flow at the base date (offset zero) is returned as is.
+func discountToBase(amount, onePlus, years decimal.Decimal) (decimal.Decimal, error) {
+	if years.IsZero() {
+		return amount, nil
+	}
+
+	factor, err := onePlus.Pow(years)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return amount.Div(factor)
 }

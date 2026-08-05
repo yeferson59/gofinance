@@ -46,16 +46,39 @@ func NewArithmetic(firstPayment, gradient money.Money, period compoundinterest.P
 	return Arithmetic{firstPayment: firstPayment, gradient: gradient, base: b}, nil
 }
 
+// half is the exact decimal 0.5, used to halve the gradient's triangular sum.
+var half = decimal.MustFromFloat64(0.5)
+
+// zeroRateValue returns the series' value when the periodic rate is zero.
+// With nothing to discount or compound, the present and future values both
+// collapse to the plain sum of the payments:
+//
+//	A×n + G×(0+1+…+(n−1)) = A×n + G×n(n−1)/2
+//
+// Both general formulas divide by the rate, so this limit is returned
+// directly instead of failing on a legitimate input.
+func (g Arithmetic) zeroRateValue(periods decimal.Decimal) money.Money {
+	gradientSteps := periods.Mul(periods.Sub(decimal.One)).Mul(half)
+
+	return g.firstPayment.MulDecimal(periods).Add(g.gradient.MulDecimal(gradientSteps))
+}
+
 // Present returns the present value of the arithmetic gradient series:
 //
 //	PV = A × [1-(1+i)^-n]/i + G/i × { [1-(1+i)^-n]/i - n×(1+i)^-n }
 //
 // where A is FirstPayment, G is Gradient, i is the periodic rate, and n is
 // the number of periods.
+//
+// At a zero rate this reduces to the sum of the payments, A×n + G×n(n−1)/2.
 func (g Arithmetic) Present() (money.Money, error) {
 	periods, rateInterest, err := g.periodsAndRate()
 	if err != nil {
 		return money.Money{}, err
+	}
+
+	if rateInterest.IsZero() {
+		return g.zeroRateValue(periods), nil
 	}
 
 	growthPower, err := decimal.One.Add(rateInterest).Pow(periods)
@@ -84,10 +107,18 @@ func (g Arithmetic) Present() (money.Money, error) {
 // Future returns the future value of the arithmetic gradient series:
 //
 //	FV = A × [(1+i)^n-1]/i + G/i × { [(1+i)^n-1]/i - n }
+//
+// At a zero rate this reduces to the sum of the payments, A×n + G×n(n−1)/2,
+// the same as Present: with no interest there is nothing to move the money
+// through time.
 func (g Arithmetic) Future() (money.Money, error) {
 	periods, rateInterest, err := g.periodsAndRate()
 	if err != nil {
 		return money.Money{}, err
+	}
+
+	if rateInterest.IsZero() {
+		return g.zeroRateValue(periods), nil
 	}
 
 	growthPower, err := decimal.One.Add(rateInterest).Pow(periods)

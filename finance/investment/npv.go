@@ -59,8 +59,18 @@ func npvDecimal(rate decimal.Decimal, amounts []decimal.Decimal) (decimal.Decima
 			return decimal.Decimal{}, err
 		}
 
-		sum = sum.Add(discounted)
-		factor = factor.Mul(onePlus)
+		// Both the running sum and the discount factor can overflow on a long
+		// series or an extreme rate. The Try variants report that instead of
+		// panicking inside a function that returns an error.
+		sum, err = sum.TryAdd(discounted)
+		if err != nil {
+			return decimal.Decimal{}, err
+		}
+
+		factor, err = factor.TryMul(onePlus)
+		if err != nil {
+			return decimal.Decimal{}, err
+		}
 	}
 
 	return sum, nil
