@@ -35,7 +35,7 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 	// just their sum. The general formula divides by the rate, so the limit
 	// is returned directly.
 	if rateInterest.IsZero() {
-		return money.FromDecimal(a.value.ToDecimal().Mul(periods), a.value.Currency()), nil
+		return money.FromDecimal(a.value.ToDecimal().Mul(periods), a.currency), nil
 	}
 
 	growthPower, err := decimal.One.Add(rateInterest).Pow(periods)
@@ -48,7 +48,7 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(a.value.ToDecimal().Mul(result), a.value.Currency()), nil
+	return money.FromDecimal(a.value.ToDecimal().Mul(result), a.currency), nil
 }
 
 // AnticipateFuture is like Future, but assumes each payment is made at the
@@ -73,7 +73,7 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(ordinary.ToDecimal().Mul(decimal.One.Add(rateInterest)), ordinary.Currency()), nil
+	return money.FromDecimal(ordinary.ToDecimal().Mul(decimal.One.Add(rateInterest)), a.currency), nil
 }
 
 // PrincipalFuture returns the future value of the initial principal (Present)
@@ -88,7 +88,7 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 func (a Annuity) PrincipalFuture() (money.Money, error) {
 	principal, err := a.compoundInterest.Future()
 	if errors.Is(err, compoundinterest.ErrInvalidOperation) {
-		return money.MustMoneyFromFloat64(0, a.value.Currency()), nil
+		return money.MustMoneyFromFloat64(0, a.currency), nil
 	}
 	if err != nil {
 		return money.Money{}, err
@@ -128,7 +128,10 @@ func (a Annuity) FutureWithContributions() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return contributions.Add(principal), nil
+	// TryAdd rather than Add: the two halves are built from the annuity's
+	// resolved currency, so they agree, but a function that returns an error
+	// must report a mismatch rather than panic if that ever stops holding.
+	return contributions.TryAdd(principal)
 }
 
 // AnticipateFutureWithContributions is like FutureWithContributions, but
@@ -145,5 +148,8 @@ func (a Annuity) AnticipateFutureWithContributions() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return contributions.Add(principal), nil
+	// TryAdd rather than Add: the two halves are built from the annuity's
+	// resolved currency, so they agree, but a function that returns an error
+	// must report a mismatch rather than panic if that ever stops holding.
+	return contributions.TryAdd(principal)
 }

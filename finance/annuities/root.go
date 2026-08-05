@@ -12,13 +12,23 @@ import (
 // and a number of periods.
 type Annuity struct {
 	value            money.Money
+	currency         money.Currency
 	compoundInterest compoundinterest.CompoundInterest
 }
 
 // New creates an Annuity from the periodic payment (value), the present and
 // future values, the number of periods, and the interest rate. Leave present
 // or future at zero when they are the unknown being solved for.
+//
+// The amounts that are set must share one currency; New returns
+// money.ErrCurrencyMismatch otherwise, since an annuity denominated in two
+// currencies has no meaning.
 func New(value, present, future money.Money, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (Annuity, error) {
+	currency, err := resolveCurrency(value, present, future)
+	if err != nil {
+		return Annuity{}, err
+	}
+
 	ci, err := compoundinterest.New(present, future, rateInterest, period)
 	if err != nil {
 		return Annuity{}, err
@@ -26,8 +36,39 @@ func New(value, present, future money.Money, period compoundinterest.Period, rat
 
 	return Annuity{
 		value:            value,
+		currency:         currency,
 		compoundInterest: ci,
 	}, nil
+}
+
+// resolveCurrency returns the single currency the given amounts are expressed
+// in, ignoring those that were never set.
+//
+// An annuity is often described by only some of its three amounts — one given
+// a present value alone has no periodic payment — and an unset money.Money
+// carries money.XXX, the ISO code for "no currency". Deriving every result
+// from one particular field therefore produced XXX whenever that field was the
+// unset one, and adding such a result to an amount in a real currency panicked
+// with a currency mismatch.
+//
+// It returns money.ErrCurrencyMismatch when two amounts that are set disagree.
+func resolveCurrency(amounts ...money.Money) (money.Currency, error) {
+	resolved := money.XXX
+
+	for _, amount := range amounts {
+		currency := amount.Currency()
+		if currency == money.XXX {
+			continue
+		}
+
+		if resolved != money.XXX && currency != resolved {
+			return money.XXX, money.ErrCurrencyMismatch
+		}
+
+		resolved = currency
+	}
+
+	return resolved, nil
 }
 
 // paymentFactor returns i(1+i)^n / [(1+i)^n - 1], the factor turning a present
