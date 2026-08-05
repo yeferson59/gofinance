@@ -64,12 +64,12 @@ func ExampleMustAnnualized() {
 func ExampleRealValue() {
 	// What 10,000 twenty years from now is worth in today's money at 2%
 	// inflation.
-	real, err := returns.RealValue(usd(10000), decimal.MustFromFloat64(0.02), decimal.MustFromInt64(20, 0))
+	todaysMoney, err := returns.RealValue(usd(10000), decimal.MustFromFloat64(0.02), decimal.MustFromInt64(20, 0))
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("%.2f\n", real.InexactFloat64())
+	fmt.Printf("%.2f\n", todaysMoney.InexactFloat64())
 	// Output: 6729.71
 }
 
