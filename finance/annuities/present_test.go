@@ -35,8 +35,10 @@ func TestAnnuityPresent(t *testing.T) {
 }
 
 func TestAnnuityPresentWithZeroInterestRate(t *testing.T) {
-	// With a zero interest rate the annuity formula divides by zero,
-	// so Present must return an error instead of a value.
+	// With no interest the payments are neither discounted nor grown, so the
+	// present value is simply their sum: 1000 × 12 = 12000. The general
+	// formula divides by the rate, so Present returns that limit directly
+	// instead of failing (TESTING_PLAN.md §2.1).
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
@@ -53,8 +55,8 @@ func TestAnnuityPresentWithZeroInterestRate(t *testing.T) {
 	require.NoError(t, err)
 
 	presentValue, err := annuity.Present()
-	require.Error(t, err)
-	assert.Equal(t, 0.0, presentValue.ToDecimal().InexactFloat64())
+	require.NoError(t, err)
+	assert.InDelta(t, 12000.0, presentValue.ToDecimal().InexactFloat64(), 1e-9)
 }
 
 func TestAnnuityPresentWithSmallPeriods(t *testing.T) {
@@ -324,8 +326,9 @@ func TestAnticipatePresentPropagatesPowOverflow(t *testing.T) {
 }
 
 func TestAnticipatePresentWithZeroInterestRate(t *testing.T) {
-	// With a zero interest rate the annuity formula divides by zero, so
-	// AnticipatePresent must return an error instead of a value.
+	// At a zero rate the payment's timing inside the period stops mattering,
+	// so the annuity due matches the ordinary one: 1000 × 12 = 12000
+	// (TESTING_PLAN.md §2.1).
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
@@ -341,6 +344,7 @@ func TestAnticipatePresentWithZeroInterestRate(t *testing.T) {
 	annuity, err := New(value, present, future, period, rateInterest)
 	require.NoError(t, err)
 
-	_, err = annuity.AnticipatePresent()
-	assert.Error(t, err)
+	presentValue, err := annuity.AnticipatePresent()
+	require.NoError(t, err)
+	assert.InDelta(t, 12000.0, presentValue.ToDecimal().InexactFloat64(), 1e-9)
 }

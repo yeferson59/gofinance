@@ -57,7 +57,11 @@ Otros datos del inventario:
 Estos no son riesgos hipotéticos. Cada uno se reprodujo ejecutando la librería.
 Son la evidencia de por qué el plan está ordenado como está.
 
-### 2.1 Pánico en funciones que devuelven `error` (tasa 0 %) — crítico
+> **Estado:** §2.1 y §2.2 están **corregidos** (Fase 1). El texto de cada uno
+> describe el defecto tal como se encontró; al final se anota la corrección y
+> las pruebas que la fijan. §2.3 a §2.7 siguen pendientes.
+
+### 2.1 Pánico en funciones que devuelven `error` (tasa 0 %) — crítico ✅ corregido
 
 Las cuatro funciones de pago de `finance/annuities` entran en pánico
 (`division by zero`) con una tasa de interés del 0 %, en lugar de devolver el
@@ -82,7 +86,27 @@ resultado analítico existe y es trivial: `pago = valor / n`.
 Hay 39 llamadas a ayudantes `Must*` repartidas por `finance/` y `money/`. Cada
 una es un pánico potencial dentro de una API que devuelve errores.
 
-### 2.2 Ceros silenciosos en la conversión de tasas — crítico
+**Corregido.** Las cinco funciones de pago propagan el error en lugar de entrar
+en pánico, y devuelven el límite analítico (`valor / n`) cuando la tasa es 0 %.
+`Present`, `AnticipatePresent`, `Future`, `AnticipateFuture` y las variantes
+`WithContributions` devuelven la suma de los pagos en vez de un error de
+división por cero. La lógica repetida en las cuatro funciones de pago se unificó
+en los ayudantes `paymentFactor` y `sinkingFundFactor`, que tratan el caso
+degenerado en un solo sitio. Se auditaron las llamadas `Must*` restantes en
+código de librería: las seis que quedan dividen por constantes literales (100,
+2), así que no pueden fallar.
+
+Pruebas: `finance/annuities/zero_rate_test.go` — barrido de toda la API de pago
+afirmando que ninguna función entra en pánico, los valores límite, el término
+que desborda, el caso de cero períodos y el cierre del cuadro de amortización
+al 0 %.
+
+Seis pruebas existentes afirmaban el comportamiento defectuoso
+(«con tasa cero la fórmula divide por cero, así que debe devolver error»).
+Describían la limitación de la implementación, no un requisito financiero, y se
+actualizaron al comportamiento correcto.
+
+### 2.2 Ceros silenciosos en la conversión de tasas — crítico ✅ corregido
 
 `finance/compoundinterest` convierte entre cinco tipos de tasa. La matriz de
 conversión (valor 0.12, capitalización mensual) da esto:
@@ -106,6 +130,25 @@ en su lugar se propaga un 0 hacia todo lo que dependa de esa tasa.
 
 Es el peor tipo de fallo posible en una librería financiera: no rompe nada,
 sólo devuelve una cifra equivocada.
+
+**Corregido.** Todas las conversiones pasan ahora por un embudo canónico: la
+tasa periódica efectiva. Un ayudante interno (`periodicEffective`) reduce
+cualquiera de las cinco formas a ese par (tasa periódica, períodos por año)
+mediante un `switch` con caso por defecto, y cada conversión pública se deriva
+de él. Las dos familias se conectan por `d = i/(1+i)` y su inversa
+`i = d/(1−d)`. Las 25 combinaciones dan un valor correcto; un tipo desconocido
+devuelve `ErrInvalidTypeRate` y una tasa anticipada ≥ 100 % (sin equivalente
+vencido finito) devuelve `ErrInvalidAnticipatedRate`.
+
+`RateAnticipateEffectyAnnually` y las cuatro funciones `To*` quedaron como
+delegaciones documentadas: la tasa efectiva anual es una sola magnitud
+independientemente de cómo se cotice, y el embudo ya acepta todos los tipos.
+
+Pruebas: `finance/compoundinterest/rate_conversion_matrix_test.go` — barrido de
+5 tipos × 7 frecuencias × 10 conversiones afirmando que una tasa positiva nunca
+convierte a cero; independencia de la forma de cotización; reciprocidad
+vencida/anticipada; ida y vuelta entre formas; valores cruzados calculados a
+mano; y los dos casos de error.
 
 ### 2.3 Series de gradientes al 0 % — importante
 
@@ -392,10 +435,17 @@ nueva cueste poco:
 
 ## 6. Fases
 
-**Fase 1 — Corregir lo que ya está roto (P0).**
+**Fase 1 — Corregir lo que ya está roto (P0). ✅ Hecha.**
 Los pánicos con tasa 0 % (§2.1) y los ceros silenciosos de conversión de tasas
-(§2.2). Cada corrección entra junto a la prueba que la fija. Es lo primero
-porque son fallos que devuelven cifras equivocadas a quien use la librería hoy.
+(§2.2). Cada corrección entró junto a la prueba que la fija. Fue lo primero
+porque eran fallos que devolvían cifras equivocadas a quien usara la librería.
+
+Efecto en la cobertura: `compoundinterest` sube de 85.9 % a 88.4 %;
+`annuities` baja de 84.7 % a 83.8 %. La bajada es real y esperada: sustituir
+expresiones que entraban en pánico por ramas `if err != nil` añade sentencias,
+y varias de esas ramas sólo se alcanzan con entradas que hoy no se prueban. El
+código quedó más correcto y el porcentaje bajó — justamente por eso la
+cobertura va al final de los criterios de aceptación.
 
 **Fase 2 — Paquetes con menor cobertura (P1).**
 `gradients`, `investment`, `bonds`, `tvm`, `depreciation`. Incluye ejecutar por

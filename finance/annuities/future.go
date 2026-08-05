@@ -31,6 +31,13 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
+	// With no interest the contributions never grow, so the future value is
+	// just their sum. The general formula divides by the rate, so the limit
+	// is returned directly.
+	if rateInterest.IsZero() {
+		return money.FromDecimal(a.value.ToDecimal().Mul(periods), a.value.Currency()), nil
+	}
+
 	growthPower, err := decimal.One.Add(rateInterest).Pow(periods)
 	if err != nil {
 		return money.Money{}, err
