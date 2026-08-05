@@ -27,8 +27,36 @@ type SimpleConfig struct {
 	future     money.Money
 	interest   money.Money
 	rate       decimal.Decimal
+	annual     bool
 	periods    int
 	periodType Periods
+}
+
+// periodsPerYear returns how many periods of the configured type fit in a
+// year, the divisor that turns an annual rate into a periodic one.
+func (s SimpleConfig) periodsPerYear() float64 {
+	switch s.periodType {
+	case Days:
+		return 365.0
+	case Weeks:
+		return 52.0
+	case Years:
+		return 1.0
+	default:
+		return 12.0
+	}
+}
+
+// periodicRate returns the rate per period, converting from the annual rate
+// when one was set. The conversion happens here rather than in AnnualRate so
+// it uses the period type the builder ends up with, whatever order the methods
+// were called in.
+func (s SimpleConfig) periodicRate() decimal.Decimal {
+	if !s.annual {
+		return s.rate
+	}
+
+	return s.rate.MustDiv(decimal.MustFromFloat64(s.periodsPerYear()))
 }
 
 // NewSimple creates a new SimpleConfig builder instance with default values.
@@ -111,11 +139,15 @@ func (s SimpleConfig) Interest(amount float64, currency money.Currency) SimpleCo
 //	.NewSimple().Rate(0.01)  // 1% monthly rate
 func (s SimpleConfig) Rate(r float64) SimpleConfig {
 	s.rate = decimal.MustFromFloat64(r)
+	s.annual = false
+
 	return s
 }
 
-// AnnualRate sets the annual interest rate and automatically converts it to the periodic rate
-// based on the configured period type.
+// AnnualRate sets the annual interest rate, which is divided by the number of
+// periods of the configured type that fit in a year to obtain the periodic
+// rate, whatever order the builder methods are called in. It replaces any rate
+// set with Rate.
 //
 // This is the recommended method for setting interest rates when you have an annual rate.
 //
@@ -132,16 +164,9 @@ func (s SimpleConfig) Rate(r float64) SimpleConfig {
 //
 //	.NewSimple().AnnualRate(0.12)  // 12% annual rate, converts to 1% monthly
 func (s SimpleConfig) AnnualRate(r float64) SimpleConfig {
-	divisor := 12.0
-	switch s.periodType {
-	case Days:
-		divisor = 365.0
-	case Weeks:
-		divisor = 52.0
-	case Years:
-		divisor = 1.0
-	}
-	s.rate = decimal.MustFromFloat64(r / divisor)
+	s.rate = decimal.MustFromFloat64(r)
+	s.annual = true
+
 	return s
 }
 
@@ -232,7 +257,7 @@ func (s SimpleConfig) Weeks() SimpleConfig {
 //	future, _ := si.Future()
 func (s SimpleConfig) Build() SimpleInterest {
 	period := NewPeriod(decimal.MustFromFloat64(float64(s.periods)), s.periodType)
-	return New(s.future, s.present, s.interest, s.rate, period)
+	return New(s.future, s.present, s.interest, s.periodicRate(), period)
 }
 
 // FutureValue calculates the future value based on the present value, rate, and periods.

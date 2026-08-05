@@ -47,6 +47,14 @@ jobs:
           go test -race -coverpkg=$(echo $PKGS | tr ' ' ',') -coverprofile=coverage.out -covermode=atomic $PKGS
           go tool cover -func=coverage.out
 
+      # A ratchet rather than a target: raise COVERAGE_MIN in the Makefile as
+      # coverage rises, so a change can never quietly give ground.
+      - name: Check coverage threshold
+        run: ./scripts/check_coverage.sh coverage.out 90
+
+      - name: Fuzz
+        run: make fuzz FUZZTIME=10s
+
       - name: Test charts module
         run: cd charts && go test -race ./...
 

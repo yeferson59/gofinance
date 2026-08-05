@@ -57,13 +57,14 @@ Otros datos del inventario:
 Estos no son riesgos hipotéticos. Cada uno se reprodujo ejecutando la librería.
 Son la evidencia de por qué el plan está ordenado como está.
 
-> **Estado:** §2.1 a §2.5 están **corregidos** (Fases 1 y 2). El texto de cada
-> uno describe el defecto tal como se encontró; al final se anota la corrección
-> y las pruebas que la fijan. §2.6 y §2.7 quedan documentados con pruebas que
-> fijan el comportamiento actual, sin cambiarlo.
+> **Estado:** §2.1 a §2.5 están **corregidos**. §2.6 y §2.7 quedan documentados
+> con pruebas que fijan el comportamiento actual, sin cambiarlo.
 >
-> La Fase 2 destapó además cuatro defectos que **no** estaban en este
-> inventario, todos en las rutas que nunca se habían ejecutado. Van en §2.8.
+> Cada fase destapó defectos que **no** estaban en este inventario inicial,
+> siempre en el terreno que la fase abría: §2.8 son los cuatro que salieron al
+> ejecutar por primera vez las rutas de bisección, §2.10 los siete del barrido
+> de robustez transversal, y §2.11 los dos que salieron al escribir ejemplos
+> que usan la API pública desde fuera.
 
 ### 2.1 Pánico en funciones que devuelven `error` (tasa 0 %) — crítico ✅ corregido
 
@@ -268,12 +269,12 @@ uno tiene una prueba que lo fija, para que cambiarlo sea visible.
   existe plazo futuro?
 - **`annuities.BuildSchedule` trunca `nper` fraccionario** (§2.7).
 - **`IRR` con varias raíces** devuelve una sola (§2.6).
-- **`gradients.annualRateDivisor` tiene ramas inalcanzables.** Reimplementa lo
-  que ya hace `term.Frequency.PeriodsPerYear` y contempla frecuencias que el
-  builder no expone (`Daily`, `Bimonthly`, `FourMonthly`), además de un `default`
-  silencioso de 12. Es la misma forma que §2.2 pero hoy no es alcanzable desde
-  la API pública. Lo correcto sería delegar en `term`, según la regla 5 de
-  `ARCHITECTURE.md`.
+- **`annuities` no tiene un `PresentValue()` liso en su builder**, aunque sí
+  tiene `FutureValue()` y `DeferredPresentValue()`. Hay que pasar por
+  `Defer(0).DeferredPresentValue()`. `simpleinterest` sí lo tiene. Es un hueco
+  de simetría, no un fallo de cálculo.
+- **`money.Currency` no implementa `String()`**, así que imprimirla da su
+  número en vez del código ISO. Hay que llamar a `GetCurrencyISOCode()`.
 
 ### 2.10 Hallazgos de la Fase 3
 
@@ -305,6 +306,38 @@ puede representar no tiene otro canal que el pánico — que es el contrato
 documentado de los constructores `Must*` que hay detrás. La regla es más
 estrecha y más honesta: *una función que devuelve `error` nunca puede entrar en
 pánico*.
+
+### 2.11 Hallazgos de la Fase 4: el orden de los builders cambiaba el resultado
+
+Escribir un ejemplo de `simpleinterest` dio 1010 donde debía dar 1120. La causa:
+
+```go
+NewSimple().Present(1000, money.USD).AnnualRate(0.06).Periods(2).Years()
+```
+
+`AnnualRate` dividía **en el momento de la llamada**, leyendo el tipo de
+período configurado *hasta ese punto* — que era el valor por defecto, meses. La
+cadena de arriba cobraba 0.5 % anual en vez de 6 %, sin error. Poner `Years()`
+antes de `AnnualRate` daba otro número. El propio ejemplo de la documentación
+del método sólo funcionaba porque usaba `Months()`, que es el defecto.
+
+Los dos builders de `gradients` tenían exactamente el mismo defecto con la
+frecuencia. `loans.AnnualRate`, en cambio, ya guardaba una bandera y convertía
+al construir, y lo documentaba: «whatever order the builder methods are called
+in». Es decir, la librería ya tenía la solución en un sitio y no en los otros
+dos.
+
+**Corregido** en los tres del mismo modo: guardar la tasa anual y convertirla al
+construir, desde el período o la frecuencia con que el builder termina.
+`Rate` y `AnnualRate` se reemplazan mutuamente en vez de dejar un valor a medio
+convertir. De paso, `gradients` dejó de tener su propia tabla de períodos por
+año —con un `default` silencioso de 12 para una frecuencia desconocida, la
+misma forma que §2.2— y ahora usa `term.Frequency.PeriodsPerYear`, cerrando la
+cuestión abierta de §2.9.
+
+Un test existente afirmaba la conversión anticipada inspeccionando el campo
+privado `rate`. Su intención —que se respete el tipo de período— se conserva y
+se refuerza; sólo se movió el momento en que se resuelve.
 
 ## 3. Estrategia: seis tipos de prueba, no uno
 
@@ -610,9 +643,25 @@ Funciones sin cobertura alguna: 10.
 El barrido de robustez encontró **seis defectos más**, todos del patrón de
 §2.8, y uno independiente en `money.Allocate`. Van en §2.10.
 
-**Fase 4 — Fuzzing, ejemplos y consolidación (P2).**
-`decimal`, `money`, ejemplos de godoc, benchmarks para los paquetes que aún no
-los tienen, umbral de cobertura en CI.
+**Fase 4 — Fuzzing, ejemplos y consolidación (P2). ✅ Hecha.**
+
+- **15 objetivos de fuzzing.** En `decimal`: el parser, la aritmética
+  contrastada contra `math/big`, las comparaciones y el redondeo. En `money`:
+  los códecs JSON y SQL, el reparto y el manejo de monedas. Ninguno encontró un
+  fallo, lo cual es información: el motor decimal aguanta, y el arreglo de
+  `Allocate` de la Fase 3 se sostiene sobre todo el espacio de entradas, no sólo
+  sobre la tabla escrita a mano que lo destapó.
+- **Ejemplos ejecutables** en trece paquetes. Se compilan y se les comprueba la
+  salida en cada ejecución de tests, así que los fragmentos de la documentación
+  no pueden separarse de lo que hace el código.
+- **Umbral de cobertura en CI** (`scripts/check_coverage.sh`, mínimo 90 %) y
+  objetivos `make cover`, `make fuzz` y `make fuzz-long`. CI corre el barrido
+  corto en cada cambio y un workflow nocturno el largo.
+
+Cobertura total: **92.6 %**. Funciones sin cobertura alguna: **0**.
+
+Escribir los ejemplos destapó dos defectos más (§2.11), que era justo lo que se
+esperaba de ellos: obligan a usar la API pública como la usaría un tercero.
 
 ---
 

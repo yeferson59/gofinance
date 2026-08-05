@@ -309,6 +309,74 @@ func TestBuilderAnnualRateSpreadsAcrossFrequency(t *testing.T) {
 	}
 }
 
+// TestBuilderAnnualRateIsOrderIndependent checks the frequency is honoured
+// whichever order the builder methods are called in.
+//
+// AnnualRate used to divide the moment it was called, reading whatever
+// frequency had been set so far — Monthly by default. Setting the rate before
+// the frequency therefore produced a monthly rate silently, so
+// AnnualRate(0.12).Annually() charged 1% a year instead of 12%, with no error.
+func TestBuilderAnnualRateIsOrderIndependent(t *testing.T) {
+	pairs := []struct {
+		name   string
+		before func() (money.Money, error)
+		after  func() (money.Money, error)
+	}{
+		{
+			"arithmetic annually",
+			func() (money.Money, error) {
+				return NewArithmeticSeries().Annually().AnnualRate(0.12).
+					FirstPayment(1000, money.USD).Gradient(0, money.USD).Periods(5).Present()
+			},
+			func() (money.Money, error) {
+				return NewArithmeticSeries().AnnualRate(0.12).Annually().
+					FirstPayment(1000, money.USD).Gradient(0, money.USD).Periods(5).Present()
+			},
+		},
+		{
+			"geometric quarterly",
+			func() (money.Money, error) {
+				return NewGeometricSeries().Quarterly().AnnualRate(0.12).
+					FirstPayment(1000, money.USD).GrowthRate(0).Periods(5).Present()
+			},
+			func() (money.Money, error) {
+				return NewGeometricSeries().AnnualRate(0.12).Quarterly().
+					FirstPayment(1000, money.USD).GrowthRate(0).Periods(5).Present()
+			},
+		},
+	}
+
+	for _, pair := range pairs {
+		t.Run(pair.name, func(t *testing.T) {
+			before, err := pair.before()
+			require.NoError(t, err)
+
+			after, err := pair.after()
+			require.NoError(t, err)
+
+			assert.InDelta(t, before.InexactFloat64(), after.InexactFloat64(), 1e-9,
+				"the method order changed the result")
+		})
+	}
+
+	// The annual rate must actually be divided: 12% a year over quarterly
+	// periods is 3% each, so one period discounts by 1.03.
+	present, err := NewGeometricSeries().AnnualRate(0.12).Quarterly().
+		FirstPayment(1000, money.USD).GrowthRate(0).Periods(1).Present()
+	require.NoError(t, err)
+	assert.InDelta(t, 1000/1.03, present.InexactFloat64(), 1e-6)
+}
+
+// TestRateOverridesAnnualRate checks the two rate setters replace each other
+// rather than compounding.
+func TestRateOverridesAnnualRate(t *testing.T) {
+	// A periodic rate set last is used as given, not divided again.
+	present, err := NewArithmeticSeries().Annually().AnnualRate(0.12).Rate(0.05).
+		FirstPayment(1000, money.USD).Gradient(0, money.USD).Periods(1).Present()
+	require.NoError(t, err)
+	assert.InDelta(t, 1000/1.05, present.InexactFloat64(), 1e-6)
+}
+
 // TestGeometricBuilderAnnualRate covers the same conversion on the geometric
 // builder.
 func TestGeometricBuilderAnnualRate(t *testing.T) {

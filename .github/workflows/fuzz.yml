@@ -1,0 +1,42 @@
+name: Nightly fuzz
+
+# The short fuzz sweep in CI guards against regressions on every push. This one
+# gives each target a real budget, which is where fuzzing actually finds things:
+# a five-minute run explores orders of magnitude more inputs than ten seconds.
+#
+# A failure uploads the crashing input so it can be added to the package's
+# testdata/fuzz corpus, turning the finding into a permanent regression test.
+
+on:
+  schedule:
+    # 03:00 UTC daily.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      fuzztime:
+        description: "Budget per fuzz target (e.g. 5m, 30m)"
+        required: false
+        default: "5m"
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.5"
+
+      - name: Fuzz
+        run: make fuzz FUZZTIME=${{ inputs.fuzztime || '5m' }}
+
+      - name: Upload failing inputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-failures
+          path: |
+            **/testdata/fuzz/**
+          if-no-files-found: ignore
