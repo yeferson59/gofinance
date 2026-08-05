@@ -28,6 +28,12 @@ type Schedule struct {
 // with present value pv, periodic rate rate, fixed periodic payment
 // payment, and nper total periods.
 //
+// A schedule has one row per payment, so nper must be a positive whole number.
+// A fractional term is rejected rather than truncated: silently turning a
+// request for 5.7 periods into five rows would answer a different question
+// than the one asked. Round or truncate the term yourself if that is what you
+// want.
+//
 // It returns ErrCurrencyMismatch if pv and payment aren't in the same
 // currency, ErrInvalidPeriods if nper isn't a positive whole number, and
 // wraps any error from parsing nper as an integer.
@@ -40,7 +46,19 @@ func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, np
 	if err != nil {
 		return nil, err
 	}
+
 	if until <= 0 {
+		return nil, ErrInvalidPeriods
+	}
+
+	// Int64 truncates, so a fractional term reaches here as its whole part.
+	// Compare back to catch it.
+	whole, err := decimal.NewFromInt64(until, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if !whole.Equal(nper) {
 		return nil, ErrInvalidPeriods
 	}
 

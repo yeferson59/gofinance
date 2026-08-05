@@ -511,6 +511,62 @@ func (a AnnuityConfig) MustFutureValue() money.Money {
 	return m
 }
 
+// PresentValue builds the Annuity and returns the present value of its
+// periodic payments, each made at the end of its period (ordinary annuity):
+// what the whole stream of payments is worth today.
+//
+// It is the counterpart of FutureValue, and the same thing
+// DeferredPresentValue computes with a grace period of zero.
+//
+// Example:
+//
+//	present, err := NewAnnuity().
+//	    Value(500, money.USD).
+//	    AnnualRate(0.06).
+//	    Periods(12).
+//	    Monthly().
+//	    PresentValue()
+func (a AnnuityConfig) PresentValue() (money.Money, error) {
+	annuity, err := a.Build()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return annuity.Present()
+}
+
+// MustPresentValue is like PresentValue, but panics if the calculation fails.
+func (a AnnuityConfig) MustPresentValue() money.Money {
+	m, err := a.PresentValue()
+	if err != nil {
+		panic(err)
+	}
+
+	return m
+}
+
+// AnticipatePresentValue is like PresentValue, but assumes each payment is
+// made at the beginning of its period (annuity due) instead of at the end.
+func (a AnnuityConfig) AnticipatePresentValue() (money.Money, error) {
+	annuity, err := a.Build()
+	if err != nil {
+		return money.Money{}, err
+	}
+
+	return annuity.AnticipatePresent()
+}
+
+// MustAnticipatePresentValue is like AnticipatePresentValue, but panics if the
+// calculation fails.
+func (a AnnuityConfig) MustAnticipatePresentValue() money.Money {
+	m, err := a.AnticipatePresentValue()
+	if err != nil {
+		panic(err)
+	}
+
+	return m
+}
+
 // AnticipateFutureValue is like FutureValue, but assumes each contribution is
 // made at the beginning of its period (annuity due) instead of at the end.
 func (a AnnuityConfig) AnticipateFutureValue() (money.Money, error) {

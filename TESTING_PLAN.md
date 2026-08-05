@@ -57,8 +57,10 @@ Otros datos del inventario:
 Estos no son riesgos hipotéticos. Cada uno se reprodujo ejecutando la librería.
 Son la evidencia de por qué el plan está ordenado como está.
 
-> **Estado:** §2.1 a §2.5 están **corregidos**. §2.6 y §2.7 quedan documentados
-> con pruebas que fijan el comportamiento actual, sin cambiarlo.
+> **Estado:** todo lo de esta sección está cerrado. §2.1 a §2.5, §2.8, §2.10 y
+> §2.11 están **corregidos**; §2.6 queda documentado con pruebas, tras
+> decidirse deliberadamente no cambiarlo; §2.7 y el resto de §2.9 se resolvieron
+> rechazando la entrada ambigua en vez de tratarla en silencio.
 >
 > Cada fase destapó defectos que **no** estaban en este inventario inicial,
 > siempre en el terreno que la fase abría: §2.8 son los cuatro que salieron al
@@ -206,7 +208,7 @@ convención US (NASD) en orden, incluidas las dos de febrero. 29-feb-2024 a
 devengado o fracción de año que cruce un fin de febrero da una cifra distinta,
 y así queda anunciado en el CHANGELOG.
 
-### 2.6 `IRR` con varias raíces devuelve una sola, sin avisar — documentado
+### 2.6 `IRR` con varias raíces devuelve una sola, sin avisar ✅ documentado
 
 Con flujos `[-1000, 6000, -11000, 6000]` (dos cambios de signo, varias TIR
 matemáticamente válidas), `IRR` devuelve ~0 sin ninguna señal de que la
@@ -214,11 +216,13 @@ solución no es única. Es la limitación clásica de la TIR y es aceptable, per
 debe quedar documentada y fijada por una prueba, no descubierta por un usuario
 en producción.
 
-### 2.7 `BuildSchedule` trunca los períodos fraccionarios en silencio
+### 2.7 `BuildSchedule` trunca los períodos fraccionarios en silencio ✅ corregido
 
 `annuities.BuildSchedule(..., nper = 5.7)` genera 5 períodos sin error. O se
 rechaza (`ErrInvalidPeriods`) o se documenta el truncamiento; hoy no se hace
 ninguna de las dos cosas.
+
+**Corregido:** se rechaza. Ver §2.9.
 
 ### 2.8 Hallazgos de la Fase 2: pánicos y abandonos en los solucionadores
 
@@ -256,25 +260,53 @@ ese patrón hay que buscarlo activamente, no esperar a tropezarlo.
 
 ---
 
-### 2.9 Cuestiones abiertas
+### 2.9 Cuestiones abiertas ✅ cerradas
 
-Casos donde el comportamiento actual es defendible pero no está decidido. Cada
-uno tiene una prueba que lo fija, para que cambiarlo sea visible.
+Casos donde el comportamiento era defendible pero no estaba decidido. Las cinco
+están resueltas; cada una tiene prueba.
 
-- **`tvm.SolveN` devuelve plazos negativos.** Cuando el pago apunta en la misma
+- **`tvm.SolveN` devolvía plazos negativos.** Cuando el pago apunta en la misma
   dirección que el saldo, nada lo amortiza hacia adelante, pero la ecuación
   sigue teniendo raíz en un plazo negativo: el momento del pasado en que el
-  saldo habría sido cero. `SolveN` la devuelve sin comentario. ¿Debería un
-  solucionador entregar un número negativo de períodos, o informar de que no
-  existe plazo futuro?
-- **`annuities.BuildSchedule` trunca `nper` fraccionario** (§2.7).
-- **`IRR` con varias raíces** devuelve una sola (§2.6).
-- **`annuities` no tiene un `PresentValue()` liso en su builder**, aunque sí
-  tiene `FutureValue()` y `DeferredPresentValue()`. Hay que pasar por
-  `Defer(0).DeferredPresentValue()`. `simpleinterest` sí lo tiene. Es un hueco
-  de simetría, no un fallo de cálculo.
-- **`money.Currency` no implementa `String()`**, así que imprimirla da su
-  número en vez del código ISO. Hay que llamar a `GetCurrencyISOCode()`.
+  saldo habría sido cero. `SolveN` la devolvía sin comentario.
+
+  **Resuelto: se rechaza con `ErrNoSolution`.** Un plazo transcurre hacia
+  adelante; entregar «−10 períodos» como respuesta a «cuántos períodos» es un
+  número que nadie puede usar. El cero sigue siendo válido —significa que el
+  objetivo ya está cumplido— así que la comprobación es sobre el signo
+  negativo, no sobre la positividad.
+
+- **`annuities.BuildSchedule` truncaba `nper` fraccionario** (§2.7).
+
+  **Resuelto: se rechaza con `ErrInvalidPeriods`.** Una tabla tiene una fila por
+  pago, así que un plazo fraccionario no tiene sentido; convertir en silencio
+  una petición de 5.7 períodos en cinco filas responde a una pregunta distinta
+  de la que se hizo. Redondear o truncar es decisión de quien llama.
+
+- **`IRR` con varias raíces** devolvía una sola (§2.6).
+
+  **Resuelto: se documenta, no se cambia.** Es el comportamiento estándar de la
+  medida, no una limitación de esta implementación: con más de un cambio de
+  signo varias tasas anulan el VPN y ninguna regla financiera dice cuál es «la»
+  rentabilidad. La documentación de `IRR` lo dice ahora explícitamente y
+  recomienda usar `NPV` a una tasa elegida, que tiene una sola respuesta por
+  construcción. Lo que sí se garantiza y se prueba: lo que devuelva es
+  genuinamente una raíz.
+
+- **`annuities` no tenía un `PresentValue()` liso en su builder**, aunque sí
+  `FutureValue()` y `DeferredPresentValue()`. Había que pasar por
+  `Defer(0).DeferredPresentValue()`.
+
+  **Resuelto: se añaden `PresentValue`, `AnticipatePresentValue` y sus
+  variantes `Must`.**
+
+- **`money.Currency` no implementaba `String()`**, así que imprimirla daba su
+  número en vez del código ISO.
+
+  **Resuelto: `String()` devuelve el código ISO**, y `Currency(<n>)` para una
+  moneda desconocida — nombrar el problema en vez de esconderlo tras un entero.
+  `GetCurrencyISOCode` sigue devolviendo el error: `String` es para leer salida,
+  no un sustituto de la validación.
 
 ### 2.10 Hallazgos de la Fase 3
 

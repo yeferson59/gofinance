@@ -2,6 +2,7 @@ package money
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -429,6 +430,21 @@ func (c Currency) Symbol() (string, error) {
 	}
 
 	return isoCode, nil
+}
+
+// String returns c's ISO 4217 code, so a Currency prints as "USD" rather than
+// as the number behind it. An unrecognised currency prints as
+// "Currency(<n>)", which names the problem instead of hiding it behind a bare
+// integer.
+//
+// It exists because Currency is an integer type: without String, printing one
+// with %v or passing it to Println produced a meaningless number.
+func (c Currency) String() string {
+	if isoCode, ok := currencyCode[c]; ok {
+		return isoCode
+	}
+
+	return "Currency(" + strconv.FormatUint(uint64(c), 10) + ")"
 }
 
 func (c Currency) GetCurrencyISOCode() (string, error) {

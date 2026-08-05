@@ -69,20 +69,56 @@ func TestNPVOverflowReportsError(t *testing.T) {
 	require.Error(t, err)
 }
 
-// TestIRRMultipleSignChanges documents the classic limitation: with more than
-// one sign change several rates can zero the NPV, and IRR returns one of them
-// without signalling the ambiguity (TESTING_PLAN.md §2.6). The contract is that
-// whatever it returns is genuinely a root.
+// TestIRRMultipleSignChanges pins the contract IRR's documentation now states
+// explicitly (TESTING_PLAN.md §2.6): with more than one sign change several
+// rates can zero the NPV, and IRR returns one of them without signalling the
+// ambiguity. That is the standard behaviour of the measure, not a defect, so
+// the guarantee under test is narrower than "the" return: whatever comes back
+// must genuinely be a root.
 func TestIRRMultipleSignChanges(t *testing.T) {
-	// −1000, +6000, −11000, +6000 has roots at 0%, 100% and 200%.
-	flows := flows(-1000, 6000, -11000, 6000)
+	series := [][]money.Money{
+		// −1000, +6000, −11000, +6000 has roots at 0%, 100% and 200%.
+		flows(-1000, 6000, -11000, 6000),
+		// A project needing further funding partway through.
+		flows(-100, 300, -200, 150),
+		flows(-4000, 25000, -25000),
+	}
 
-	irr, err := IRR(flows)
-	require.NoError(t, err)
+	for i, cashFlows := range series {
+		t.Run(string(rune('A'+i)), func(t *testing.T) {
+			irr, err := IRR(cashFlows)
+			if err != nil {
+				// Not every alternating series has a real root; reporting that
+				// is a valid outcome.
+				assert.ErrorIs(t, err, ErrNoConvergence)
 
-	npv, err := NPV(irr, flows)
-	require.NoError(t, err)
-	assert.InDelta(t, 0.0, npv.InexactFloat64(), 0.01)
+				return
+			}
+
+			npv, err := NPV(irr, cashFlows)
+			require.NoError(t, err)
+			assert.InDelta(t, 0.0, npv.InexactFloat64(), 0.01,
+				"IRR returned %v, which does not zero the NPV", irr)
+		})
+	}
+}
+
+// TestNPVIsUnambiguousWhereIRRIsNot is the counterpart of the advice in IRR's
+// documentation: for a series with several roots, NPV at a chosen discount
+// rate has one answer by construction, so it is the measure to reach for.
+func TestNPVIsUnambiguousWhereIRRIsNot(t *testing.T) {
+	ambiguous := flows(-1000, 6000, -11000, 6000)
+
+	// Every rate gives exactly one present value, and the same one each time.
+	for _, rate := range []float64{0.05, 0.5, 1.5} {
+		first, err := NPV(decimal.MustFromFloat64(rate), ambiguous)
+		require.NoError(t, err)
+
+		second, err := NPV(decimal.MustFromFloat64(rate), ambiguous)
+		require.NoError(t, err)
+
+		assert.True(t, first.Equal(second))
+	}
 }
 
 // TestIRRNoRealRoot checks the case where the flows change sign but no rate

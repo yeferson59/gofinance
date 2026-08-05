@@ -27,6 +27,20 @@ var (
 // the valid domain or fails to converge, a bracketed bisection search takes
 // over.
 //
+// # More than one sign change
+//
+// A series that changes sign more than once can have several rates that zero
+// its net present value, and no rule of finance says which of them is "the"
+// return. IRR returns one of the roots — whichever the search reaches first —
+// without signalling that others exist. This is the standard behaviour of the
+// measure rather than a limitation of this implementation, and it is why the
+// internal rate of return is unreliable for such series.
+//
+// Whatever it returns is genuinely a root: NPV discounted at it comes back to
+// zero. But if the flows alternate sign — an investment that needs further
+// funding partway through, say — prefer NPV at a discount rate you choose
+// yourself, which has one answer by construction.
+//
 // It returns ErrNoCashFlows for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, ErrNoSignChange when no sign change is present, and
 // ErrNoConvergence if no root can be located.

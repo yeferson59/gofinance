@@ -168,19 +168,29 @@ func TestSolveNUnrepayableBalance(t *testing.T) {
 	assert.ErrorIs(t, err, ErrNoSolution)
 }
 
-// TestSolveNReturnsNegativeTermForPastBalance documents current behaviour
-// rather than endorsing it: when the payment points the same way as the
-// balance, nothing repays anything going forward, but the equation still has a
-// root at a negative term — the point in the past where the balance would have
-// been zero. SolveN returns it without comment.
+// TestSolveNRejectsNegativeTerm covers the resolution of the question this
+// test used to pin open: when the payment points the same way as the balance,
+// nothing repays anything going forward, but the equation still has a root at
+// a negative term — the point in the past where the balance would have been
+// zero. SolveN used to hand that back without comment.
 //
-// Whether a solver should hand back a negative number of periods, or report
-// that no future term exists, is an open question recorded in TESTING_PLAN.md.
-// This test pins the behaviour so a deliberate change is visible.
-func TestSolveNReturnsNegativeTermForPastBalance(t *testing.T) {
-	periods, err := NewTVM().PV(1000).PMT(100).Rate(0.10).SolveN()
+// A term must run forwards, so it is now reported as ErrNoSolution.
+func TestSolveNRejectsNegativeTerm(t *testing.T) {
+	// Money going out on both sides: nothing is ever repaid.
+	_, err := NewTVM().PV(1000).PMT(100).Rate(0.10).SolveN()
+	assert.ErrorIs(t, err, ErrNoSolution)
+
+	// The same at a zero rate, where the closed form is −(PV+FV)/PMT.
+	_, err = NewTVM().PV(1000).PMT(100).Rate(0).SolveN()
+	assert.ErrorIs(t, err, ErrNoSolution)
+}
+
+// TestSolveNAllowsZeroTerm checks the boundary the sign check must not catch:
+// a target already met needs no periods at all.
+func TestSolveNAllowsZeroTerm(t *testing.T) {
+	periods, err := NewTVM().PV(-1000).FV(1000).PMT(100).Rate(0).SolveN()
 	require.NoError(t, err)
-	assert.Negative(t, periods.InexactFloat64())
+	assert.InDelta(t, 0.0, periods.InexactFloat64(), 1e-9)
 }
 
 // TestInvalidRateBound checks the documented domain: 1+rate must be positive.

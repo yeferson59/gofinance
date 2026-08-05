@@ -157,10 +157,33 @@ func (t Config) MustSolvePMT() decimal.Decimal {
 // At a zero rate it uses N = −(PV + FV)/PMT; otherwise it solves the equation
 // for (1+i)ᴺ and takes logarithms.
 //
+// A term must run forwards, so a negative result is reported as ErrNoSolution
+// rather than returned. The equation has a root at a negative N whenever the
+// payment points the same way as the balance — money going out on both sides
+// never repays anything — and that root describes a point in the past, not a
+// term anyone can enter into. Zero is allowed: it means the target is already
+// met.
+//
 // It returns ErrInvalidRate if 1+rate is not positive and ErrNoSolution when
 // the inputs admit no finite, positive-argument logarithm (for example a zero
-// payment at a zero rate, or values that force a non-positive growth factor).
+// payment at a zero rate, or values that force a non-positive growth factor),
+// or when the only root is negative.
 func (t Config) SolveN() (decimal.Decimal, error) {
+	periods, err := t.solveN()
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	if periods.IsNeg() {
+		return decimal.Decimal{}, ErrNoSolution
+	}
+
+	return periods, nil
+}
+
+// solveN is SolveN without the sign check, so the two branches below can
+// return their raw root.
+func (t Config) solveN() (decimal.Decimal, error) {
 	if t.rate.IsZero() {
 		if t.pmt.IsZero() {
 			return decimal.Decimal{}, ErrNoSolution
