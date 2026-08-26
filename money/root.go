@@ -1,8 +1,10 @@
 package money
 
 import (
+	"bytes"
 	"database/sql/driver"
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 
@@ -75,8 +77,23 @@ func MustMoneyFromString(s string, currency Currency) Money {
 	return m
 }
 
-func (m Money) ToDecimal() decimal.Decimal {
+// NewFromDecimal attaches a currency to d, turning it into a Money value.
+func NewFromDecimal(d decimal.Decimal, currency Currency) Money {
+	return Money{d, currency}
+}
+
+func (m Money) GetDecimal() decimal.Decimal {
 	return m.value
+}
+
+func (m Money) GetCurrency() Currency {
+	return m.currency
+}
+
+func (m Money) SetCurrency(currency Currency) Money {
+	m.currency = currency
+
+	return m
 }
 
 // TryAdd returns the sum of m and other, keeping the currency. It returns
@@ -139,10 +156,6 @@ func (m Money) Sub(other Money) Money {
 	}
 
 	return v
-}
-
-func (m Money) Currency() Currency {
-	return m.currency
 }
 
 func (m Money) RoundBank(prec uint8) Money {
@@ -358,8 +371,8 @@ type moneyJSON struct {
 }
 
 type moneyJSONRaw struct {
-	Value    json.RawMessage `json:"value"`
-	Currency string          `json:"currency"`
+	Value    jsontext.Value `json:"value"`
+	Currency string         `json:"currency"`
 }
 
 func (m Money) MarshalJSON() ([]byte, error) {
@@ -375,9 +388,12 @@ func (m Money) MarshalJSON() ([]byte, error) {
 }
 
 func (m *Money) UnmarshalJSON(data []byte) error {
+	v, err := jsontext.NewDecoder(bytes.NewBuffer(data)).ReadValue()
+	if err != nil {
+		return err
+	}
 
-	var num json.Number
-	if err := json.Unmarshal(data, &num); err == nil {
+	if v.Kind() == jsontext.KindNumber {
 		var dec decimal.Decimal
 		if err := dec.UnmarshalJSON(data); err != nil {
 			return err
@@ -394,8 +410,13 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	t, err := jsontext.NewDecoder(bytes.NewBuffer(mj.Value)).ReadToken()
+	if err != nil {
+		return err
+	}
+
 	var dec decimal.Decimal
-	if err := dec.UnmarshalJSON(mj.Value); err != nil {
+	if err := dec.UnmarshalJSON([]byte(t.String())); err != nil {
 		return err
 	}
 

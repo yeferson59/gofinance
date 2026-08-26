@@ -16,8 +16,8 @@ func TestNewMoney(t *testing.T) {
 	if m.String() != "123.45" {
 		t.Errorf("expected 123.45, got %s", m.String())
 	}
-	if m.Currency() != USD {
-		t.Errorf("expected USD, got %v", m.Currency())
+	if m.GetCurrency() != USD {
+		t.Errorf("expected USD, got %v", m.GetCurrency())
 	}
 
 	if _, err := New(1, 20, USD); !errors.Is(err, decimal.ErrPrecOutOfRange) {
@@ -41,8 +41,7 @@ func TestMustMoneyFromStringPanicsOnInvalid(t *testing.T) {
 }
 
 func TestMoneyToDecimal(t *testing.T) {
-	m := MustMoneyFromString("100.50", USD)
-	d := m.ToDecimal()
+	d := MustMoneyFromString("100.50", USD).GetDecimal()
 	if d.String() != "100.5" {
 		t.Errorf("expected 100.5, got %s", d.String())
 	}
@@ -71,7 +70,7 @@ func TestMoneyRoundAway(t *testing.T) {
 	if rounded.String() != "1.3" {
 		t.Errorf("expected 1.3, got %s", rounded.String())
 	}
-	if rounded.Currency() != USD {
+	if rounded.GetCurrency() != USD {
 		t.Errorf("currency should be preserved")
 	}
 }
@@ -90,7 +89,7 @@ func TestMoneyAbs(t *testing.T) {
 	if abs.String() != "42.5" {
 		t.Errorf("expected 42.5, got %s", abs.String())
 	}
-	if abs.Currency() != USD {
+	if abs.GetCurrency() != USD {
 		t.Errorf("currency should be preserved")
 	}
 }
@@ -131,7 +130,7 @@ func TestMoneyFloorCeil(t *testing.T) {
 	if got := m.Ceil().String(); got != "2" {
 		t.Errorf("Ceil: expected 2, got %s", got)
 	}
-	if m.Floor().Currency() != USD || m.Ceil().Currency() != USD {
+	if m.Floor().GetCurrency() != USD || m.Ceil().GetCurrency() != USD {
 		t.Error("currency should be preserved by Floor/Ceil")
 	}
 }
@@ -182,31 +181,41 @@ func TestMoneyUnmarshalJSONPlainNumber(t *testing.T) {
 	if m.String() != "123.45" {
 		t.Errorf("expected 123.45, got %s", m.String())
 	}
-	if m.Currency() != USD {
-		t.Errorf("expected default currency USD, got %v", m.Currency())
+	if m.GetCurrency() != USD {
+		t.Errorf("expected default currency USD, got %v", m.GetCurrency())
 	}
 }
 
 func TestMoneyUnmarshalJSONWithCurrency(t *testing.T) {
-	var m Money
-	if err := m.UnmarshalJSON([]byte(`{"value":"99.99","currency":"EUR"}`)); err != nil {
+	m, err := NewMoneyFromString("99.99", EUR)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d, err := m.MarshalJSON()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var m2 Money
+	if err := m2.UnmarshalJSON(d); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if m.String() != "99.99" {
+	if m2.String() != "99.99" {
 		t.Errorf("expected 99.99, got %s", m.String())
 	}
-	if m.Currency() != EUR {
-		t.Errorf("expected EUR, got %v", m.Currency())
+	if m2.GetCurrency() != EUR {
+		t.Errorf("expected EUR, got %v", m.GetCurrency())
 	}
 }
 
 func TestMoneyUnmarshalJSONEmptyCurrencyDefaultsToUSD(t *testing.T) {
 	var m Money
-	if err := m.UnmarshalJSON([]byte(`{"value":"5.00","currency":""}`)); err != nil {
+	if err := m.UnmarshalJSON([]byte(`{"value":5.00,"currency":""}`)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if m.Currency() != USD {
-		t.Errorf("expected default currency USD, got %v", m.Currency())
+	if m.GetCurrency() != USD {
+		t.Errorf("expected default currency USD, got %v", m.GetCurrency())
 	}
 }
 

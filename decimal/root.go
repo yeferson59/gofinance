@@ -1,7 +1,8 @@
 package decimal
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/json/jsontext"
 	"strings"
 )
 
@@ -475,7 +476,12 @@ func (d Decimal) Equal(other Decimal) bool {
 }
 
 func (d Decimal) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.value.String())
+	v, err := jsontext.NewDecoder(bytes.NewBufferString(d.value.String())).ReadValue()
+	if err != nil {
+		return nil, err
+	}
+
+	return v.MarshalJSON()
 }
 
 func (d *Decimal) UnmarshalJSON(data []byte) error {
@@ -490,15 +496,14 @@ func (d *Decimal) UnmarshalJSON(data []byte) error {
 }
 
 func parseDecimalJSON(data []byte) (decimal128, error) {
-	var s string
-	if err := json.Unmarshal(data, &s); err == nil {
-		return parseDecimal(s)
+	t, err := jsontext.NewDecoder(bytes.NewReader(data)).ReadToken()
+	if err != nil {
+		return decimal128{}, err
 	}
 
-	var num json.Number
-	if err := json.Unmarshal(data, &num); err == nil {
-		return parseDecimal(num.String())
+	if t.Kind() != jsontext.KindNumber {
+		return decimal128{}, ErrInvalidFormat
 	}
 
-	return decimal128{}, ErrInvalidFormat
+	return parseDecimal(t.String())
 }
