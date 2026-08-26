@@ -62,7 +62,7 @@ func (m Money) Allocate(ratios ...uint32) ([]Money, error) {
 
 		share = share.Trunc(prec)
 
-		results[i] = Money{value: share, currency: m.currency}
+		results[i] = Money{share, m.currency}
 
 		allocated, err = allocated.TryAdd(share)
 		if err != nil {

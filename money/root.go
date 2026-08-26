@@ -10,8 +10,8 @@ import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
-var MoneyZero = Money{value: decimal.Zero, currency: USD}
-var MoneyOne = Money{value: decimal.One, currency: USD}
+var MoneyZero = Money{decimal.Zero, USD}
+var MoneyOne = Money{decimal.One, USD}
 
 type Money struct {
 	value    decimal.Decimal
@@ -24,10 +24,7 @@ func New(value int64, precision uint8, currency Currency) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    parsedValue,
-		currency: currency,
-	}, nil
+	return Money{parsedValue, currency}, nil
 }
 
 func NewMoneyFromFloat64(f float64, currency Currency) (Money, error) {
@@ -36,10 +33,7 @@ func NewMoneyFromFloat64(f float64, currency Currency) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    parsedValue,
-		currency: currency,
-	}, nil
+	return Money{parsedValue, currency}, nil
 }
 
 func MustMoneyFromFloat64(f float64, currency Currency) Money {
@@ -57,10 +51,7 @@ func NewMoneyFromString(s string, currency Currency) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    parsedValue,
-		currency: currency,
-	}, nil
+	return Money{parsedValue, currency}, nil
 }
 
 func MustMoneyFromString(s string, currency Currency) Money {
@@ -104,10 +95,7 @@ func (m Money) TryAdd(other Money) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    v,
-		currency: m.currency,
-	}, nil
+	return Money{v, m.currency}, nil
 }
 
 // Add returns the sum of m and other. Like the decimal engine's Add, it
@@ -135,10 +123,7 @@ func (m Money) TrySub(other Money) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    v,
-		currency: m.currency,
-	}, nil
+	return Money{v, m.currency}, nil
 }
 
 // Sub returns the difference of m and other. Like the decimal engine's Sub,
@@ -154,10 +139,7 @@ func (m Money) Sub(other Money) Money {
 }
 
 func (m Money) RoundBank(prec uint8) Money {
-	return Money{
-		value:    m.value.RoundBank(prec),
-		currency: m.currency,
-	}
+	return Money{m.value.RoundBank(prec), m.currency}
 }
 
 func (m Money) RoundBankString(prec uint8) string {
@@ -165,31 +147,19 @@ func (m Money) RoundBankString(prec uint8) string {
 }
 
 func (m Money) RoundAway(prec uint8) Money {
-	return Money{
-		value:    m.value.RoundAway(prec),
-		currency: m.currency,
-	}
+	return Money{m.value.RoundAway(prec), m.currency}
 }
 
 func (m Money) Trunc(prec uint8) Money {
-	return Money{
-		value:    m.value.Trunc(prec),
-		currency: m.currency,
-	}
+	return Money{m.value.Trunc(prec), m.currency}
 }
 
 func (m Money) Abs() Money {
-	return Money{
-		value:    m.value.Abs(),
-		currency: m.currency,
-	}
+	return Money{m.value.Abs(), m.currency}
 }
 
 func (m Money) Neg() Money {
-	return Money{
-		value:    m.value.Neg(),
-		currency: m.currency,
-	}
+	return Money{m.value.Neg(), m.currency}
 }
 
 func (m Money) IsZero() bool {
@@ -214,20 +184,14 @@ func (m Money) MulInt64(n int64) Money {
 		panic(err)
 	}
 
-	return Money{
-		value:    m.value.Mul(factor),
-		currency: m.currency,
-	}
+	return Money{m.value.Mul(factor), m.currency}
 }
 
 // MulDecimal multiplies m by a currency-less factor, such as a rate or a
 // growth factor, keeping m's currency. Prefer this over Mul when the factor
 // is not itself an amount of money.
 func (m Money) MulDecimal(d decimal.Decimal) Money {
-	return Money{
-		value:    m.value.Mul(d),
-		currency: m.currency,
-	}
+	return Money{m.value.Mul(d), m.currency}
 }
 
 // DivDecimal divides m by a currency-less divisor, such as a rate or a
@@ -238,10 +202,7 @@ func (m Money) DivDecimal(d decimal.Decimal) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    v,
-		currency: m.currency,
-	}, nil
+	return Money{v, m.currency}, nil
 }
 
 // MustDivDecimal is like DivDecimal but panics on error.
@@ -266,10 +227,7 @@ func (m Money) DivInt64(n int64) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    v,
-		currency: m.currency,
-	}, nil
+	return Money{v, m.currency}, nil
 }
 
 // MustDivInt64 is like DivInt64 but panics on error.
@@ -319,17 +277,11 @@ func (m Money) Cmp(other Money) int {
 }
 
 func (m Money) Floor() Money {
-	return Money{
-		value:    m.value.Floor(),
-		currency: m.currency,
-	}
+	return Money{m.value.Floor(), m.currency}
 }
 
 func (m Money) Ceil() Money {
-	return Money{
-		value:    m.value.Ceil(),
-		currency: m.currency,
-	}
+	return Money{m.value.Ceil(), m.currency}
 }
 
 func (m Money) String() string {

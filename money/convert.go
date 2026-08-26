@@ -26,10 +26,7 @@ func (m Money) Convert(to Currency, rate decimal.Decimal) (Money, error) {
 		return Money{}, err
 	}
 
-	return Money{
-		value:    v.RoundBank(prec),
-		currency: to,
-	}, nil
+	return Money{v.RoundBank(prec), to}, nil
 }
 
 // MustConvert is like Convert but panics on error.
