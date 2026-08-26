@@ -5,15 +5,10 @@ import (
 	"database/sql/driver"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
-	"errors"
 	"fmt"
 
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
-
-// ErrCurrencyMismatch is returned by operations that require both operands
-// to share the same currency, such as SafeAdd and SafeSub.
-var ErrCurrencyMismatch = errors.New("money: currency mismatch")
 
 var MoneyZero = Money{value: decimal.Zero, currency: USD}
 var MoneyOne = Money{value: decimal.One, currency: USD}

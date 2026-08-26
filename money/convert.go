@@ -1,14 +1,8 @@
 package money
 
 import (
-	"errors"
-
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
-
-// ErrInvalidExchangeRate is returned by Convert when given a rate that is
-// zero or negative.
-var ErrInvalidExchangeRate = errors.New("money: exchange rate must be positive")
 
 // Convert converts m into the given target currency using rate, the
 // number of units of to that one unit of m's currency is worth

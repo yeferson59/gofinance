@@ -1,22 +1,8 @@
 package money
 
 import (
-	"errors"
-
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
-
-// ErrNoAllocationRatios is returned by Allocate when called without any
-// ratios to split by.
-var ErrNoAllocationRatios = errors.New("money: no allocation ratios given")
-
-// ErrZeroAllocationRatios is returned by Allocate when every ratio is zero,
-// making the split undefined.
-var ErrZeroAllocationRatios = errors.New("money: allocation ratios sum to zero")
-
-// ErrInvalidAllocationCount is returned by AllocateEvenly when asked to
-// split into zero or fewer parts.
-var ErrInvalidAllocationCount = errors.New("money: allocation count must be positive")
 
 // Allocate splits m into len(ratios) parts proportional to ratios. The
 // parts always sum back to exactly m: any smallest-currency-unit remainder
