@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
+	"errors"
 	"fmt"
 
 	"github.com/yeferson59/gofinance/v2/decimal"
@@ -411,7 +412,7 @@ func (m *Money) Scan(src any) error {
 	case float64:
 		dec, err = decimal.NewFromFloat64(v)
 	case nil:
-		err = fmt.Errorf("money: can't scan nil to Money")
+		err = errors.New("money: can't scan nil to Money")
 	default:
 		err = fmt.Errorf("money: can't scan %T to Money", src)
 	}
