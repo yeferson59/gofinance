@@ -15,7 +15,7 @@ func TestToDecimal(t *testing.T) {
 		t.Errorf("%s must be equal %s", n, d.String())
 	}
 
-	m := FromDecimal(d, USD)
+	m := NewFromDecimal(d, USD)
 
 	if m.String() != d.String() {
 		t.Errorf("%s must be equal to %s", n, d.String())

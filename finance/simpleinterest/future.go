@@ -16,12 +16,12 @@ func (s SimpleInterest) Future() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	total, err := s.present.ToDecimal().TryAdd(s.interest.ToDecimal())
+	total, err := s.present.GetDecimal().TryAdd(s.interest.GetDecimal())
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(total, currency), nil
+	return money.NewFromDecimal(total, currency), nil
 }
 
 // FutureWithRateInterest returns the future value from the principal, rate and
@@ -42,10 +42,10 @@ func (s SimpleInterest) FutureWithRateInterest() (money.Money, error) {
 
 	growth := numberOfPeriods.Mul(s.rateInterest).Add(decimal.One)
 
-	future, err := s.present.ToDecimal().TryMul(growth)
+	future, err := s.present.GetDecimal().TryMul(growth)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(future, currency), nil
+	return money.NewFromDecimal(future, currency), nil
 }

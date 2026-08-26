@@ -15,7 +15,7 @@ func (a Annuity) Present() (money.Money, error) {
 	// present value is just their sum. The general formula divides by the
 	// rate, so the limit is returned directly.
 	if rateInterest.IsZero() {
-		return money.FromDecimal(a.value.ToDecimal().Mul(periods), a.currency), nil
+		return money.NewFromDecimal(a.value.GetDecimal().Mul(periods), a.currency), nil
 	}
 
 	growthPower, err := rateInterest.Add(decimal.One).Pow(periods)
@@ -28,7 +28,7 @@ func (a Annuity) Present() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(a.value.ToDecimal().Mul(quotient), a.currency), nil
+	return money.NewFromDecimal(a.value.GetDecimal().Mul(quotient), a.currency), nil
 }
 
 func (a Annuity) AnticipatePresent() (money.Money, error) {
@@ -40,7 +40,7 @@ func (a Annuity) AnticipatePresent() (money.Money, error) {
 	// At a zero rate the payment's timing inside the period stops mattering,
 	// so this matches Present: the sum of the payments.
 	if rateInterest.IsZero() {
-		return money.FromDecimal(a.value.ToDecimal().Mul(periods), a.currency), nil
+		return money.NewFromDecimal(a.value.GetDecimal().Mul(periods), a.currency), nil
 	}
 
 	growthPower, err := rateInterest.Add(decimal.One).Pow(periods.Sub(decimal.One))
@@ -53,5 +53,5 @@ func (a Annuity) AnticipatePresent() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(a.value.ToDecimal().Mul(decimal.One.Add(quotient)), a.currency), nil
+	return money.NewFromDecimal(a.value.GetDecimal().Mul(decimal.One.Add(quotient)), a.currency), nil
 }

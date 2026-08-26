@@ -133,8 +133,8 @@ func TestSimpleConfigRateSetter(t *testing.T) {
 func TestSimpleConfigInterestSetter(t *testing.T) {
 	config := NewSimple().Interest(900, money.USD)
 
-	if config.interest.Currency() != money.USD {
-		t.Fatalf("expected USD currency, got %v", config.interest.Currency())
+	if config.interest.GetCurrency() != money.USD {
+		t.Fatalf("expected USD currency, got %v", config.interest.GetCurrency())
 	}
 	if config.interest.InexactFloat64() != 900 {
 		t.Errorf("expected 900, got %v", config.interest.InexactFloat64())

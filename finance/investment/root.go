@@ -67,15 +67,15 @@ func decimalFlows(cashFlows []money.Money) ([]decimal.Decimal, money.Currency, e
 		return nil, 0, ErrNoCashFlows
 	}
 
-	currency := cashFlows[0].Currency()
+	currency := cashFlows[0].GetCurrency()
 	amounts := make([]decimal.Decimal, len(cashFlows))
 
 	for i, cf := range cashFlows {
-		if cf.Currency() != currency {
+		if cf.GetCurrency() != currency {
 			return nil, 0, money.ErrCurrencyMismatch
 		}
 
-		amounts[i] = cf.ToDecimal()
+		amounts[i] = cf.GetDecimal()
 	}
 
 	return amounts, currency, nil

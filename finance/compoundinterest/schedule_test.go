@@ -27,13 +27,13 @@ func TestBuildGrowthSchedule(t *testing.T) {
 	assert.True(t, rows[0].Change.IsZero())
 	assert.Equal(t, 0.0, rows[0].ChangePercent.InexactFloat64())
 
-	assert.InDelta(t, 1010.00, rows[1].Balance.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1010.00, rows[1].Balance.GetDecimal().InexactFloat64(), 0.01)
 	assert.InDelta(t, 0.01, rows[1].ChangePercent.InexactFloat64(), 0.0001)
 
-	assert.InDelta(t, 1020.10, rows[2].Balance.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1020.10, rows[2].Balance.GetDecimal().InexactFloat64(), 0.01)
 	assert.InDelta(t, 0.01, rows[2].ChangePercent.InexactFloat64(), 0.0001)
 
-	assert.InDelta(t, 1030.30, rows[3].Balance.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1030.30, rows[3].Balance.GetDecimal().InexactFloat64(), 0.01)
 	assert.InDelta(t, 0.01, rows[3].ChangePercent.InexactFloat64(), 0.0001)
 
 	// The interest earned each period grows because it's computed on an

@@ -8,11 +8,11 @@ not yet executed.
 
 The repository hosts three Go modules:
 
-| Module | Path | External runtime deps |
-| ------ | ---- | --------------------- |
-| `github.com/yeferson59/gofinance/v2` | repo root | none (testify is test-only) |
-| `github.com/yeferson59/gofinance/charts` | `charts/` | go-echarts |
-| `github.com/yeferson59/gofinance/examples` | `examples/` | go-echarts (via `charts`) |
+| Module                                     | Path        | External runtime deps       |
+| ------------------------------------------ | ----------- | --------------------------- |
+| `github.com/yeferson59/gofinance/v2`       | repo root   | none (testify is test-only) |
+| `github.com/yeferson59/gofinance/charts`   | `charts/`   | go-echarts                  |
+| `github.com/yeferson59/gofinance/examples` | `examples/` | go-echarts (via `charts`)   |
 
 Splitting `charts` and `examples` out keeps the library module dependency-free:
 consumers who only need financial math never download a charting stack. The
@@ -41,7 +41,7 @@ The rules, from the bottom up:
 2. **`money` adds exactly one concept: currency.** `Money` is a
    `decimal.Decimal` plus a `Currency`, with currency-aware operations
    (checked add/sub, allocation, conversion, formatting, JSON/SQL codecs).
-   `money.FromDecimal(d, currency)` is the bridge from a computed decimal to a
+   `money.NewFromDecimal(d, currency)` is the bridge from a computed decimal to a
    monetary amount. `money.Decimal` remains only as a deprecated alias of
    `decimal.Decimal` for source compatibility.
 3. **`finance/*` computes on `decimal` and carries amounts as `money.Money`.**
@@ -90,7 +90,7 @@ The previous structure had four structural problems, all fixed in this pass:
   deprecated.** Multiplying two monetary amounts is dimensionally
   meaningless (money²), and dividing them yields a currency-less ratio.
   Use `MulDecimal`/`DivDecimal` to scale amounts and
-  `ToDecimal()` + `decimal.Div` for ratios. `Add`/`Sub` now document that
+  `GetDecimal()` + `decimal.Div` for ratios. `Add`/`Sub` now document that
   they don't currency-check and point to `SafeAdd`/`SafeSub`.
 - **Shared time vocabulary in `finance/term`.** `term.Unit`
   (days/weeks/months/years) and `term.Frequency` (daily … annually, with

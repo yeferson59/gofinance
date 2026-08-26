@@ -21,12 +21,12 @@ func StraightLine(cost, salvage money.Money, life int) ([]Schedule, error) {
 
 	base := cost.Sub(salvage)
 
-	annualDec, err := base.ToDecimal().Div(decimal.MustFromInt64(int64(life), 0))
+	annualDec, err := base.GetDecimal().Div(decimal.MustFromInt64(int64(life), 0))
 	if err != nil {
 		return nil, err
 	}
 
-	annual := money.FromDecimal(annualDec, cost.Currency())
+	annual := money.NewFromDecimal(annualDec, cost.GetCurrency())
 
 	rows := make([]Schedule, 0, life)
 	accumulated := cost.Sub(cost)
@@ -78,7 +78,7 @@ func DecliningBalance(cost, salvage money.Money, life int, factor decimal.Decima
 	book := cost
 
 	for year := 1; year <= life; year++ {
-		depr := money.FromDecimal(book.ToDecimal().Mul(rate), cost.Currency())
+		depr := money.NewFromDecimal(book.GetDecimal().Mul(rate), cost.GetCurrency())
 
 		if maxDepr := book.Sub(salvage); depr.GreaterThan(maxDepr) {
 			depr = maxDepr
@@ -122,16 +122,16 @@ func DoubleDecliningBalance(cost, salvage money.Money, life int) ([]Schedule, er
 	book := cost
 
 	for year := 1; year <= life; year++ {
-		declining := money.FromDecimal(book.ToDecimal().Mul(rate), cost.Currency())
+		declining := money.NewFromDecimal(book.GetDecimal().Mul(rate), cost.GetCurrency())
 
 		remainingLife := decimal.MustFromInt64(int64(life-year+1), 0)
 
-		straightDec, err := book.Sub(salvage).ToDecimal().Div(remainingLife)
+		straightDec, err := book.Sub(salvage).GetDecimal().Div(remainingLife)
 		if err != nil {
 			return nil, err
 		}
 
-		straight := money.FromDecimal(straightDec, cost.Currency())
+		straight := money.NewFromDecimal(straightDec, cost.GetCurrency())
 
 		depr := declining
 		if straight.GreaterThan(declining) {
@@ -189,7 +189,7 @@ func SumOfYearsDigits(cost, salvage money.Money, life int) ([]Schedule, error) {
 				return nil, err
 			}
 
-			depr = money.FromDecimal(base.ToDecimal().Mul(weight), cost.Currency())
+			depr = money.NewFromDecimal(base.GetDecimal().Mul(weight), cost.GetCurrency())
 		}
 
 		rows, accumulated, book = appendRow(rows, year, depr, accumulated, book)
@@ -233,7 +233,7 @@ func MACRS(cost money.Money, recovery int) ([]Schedule, error) {
 	for i, pct := range percentages {
 		depr := book
 		if i < len(percentages)-1 {
-			depr = money.FromDecimal(cost.ToDecimal().Mul(pct), cost.Currency())
+			depr = money.NewFromDecimal(cost.GetDecimal().Mul(pct), cost.GetCurrency())
 		}
 
 		rows, accumulated, book = appendRow(rows, i+1, depr, accumulated, book)

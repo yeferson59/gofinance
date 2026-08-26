@@ -266,11 +266,11 @@ func TestGeometricCurrencyIsPreserved(t *testing.T) {
 
 	present, err := series.Present()
 	require.NoError(t, err)
-	assert.Equal(t, money.EUR, present.Currency())
+	assert.Equal(t, money.EUR, present.GetCurrency())
 
 	future, err := series.Future()
 	require.NoError(t, err)
-	assert.Equal(t, money.EUR, future.Currency())
+	assert.Equal(t, money.EUR, future.GetCurrency())
 }
 
 // TestBuilderAnnualRateSpreadsAcrossFrequency covers AnnualRate, which divides

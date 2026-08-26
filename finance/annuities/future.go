@@ -35,7 +35,7 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 	// just their sum. The general formula divides by the rate, so the limit
 	// is returned directly.
 	if rateInterest.IsZero() {
-		return money.FromDecimal(a.value.ToDecimal().Mul(periods), a.currency), nil
+		return money.NewFromDecimal(a.value.GetDecimal().Mul(periods), a.currency), nil
 	}
 
 	growthPower, err := decimal.One.Add(rateInterest).Pow(periods)
@@ -48,7 +48,7 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(a.value.ToDecimal().Mul(result), a.currency), nil
+	return money.NewFromDecimal(a.value.GetDecimal().Mul(result), a.currency), nil
 }
 
 // AnticipateFuture is like Future, but assumes each payment is made at the
@@ -73,7 +73,7 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(ordinary.ToDecimal().Mul(decimal.One.Add(rateInterest)), a.currency), nil
+	return money.NewFromDecimal(ordinary.GetDecimal().Mul(decimal.One.Add(rateInterest)), a.currency), nil
 }
 
 // PrincipalFuture returns the future value of the initial principal (Present)

@@ -21,12 +21,12 @@ func (s SimpleInterest) Interest() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	interest, err := s.present.ToDecimal().TryMul(numberOfPeriods.Mul(s.rateInterest))
+	interest, err := s.present.GetDecimal().TryMul(numberOfPeriods.Mul(s.rateInterest))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(interest, currency), nil
+	return money.NewFromDecimal(interest, currency), nil
 }
 
 // InterestWithPresentAndFuture calculates the interest as the difference
@@ -40,10 +40,10 @@ func (s SimpleInterest) InterestWithPresentAndFuture() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	interest, err := s.future.ToDecimal().TrySub(s.present.ToDecimal())
+	interest, err := s.future.GetDecimal().TrySub(s.present.GetDecimal())
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(interest, currency), nil
+	return money.NewFromDecimal(interest, currency), nil
 }

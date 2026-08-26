@@ -30,7 +30,7 @@ func TestAnnuityAnticipatePaymentFromPresentValue(t *testing.T) {
 
 	payment, err := annuity.AnticipatePaymentFromPresentValue()
 	require.NoError(t, err)
-	assert.InDelta(t, 879.6910, payment.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 879.6910, payment.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityAnticipatePaymentFromFutureValue(t *testing.T) {
@@ -53,7 +53,7 @@ func TestAnnuityAnticipatePaymentFromFutureValue(t *testing.T) {
 
 	payment, err := annuity.AnticipatePaymentFromFutureValue()
 	require.NoError(t, err)
-	assert.InDelta(t, 1171.0216, payment.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1171.0216, payment.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityConfigAnticipatePayment(t *testing.T) {

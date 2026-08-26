@@ -40,7 +40,7 @@ func (c CompoundInterest) Interest() (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrInvalidOperation
 	}
 
-	futureToPresent, err := c.future.ToDecimal().Div(c.present.ToDecimal())
+	futureToPresent, err := c.future.GetDecimal().Div(c.present.GetDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

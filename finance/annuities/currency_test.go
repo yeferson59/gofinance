@@ -35,13 +35,13 @@ func TestFutureFromPresentValueAlone(t *testing.T) {
 
 				// 1000 × 1.01^12 = 1126.8250
 				assert.InDelta(t, 1126.8250, future.InexactFloat64(), 0.0001)
-				assert.Equal(t, currency, future.Currency())
+				assert.Equal(t, currency, future.GetCurrency())
 			})
 
 			assert.NotPanics(t, func() {
 				future, err := config.AnticipateFutureValue()
 				require.NoError(t, err)
-				assert.Equal(t, currency, future.Currency())
+				assert.Equal(t, currency, future.GetCurrency())
 			})
 		})
 	}
@@ -59,7 +59,7 @@ func TestPresentFromFutureValueAlone(t *testing.T) {
 	assert.NotPanics(t, func() {
 		present, err := config.PresentValue()
 		require.NoError(t, err)
-		assert.Equal(t, money.EUR, present.Currency())
+		assert.Equal(t, money.EUR, present.GetCurrency())
 	})
 }
 
@@ -91,8 +91,8 @@ func TestResultsCarryTheConfiguredCurrency(t *testing.T) {
 			assert.NotPanics(t, func() {
 				result, err := compute()
 				require.NoError(t, err)
-				assert.Equal(t, money.EUR, result.Currency(),
-					"%s returned %v", name, result.Currency())
+				assert.Equal(t, money.EUR, result.GetCurrency(),
+					"%s returned %v", name, result.GetCurrency())
 			})
 		})
 	}
@@ -156,7 +156,7 @@ func TestAllZeroAmountsResolveToNoCurrency(t *testing.T) {
 	assert.NotPanics(t, func() {
 		future, err := annuity.Future()
 		require.NoError(t, err)
-		assert.Equal(t, money.XXX, future.Currency())
+		assert.Equal(t, money.XXX, future.GetCurrency())
 		assert.True(t, future.IsZero())
 	})
 }

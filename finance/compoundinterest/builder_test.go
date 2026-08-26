@@ -62,8 +62,8 @@ func TestCompoundConfigMoneySetters(t *testing.T) {
 func TestCompoundConfigFutureSetter(t *testing.T) {
 	config := NewCompound().Future(1500, money.USD)
 
-	if config.future.Currency() != money.USD {
-		t.Fatalf("expected USD currency, got %v", config.future.Currency())
+	if config.future.GetCurrency() != money.USD {
+		t.Fatalf("expected USD currency, got %v", config.future.GetCurrency())
 	}
 	if config.future.InexactFloat64() != 1500 {
 		t.Errorf("expected 1500, got %v", config.future.InexactFloat64())

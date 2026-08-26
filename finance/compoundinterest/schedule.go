@@ -44,7 +44,7 @@ func BuildGrowthSchedule(present money.Money, rate decimal.Decimal, nper decimal
 		return nil, ErrInvalidPeriods
 	}
 
-	currency := present.Currency()
+	currency := present.GetCurrency()
 	zero := money.MustMoneyFromFloat64(0, currency)
 
 	balance := present
@@ -65,7 +65,7 @@ func BuildGrowthSchedule(present money.Money, rate decimal.Decimal, nper decimal
 		balance = balance.Add(interest)
 		sumInterest = sumInterest.Add(interest)
 
-		changePercent, err := interest.ToDecimal().Div(previous.ToDecimal())
+		changePercent, err := interest.GetDecimal().Div(previous.GetDecimal())
 		if err != nil {
 			return nil, err
 		}

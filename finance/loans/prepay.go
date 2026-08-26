@@ -71,7 +71,7 @@ func (l Config) Payoff() (Payoff, error) {
 		return Payoff{}, err
 	}
 
-	extra := money.FromDecimal(l.extra, l.principal.Currency())
+	extra := money.NewFromDecimal(l.extra, l.principal.GetCurrency())
 
 	return amortize(l.principal, rate, payment, extra, n)
 }
@@ -134,8 +134,8 @@ func amortize(pv money.Money, rate decimal.Decimal, payment, extra money.Money, 
 		return Payoff{}, ErrNegativeExtra
 	}
 
-	currency := pv.Currency()
-	zero := money.FromDecimal(decimal.Zero, currency)
+	currency := pv.GetCurrency()
+	zero := money.NewFromDecimal(decimal.Zero, currency)
 	due := payment.Add(extra)
 
 	balance, sumInterest, totalPaid, final := pv, zero, zero, zero

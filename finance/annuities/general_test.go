@@ -33,7 +33,7 @@ func TestNewGeneralAnnuityMatchesSimpleWhenFrequenciesAgree(t *testing.T) {
 	simplePresent, err := simple.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, simplePresent.ToDecimal().InexactFloat64(), generalPresent.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, simplePresent.GetDecimal().InexactFloat64(), generalPresent.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestNewGeneralAnnuityQuarterlyRateMonthlyPayments(t *testing.T) {
@@ -65,7 +65,7 @@ func TestNewGeneralAnnuityQuarterlyRateMonthlyPayments(t *testing.T) {
 	quarterlyPresent, err := quarterlyEquivalent.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, quarterlyPresent.ToDecimal().InexactFloat64(), generalPresent.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, quarterlyPresent.GetDecimal().InexactFloat64(), generalPresent.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityConfigPaymentFrequency(t *testing.T) {

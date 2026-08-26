@@ -34,11 +34,11 @@ type Arithmetic struct {
 //	    money.MustMoneyFromFloat64(100, money.USD),
 //	    period, rate)
 func NewArithmetic(firstPayment, gradient money.Money, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (Arithmetic, error) {
-	if firstPayment.Currency() != gradient.Currency() {
+	if firstPayment.GetCurrency() != gradient.GetCurrency() {
 		return Arithmetic{}, money.ErrCurrencyMismatch
 	}
 
-	b, err := newBase(firstPayment.Currency(), period, rateInterest)
+	b, err := newBase(firstPayment.GetCurrency(), period, rateInterest)
 	if err != nil {
 		return Arithmetic{}, err
 	}

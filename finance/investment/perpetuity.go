@@ -18,12 +18,12 @@ func Perpetuity(payment money.Money, rate decimal.Decimal) (money.Money, error) 
 		return money.Money{}, ErrNonPositiveRate
 	}
 
-	value, err := payment.ToDecimal().Div(rate)
+	value, err := payment.GetDecimal().Div(rate)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(value, payment.Currency()), nil
+	return money.NewFromDecimal(value, payment.GetCurrency()), nil
 }
 
 // MustPerpetuity is like Perpetuity but panics on error.
@@ -50,12 +50,12 @@ func GrowingPerpetuity(payment money.Money, rate, growth decimal.Decimal) (money
 		return money.Money{}, ErrRateBelowGrowth
 	}
 
-	value, err := payment.ToDecimal().Div(rate.Sub(growth))
+	value, err := payment.GetDecimal().Div(rate.Sub(growth))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(value, payment.Currency()), nil
+	return money.NewFromDecimal(value, payment.GetCurrency()), nil
 }
 
 // MustGrowingPerpetuity is like GrowingPerpetuity but panics on error.

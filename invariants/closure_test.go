@@ -180,7 +180,7 @@ func TestAllocationSumsBack(t *testing.T) {
 
 				total := money.MustMoneyFromFloat64(0, currency)
 				for _, part := range parts {
-					assert.Equal(t, currency, part.Currency())
+					assert.Equal(t, currency, part.GetCurrency())
 					total = total.Add(part)
 				}
 

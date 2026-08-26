@@ -58,8 +58,8 @@ func assertResolved(t *testing.T, name string, compute func() (money.Money, erro
 				return
 			}
 
-			assert.Equal(t, sweepCurrency, result.Currency(),
-				"%s returned %v in %v", name, result, result.Currency())
+			assert.Equal(t, sweepCurrency, result.GetCurrency(),
+				"%s returned %v in %v", name, result, result.GetCurrency())
 		})
 	})
 }

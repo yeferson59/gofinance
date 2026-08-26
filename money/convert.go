@@ -12,7 +12,7 @@ var ErrInvalidExchangeRate = errors.New("money: exchange rate must be positive")
 
 // Convert converts m into the given target currency using rate, the
 // number of units of to that one unit of m's currency is worth
-// (e.g. amountIn(to) = amountIn(m.Currency()) * rate). The result is
+// (e.g. amountIn(to) = amountIn(m.GetCurrency()) * rate). The result is
 // rounded (half to even) to the target currency's standard precision.
 //
 //	usd := money.MustMoneyFromFloat64(100, money.USD)

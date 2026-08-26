@@ -55,7 +55,7 @@ func TestAnnuityFutureWithContributions(t *testing.T) {
 
 	total, err := annuity.FutureWithContributions()
 	require.NoError(t, err)
-	assert.InDelta(t, 23950.7533, total.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 23950.7533, total.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityFutureWithContributionsNoPrincipal(t *testing.T) {
@@ -78,7 +78,7 @@ func TestAnnuityFutureWithContributionsNoPrincipal(t *testing.T) {
 
 	total, err := annuity.FutureWithContributions()
 	require.NoError(t, err)
-	assert.InDelta(t, 12682.5030, total.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 12682.5030, total.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityAnticipateFutureWithContributions(t *testing.T) {
@@ -101,7 +101,7 @@ func TestAnnuityAnticipateFutureWithContributions(t *testing.T) {
 
 	total, err := annuity.AnticipateFutureWithContributions()
 	require.NoError(t, err)
-	assert.InDelta(t, 24077.5783, total.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 24077.5783, total.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityConfigFutureValue(t *testing.T) {
@@ -113,7 +113,7 @@ func TestAnnuityConfigFutureValue(t *testing.T) {
 		Monthly().
 		MustFutureValue()
 
-	assert.InDelta(t, 23950.7533, total.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 23950.7533, total.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityConfigAnticipateFutureValue(t *testing.T) {
@@ -125,7 +125,7 @@ func TestAnnuityConfigAnticipateFutureValue(t *testing.T) {
 		Monthly().
 		MustAnticipateFutureValue()
 
-	assert.InDelta(t, 24077.5783, total.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 24077.5783, total.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFuturePropagatesRateInterestPeriodsError(t *testing.T) {

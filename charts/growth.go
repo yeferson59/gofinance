@@ -36,7 +36,7 @@ func GrowthBalance(schedule []compoundinterest.GrowthSchedule) ([]opts.LineData,
 		return items, nil
 	}
 
-	prec, err := schedule[0].Balance.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Balance.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func GrowthChange(schedule []compoundinterest.GrowthSchedule) ([]opts.LineData, 
 		return items, nil
 	}
 
-	prec, err := schedule[0].Balance.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Balance.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func GrowthSumInterest(schedule []compoundinterest.GrowthSchedule) ([]opts.LineD
 		return items, nil
 	}
 
-	prec, err := schedule[0].SumInterest.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].SumInterest.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}

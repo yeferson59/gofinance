@@ -8,11 +8,11 @@ import (
 )
 
 func TestMoneyConstantsCurrency(t *testing.T) {
-	if MoneyZero.Currency() != USD {
-		t.Errorf("expected MoneyZero currency to be USD, got %v", MoneyZero.Currency())
+	if MoneyZero.GetCurrency() != USD {
+		t.Errorf("expected MoneyZero currency to be USD, got %v", MoneyZero.GetCurrency())
 	}
-	if MoneyOne.Currency() != USD {
-		t.Errorf("expected MoneyOne currency to be USD, got %v", MoneyOne.Currency())
+	if MoneyOne.GetCurrency() != USD {
+		t.Errorf("expected MoneyOne currency to be USD, got %v", MoneyOne.GetCurrency())
 	}
 }
 
@@ -281,8 +281,8 @@ func TestTryAddSameCurrency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if sum.String() != "16" || sum.Currency() != USD {
-		t.Errorf("expected 16 USD, got %s %v", sum.String(), sum.Currency())
+	if sum.String() != "16" || sum.GetCurrency() != USD {
+		t.Errorf("expected 16 USD, got %s %v", sum.String(), sum.GetCurrency())
 	}
 }
 
@@ -294,8 +294,8 @@ func TestTrySubSameCurrency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if diff.String() != "4.5" || diff.Currency() != USD {
-		t.Errorf("expected 4.5 USD, got %s %v", diff.String(), diff.Currency())
+	if diff.String() != "4.5" || diff.GetCurrency() != USD {
+		t.Errorf("expected 4.5 USD, got %s %v", diff.String(), diff.GetCurrency())
 	}
 }
 

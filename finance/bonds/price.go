@@ -24,7 +24,7 @@ func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Deci
 		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, ErrInvalidYield
 	}
 
-	annualCoupon, err := b.face.ToDecimal().TryMul(b.couponRate)
+	annualCoupon, err := b.face.GetDecimal().TryMul(b.couponRate)
 	if err != nil {
 		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
 	}
@@ -34,7 +34,7 @@ func (b Config) cashflowSums(y decimal.Decimal) (price, sumT, sumTT decimal.Deci
 		return decimal.Decimal{}, decimal.Decimal{}, decimal.Decimal{}, err
 	}
 
-	face := b.face.ToDecimal()
+	face := b.face.GetDecimal()
 
 	price = decimal.Zero
 	sumT = decimal.Zero
@@ -130,7 +130,7 @@ func (b Config) Price() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(price, b.face.Currency()), nil
+	return money.NewFromDecimal(price, b.face.GetCurrency()), nil
 }
 
 // MustPrice is like Price but panics on error.

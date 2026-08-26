@@ -34,7 +34,7 @@ type Geometric struct {
 //	    decimal.MustFromFloat64(0.08),
 //	    period, rate)
 func NewGeometric(firstPayment money.Money, growthRate decimal.Decimal, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (Geometric, error) {
-	b, err := newBase(firstPayment.Currency(), period, rateInterest)
+	b, err := newBase(firstPayment.GetCurrency(), period, rateInterest)
 	if err != nil {
 		return Geometric{}, err
 	}

@@ -27,7 +27,7 @@ func TestGeometricPresent(t *testing.T) {
 
 	present, err := series.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 4383.1433, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 4383.1433, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestGeometricFuture(t *testing.T) {
@@ -46,7 +46,7 @@ func TestGeometricFuture(t *testing.T) {
 
 	future, err := series.Future()
 	require.NoError(t, err)
-	assert.InDelta(t, 7059.0962, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 7059.0962, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestGeometricPresentGrowthEqualsRate(t *testing.T) {
@@ -65,7 +65,7 @@ func TestGeometricPresentGrowthEqualsRate(t *testing.T) {
 
 	present, err := series.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 4545.4545, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 4545.4545, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestGeometricFutureGrowthEqualsRate(t *testing.T) {
@@ -84,7 +84,7 @@ func TestGeometricFutureGrowthEqualsRate(t *testing.T) {
 
 	future, err := series.Future()
 	require.NoError(t, err)
-	assert.InDelta(t, 7320.50, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 7320.50, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestGeometricZeroGrowthMatchesOrdinaryAnnuity(t *testing.T) {
@@ -104,7 +104,7 @@ func TestGeometricZeroGrowthMatchesOrdinaryAnnuity(t *testing.T) {
 
 	present, err := series.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 3790.7868, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 3790.7868, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestGeometricConfigBuilder(t *testing.T) {
@@ -116,7 +116,7 @@ func TestGeometricConfigBuilder(t *testing.T) {
 		Annually().
 		Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 4383.1433, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 4383.1433, present.GetDecimal().InexactFloat64(), 0.01)
 
 	future := NewGeometricSeries().
 		FirstPayment(1000, money.USD).
@@ -125,5 +125,5 @@ func TestGeometricConfigBuilder(t *testing.T) {
 		Periods(5).
 		Annually().
 		MustFuture()
-	assert.InDelta(t, 7059.0962, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 7059.0962, future.GetDecimal().InexactFloat64(), 0.01)
 }

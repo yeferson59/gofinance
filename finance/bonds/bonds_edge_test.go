@@ -367,7 +367,7 @@ func TestAccruedInterestPreservesCurrency(t *testing.T) {
 		money.MustMoneyFromFloat64(25, money.EUR),
 		last, time.Date(2024, 4, 15, 0, 0, 0, 0, time.UTC), next, daycount.Thirty360)
 	require.NoError(t, err)
-	assert.Equal(t, money.EUR, accrued.Currency())
+	assert.Equal(t, money.EUR, accrued.GetCurrency())
 }
 
 // TestSinglePeriodBond covers the shortest possible bond: one period left, so
@@ -399,5 +399,5 @@ func TestYTMOnUnreachablePrice(t *testing.T) {
 func TestPriceCurrencyIsPreserved(t *testing.T) {
 	price, err := NewBond().Face(1000, money.JPY).CouponRate(0.05).Frequency(2).Periods(10).Yield(0.06).Price()
 	require.NoError(t, err)
-	assert.Equal(t, money.JPY, price.Currency())
+	assert.Equal(t, money.JPY, price.GetCurrency())
 }

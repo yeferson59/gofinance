@@ -374,14 +374,14 @@ func TestCurrencyIsPreserved(t *testing.T) {
 			require.NoError(t, err)
 
 			for _, row := range schedule {
-				assert.Equal(t, money.EUR, row.Depreciation.Currency())
-				assert.Equal(t, money.EUR, row.BookValue.Currency())
-				assert.Equal(t, money.EUR, row.Accumulated.Currency())
+				assert.Equal(t, money.EUR, row.Depreciation.GetCurrency())
+				assert.Equal(t, money.EUR, row.BookValue.GetCurrency())
+				assert.Equal(t, money.EUR, row.Accumulated.GetCurrency())
 			}
 		})
 	}
 
 	macrs, err := MACRS(cost, 5)
 	require.NoError(t, err)
-	assert.Equal(t, money.EUR, macrs[0].BookValue.Currency())
+	assert.Equal(t, money.EUR, macrs[0].BookValue.GetCurrency())
 }

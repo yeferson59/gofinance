@@ -30,8 +30,8 @@ func TestFutureWithPeriodicRate(t *testing.T) {
 	future, err := ci.Future()
 	tx.NoError(err)
 
-	tx.True(future.ToDecimal().InexactFloat64() > 1000, "future should be greater than present")
-	tx.InDelta(1126.825, future.ToDecimal().InexactFloat64(), 0.01)
+	tx.True(future.GetDecimal().InexactFloat64() > 1000, "future should be greater than present")
+	tx.InDelta(1126.825, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithNominalRate(t *testing.T) {
@@ -51,8 +51,8 @@ func TestFutureWithNominalRate(t *testing.T) {
 	future, err := ci.Future()
 	require.NoError(t, err)
 
-	assert.True(t, future.ToDecimal().InexactFloat64() > 1000, "future should be greater than present")
-	assert.InDelta(t, 1126.825, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.True(t, future.GetDecimal().InexactFloat64() > 1000, "future should be greater than present")
+	assert.InDelta(t, 1126.825, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithAnnuallyRate(t *testing.T) {
@@ -72,8 +72,8 @@ func TestFutureWithAnnuallyRate(t *testing.T) {
 	future, err := ci.Future()
 	require.NoError(t, err)
 
-	assert.True(t, future.ToDecimal().InexactFloat64() > 1000, "future should be greater than present")
-	assert.InDelta(t, 1126.8, future.ToDecimal().InexactFloat64(), 0.1)
+	assert.True(t, future.GetDecimal().InexactFloat64() > 1000, "future should be greater than present")
+	assert.InDelta(t, 1126.8, future.GetDecimal().InexactFloat64(), 0.1)
 }
 
 func TestFutureWithDailyCompounding(t *testing.T) {
@@ -95,7 +95,7 @@ func TestFutureWithDailyCompounding(t *testing.T) {
 
 	// 10% effective annual compounded daily over 365 days is exactly one year:
 	// FV = 1000 × 1.10 = 1100
-	assert.InDelta(t, 1100.0, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1100.0, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithQuarterlyCompounding(t *testing.T) {
@@ -116,7 +116,7 @@ func TestFutureWithQuarterlyCompounding(t *testing.T) {
 	require.NoError(t, err)
 
 	// 12% nominal quarterly => i = 0.03, FV = 1000 × 1.03^4 = 1125.5088
-	assert.InDelta(t, 1125.5088, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1125.5088, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
@@ -139,7 +139,7 @@ func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
 	// 10% effective annual compounded semi-annually over 2 periods is exactly
 	// one year: FV = 5000 × 1.10 = 5500 (not 5512.50, which would be a 10%
 	// nominal rate instead of the effective annual rate used here).
-	assert.InDelta(t, 5500.0, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 5500.0, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithZeroPresent(t *testing.T) {
@@ -159,7 +159,7 @@ func TestFutureWithZeroPresent(t *testing.T) {
 	future, err := ci.Future()
 	require.Error(t, err)
 
-	assert.Equal(t, 0.0, future.ToDecimal().InexactFloat64())
+	assert.Equal(t, 0.0, future.GetDecimal().InexactFloat64())
 }
 
 func TestFutureWithMultipleDataSets(t *testing.T) {
@@ -220,7 +220,7 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 			future, err := ci.Future()
 			require.NoError(t, err)
 
-			assert.InDelta(t, tc.expected, future.ToDecimal().InexactFloat64(), 0.01)
+			assert.InDelta(t, tc.expected, future.GetDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }
@@ -243,7 +243,7 @@ func TestFutureWithBimonthlyCompounding(t *testing.T) {
 	require.NoError(t, err)
 
 	// 6% nominal bimonthly => i = 0.01, FV = 1000 × 1.01^6 = 1061.5202
-	assert.InDelta(t, 1061.5202, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1061.5202, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestFutureWithDifferentRateTypes(t *testing.T) {
@@ -280,7 +280,7 @@ func TestFutureWithDifferentRateTypes(t *testing.T) {
 			future, err := ci.Future()
 			require.NoError(t, err)
 
-			assert.InDelta(t, tc.expected, future.ToDecimal().InexactFloat64(), 0.01)
+			assert.InDelta(t, tc.expected, future.GetDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }
@@ -313,7 +313,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 5_005_087.00
 
-		tx.InDelta(expected, math.Round(future.ToDecimal().InexactFloat64()), 0.00001)
+		tx.InDelta(expected, math.Round(future.GetDecimal().InexactFloat64()), 0.00001)
 	})
 
 	t.Run("run simple operation with monthly compounding frequency for future", func(t *testing.T) {
@@ -326,7 +326,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_689_240.66147257
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with bimonth compounding frequency for future", func(t *testing.T) {
@@ -339,7 +339,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_673_902.24980029
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with quarterly one compounding frequency for future", func(t *testing.T) {
@@ -352,7 +352,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_658_908.265198686
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with quarterly two compounding frequency for future", func(t *testing.T) {
@@ -365,7 +365,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_644_246.304611462
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with semi annually compounding frequency for future", func(t *testing.T) {
@@ -378,7 +378,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_615_871.864700002
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with annually compounding frequency for future", func(t *testing.T) {
@@ -391,7 +391,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_537_600.666784153
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with day period for future", func(t *testing.T) {
@@ -411,7 +411,7 @@ func TestMoreExampleFuture(t *testing.T) {
 		// 30.4167 months (TESTING_PLAN.md §2.4).
 		expected := 4_689_240.661472568
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with bimonthly period for future", func(t *testing.T) {
@@ -424,7 +424,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_689_240.66147257
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with quarterly one period for future", func(t *testing.T) {
@@ -437,7 +437,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_689_240.66147257
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with quarterly two period for future", func(t *testing.T) {
@@ -450,7 +450,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_689_240.66147257
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with semi-annually period for future", func(t *testing.T) {
@@ -463,7 +463,7 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_689_240.66147257
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 
 	t.Run("run simple operation with annually period for future", func(t *testing.T) {
@@ -476,6 +476,6 @@ func TestMoreExampleFuture(t *testing.T) {
 
 		expected := 4_689_240.66147257
 
-		tx.InDelta(expected, future.ToDecimal().InexactFloat64(), 0.00001)
+		tx.InDelta(expected, future.GetDecimal().InexactFloat64(), 0.00001)
 	})
 }

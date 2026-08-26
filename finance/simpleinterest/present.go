@@ -28,12 +28,12 @@ func (s SimpleInterest) Present() (money.Money, error) {
 		return money.Money{}, errors.New("invalid period or rate interest for operation")
 	}
 
-	present, err := s.interest.ToDecimal().Div(numberOfPeriods.Mul(s.rateInterest))
+	present, err := s.interest.GetDecimal().Div(numberOfPeriods.Mul(s.rateInterest))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(present, currency), nil
+	return money.NewFromDecimal(present, currency), nil
 }
 
 // PresentWithFuture calculates the present value using future value, rate, and periods.
@@ -57,10 +57,10 @@ func (s SimpleInterest) PresentWithFuture() (money.Money, error) {
 		return money.Money{}, errors.New("invalid period or rate interest for operation")
 	}
 
-	present, err := s.future.ToDecimal().Div(decimal.One.Add(numberOfPeriods.Mul(s.rateInterest)))
+	present, err := s.future.GetDecimal().Div(decimal.One.Add(numberOfPeriods.Mul(s.rateInterest)))
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(present, currency), nil
+	return money.NewFromDecimal(present, currency), nil
 }

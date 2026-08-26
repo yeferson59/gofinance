@@ -55,7 +55,7 @@ func ExampleMoney_MulDecimal() {
 
 	interest := principal.MulDecimal(rate)
 
-	code, err := interest.Currency().GetCurrencyISOCode()
+	code, err := interest.GetCurrency().GetCurrencyISOCode()
 	if err != nil {
 		panic(err)
 	}
@@ -75,11 +75,11 @@ func ExampleMoney_MustDivDecimal() {
 	// Output: 100.00
 }
 
-func ExampleFromDecimal() {
+func ExampleNewFromDecimal() {
 	// FromDecimal is the bridge from a computed decimal back to an amount.
 	computed := decimal.MustFromString("1234.5678")
 
-	amount := money.FromDecimal(computed, money.USD)
+	amount := money.NewFromDecimal(computed, money.USD)
 
 	fmt.Println(amount.RoundBankString(2))
 	// Output: 1234.57

@@ -30,7 +30,7 @@ func InvestmentBalance(schedule []annuities.InvestmentSchedule) ([]opts.LineData
 		return items, nil
 	}
 
-	prec, err := schedule[0].Balance.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Balance.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func InvestmentChange(schedule []annuities.InvestmentSchedule) ([]opts.LineData,
 		return items, nil
 	}
 
-	prec, err := schedule[0].Balance.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Balance.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func InvestmentSumContributions(schedule []annuities.InvestmentSchedule) ([]opts
 		return items, nil
 	}
 
-	prec, err := schedule[0].SumContributions.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].SumContributions.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func InvestmentSumInterest(schedule []annuities.InvestmentSchedule) ([]opts.Line
 		return items, nil
 	}
 
-	prec, err := schedule[0].SumInterest.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].SumInterest.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}

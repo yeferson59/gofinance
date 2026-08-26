@@ -48,7 +48,7 @@ func BuildAnticipateInvestmentSchedule(principal, contribution money.Money, rate
 }
 
 func buildInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal, anticipated bool) ([]InvestmentSchedule, error) {
-	if principal.Currency() != contribution.Currency() {
+	if principal.GetCurrency() != contribution.GetCurrency() {
 		return nil, money.ErrCurrencyMismatch
 	}
 
@@ -61,7 +61,7 @@ func buildInvestmentSchedule(principal, contribution money.Money, rate decimal.D
 		return nil, ErrInvalidPeriods
 	}
 
-	currency := principal.Currency()
+	currency := principal.GetCurrency()
 	zero := money.MustMoneyFromFloat64(0, currency)
 
 	balance := principal
@@ -96,7 +96,7 @@ func buildInvestmentSchedule(principal, contribution money.Money, rate decimal.D
 
 		changePercent := decimal.Zero
 		if !previous.IsZero() {
-			changePercent, err = balance.Sub(previous).ToDecimal().Div(previous.ToDecimal())
+			changePercent, err = balance.Sub(previous).GetDecimal().Div(previous.GetDecimal())
 			if err != nil {
 				return nil, err
 			}

@@ -450,7 +450,7 @@ func ResolveCurrency(amounts ...Money) (Currency, error) {
 	resolved := XXX
 
 	for _, amount := range amounts {
-		currency := amount.Currency()
+		currency := amount.GetCurrency()
 		if currency == XXX {
 			continue
 		}

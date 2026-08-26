@@ -23,7 +23,7 @@ func TestPriceAtPar(t *testing.T) {
 	price, err := parBond().Yield(0.05).Price()
 	require.NoError(t, err)
 	assert.InDelta(t, 1000.0, price.InexactFloat64(), 0.01)
-	assert.Equal(t, money.USD, price.Currency())
+	assert.Equal(t, money.USD, price.GetCurrency())
 }
 
 func TestPriceBelowParWhenYieldExceedsCoupon(t *testing.T) {

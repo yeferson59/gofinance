@@ -49,5 +49,5 @@ func (c CompoundInterest) Future() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(c.present.ToDecimal().Mul(compoundGrowth), c.present.Currency()), nil
+	return money.NewFromDecimal(c.present.GetDecimal().Mul(compoundGrowth), c.present.GetCurrency()), nil
 }

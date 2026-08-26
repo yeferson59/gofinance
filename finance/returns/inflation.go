@@ -21,12 +21,12 @@ func RealValue(nominal money.Money, inflation, periods decimal.Decimal) (money.M
 		return money.Money{}, err
 	}
 
-	realAmount, err := nominal.ToDecimal().Div(factor)
+	realAmount, err := nominal.GetDecimal().Div(factor)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(realAmount, nominal.Currency()), nil
+	return money.NewFromDecimal(realAmount, nominal.GetCurrency()), nil
 }
 
 // MustRealValue is like RealValue but panics on error.
@@ -57,12 +57,12 @@ func NominalValue(realAmount money.Money, inflation, periods decimal.Decimal) (m
 	// TryMul rather than Mul: a large amount compounded over a long horizon
 	// overflows, and RealValue's matching Div already reports that, so this
 	// direction must too.
-	nominal, err := realAmount.ToDecimal().TryMul(factor)
+	nominal, err := realAmount.GetDecimal().TryMul(factor)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(nominal, realAmount.Currency()), nil
+	return money.NewFromDecimal(nominal, realAmount.GetCurrency()), nil
 }
 
 // MustNominalValue is like NominalValue but panics on error.

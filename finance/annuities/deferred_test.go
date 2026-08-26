@@ -28,7 +28,7 @@ func TestAnnuityPresentDeferred(t *testing.T) {
 
 	present, err := annuity.PresentDeferred(3)
 	require.NoError(t, err)
-	assert.InDelta(t, 10924.07, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 10924.07, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPresentDeferredZeroReducesToPresent(t *testing.T) {
@@ -50,7 +50,7 @@ func TestAnnuityPresentDeferredZeroReducesToPresent(t *testing.T) {
 	ordinary, err := annuity.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, ordinary.ToDecimal().InexactFloat64(), deferred.ToDecimal().InexactFloat64(), 0.0001)
+	assert.InDelta(t, ordinary.GetDecimal().InexactFloat64(), deferred.GetDecimal().InexactFloat64(), 0.0001)
 }
 
 func TestAnnuityAnticipatePresentDeferred(t *testing.T) {
@@ -73,7 +73,7 @@ func TestAnnuityAnticipatePresentDeferred(t *testing.T) {
 	require.NoError(t, err)
 
 	growth := 1.01 * 1.01 * 1.01
-	assert.InDelta(t, ordinaryDue.ToDecimal().InexactFloat64()/growth, deferredDue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, ordinaryDue.GetDecimal().InexactFloat64()/growth, deferredDue.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPaymentFromPresentValueDeferred(t *testing.T) {
@@ -93,7 +93,7 @@ func TestAnnuityPaymentFromPresentValueDeferred(t *testing.T) {
 
 	payment, err := annuity.PaymentFromPresentValueDeferred(3)
 	require.NoError(t, err)
-	assert.InDelta(t, 1000, payment.ToDecimal().InexactFloat64(), 0.5)
+	assert.InDelta(t, 1000, payment.GetDecimal().InexactFloat64(), 0.5)
 }
 
 func TestAnnuityPaymentFromPresentValueDeferredZeroReducesToOrdinary(t *testing.T) {
@@ -115,7 +115,7 @@ func TestAnnuityPaymentFromPresentValueDeferredZeroReducesToOrdinary(t *testing.
 	ordinary, err := annuity.PaymentFromPresentValue()
 	require.NoError(t, err)
 
-	assert.InDelta(t, ordinary.ToDecimal().InexactFloat64(), deferred.ToDecimal().InexactFloat64(), 0.0001)
+	assert.InDelta(t, ordinary.GetDecimal().InexactFloat64(), deferred.GetDecimal().InexactFloat64(), 0.0001)
 }
 
 func TestAnnuityConfigDeferredPresentValue(t *testing.T) {
@@ -127,7 +127,7 @@ func TestAnnuityConfigDeferredPresentValue(t *testing.T) {
 		Defer(3).
 		DeferredPresentValue()
 	require.NoError(t, err)
-	assert.InDelta(t, 10924.07, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 10924.07, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityConfigDeferredPayment(t *testing.T) {
@@ -138,5 +138,5 @@ func TestAnnuityConfigDeferredPayment(t *testing.T) {
 		Monthly().
 		Defer(3).
 		MustDeferredPayment()
-	assert.InDelta(t, 1000, payment.ToDecimal().InexactFloat64(), 0.5)
+	assert.InDelta(t, 1000, payment.GetDecimal().InexactFloat64(), 0.5)
 }

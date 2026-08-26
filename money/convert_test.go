@@ -15,8 +15,8 @@ func TestConvertAppliesRateAndCurrency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if eur.Currency() != EUR {
-		t.Errorf("expected EUR currency, got %v", eur.Currency())
+	if eur.GetCurrency() != EUR {
+		t.Errorf("expected EUR currency, got %v", eur.GetCurrency())
 	}
 	if eur.StringFixed(2) != "92.00" {
 		t.Errorf("expected 92.00, got %s", eur.StringFixed(2))
@@ -64,8 +64,8 @@ func TestConvertFloat64(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if gbp.Currency() != GBP {
-		t.Errorf("expected GBP currency, got %v", gbp.Currency())
+	if gbp.GetCurrency() != GBP {
+		t.Errorf("expected GBP currency, got %v", gbp.GetCurrency())
 	}
 	if gbp.StringFixed(2) != "39.50" {
 		t.Errorf("expected 39.50, got %s", gbp.StringFixed(2))
@@ -87,8 +87,8 @@ func TestMustConvertSuccess(t *testing.T) {
 	usd := MustMoneyFromFloat64(100, USD)
 
 	eur := usd.MustConvert(EUR, decimal.MustFromFloat64(0.92))
-	if eur.Currency() != EUR {
-		t.Errorf("expected EUR, got %v", eur.Currency())
+	if eur.GetCurrency() != EUR {
+		t.Errorf("expected EUR, got %v", eur.GetCurrency())
 	}
 	if eur.StringFixed(2) != "92.00" {
 		t.Errorf("expected 92.00, got %s", eur.StringFixed(2))
@@ -110,8 +110,8 @@ func TestMustConvertFloat64Success(t *testing.T) {
 	usd := MustMoneyFromFloat64(50, USD)
 
 	gbp := usd.MustConvertFloat64(GBP, 0.79)
-	if gbp.Currency() != GBP {
-		t.Errorf("expected GBP, got %v", gbp.Currency())
+	if gbp.GetCurrency() != GBP {
+		t.Errorf("expected GBP, got %v", gbp.GetCurrency())
 	}
 	if gbp.StringFixed(2) != "39.50" {
 		t.Errorf("expected 39.50, got %s", gbp.StringFixed(2))

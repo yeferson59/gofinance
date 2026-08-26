@@ -68,8 +68,8 @@ func TestAnnualRateRespectsFrequency(t *testing.T) {
 func TestAnnuityConfigFutureSetter(t *testing.T) {
 	config := NewAnnuity().Future(50000, money.USD)
 
-	if config.future.Currency() != money.USD {
-		t.Fatalf("expected USD currency, got %v", config.future.Currency())
+	if config.future.GetCurrency() != money.USD {
+		t.Fatalf("expected USD currency, got %v", config.future.GetCurrency())
 	}
 	if config.future.InexactFloat64() != 50000 {
 		t.Errorf("expected 50000, got %v", config.future.InexactFloat64())

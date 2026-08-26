@@ -27,7 +27,7 @@ func TestNPV(t *testing.T) {
 	npv, err := NPV(decimal.MustFromFloat64(0.10), flows(-1000, 400, 400, 400))
 	require.NoError(t, err)
 	assert.InDelta(t, -5.2592, npv.InexactFloat64(), 1e-3)
-	assert.Equal(t, money.USD, npv.Currency())
+	assert.Equal(t, money.USD, npv.GetCurrency())
 }
 
 func TestNPVZeroRate(t *testing.T) {

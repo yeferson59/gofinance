@@ -35,8 +35,8 @@ func TestBuildScheduleAmortizesToZero(t *testing.T) {
 	if !first.Balance.Equal(pv) {
 		t.Errorf("expected period 0 balance to equal pv %s, got %s", pv.String(), first.Balance.String())
 	}
-	if first.Payment.Currency() != pv.Currency() {
-		t.Errorf("expected period 0 payment currency to match pv currency %v, got %v", pv.Currency(), first.Payment.Currency())
+	if first.Payment.GetCurrency() != pv.GetCurrency() {
+		t.Errorf("expected period 0 payment currency to match pv currency %v, got %v", pv.GetCurrency(), first.Payment.GetCurrency())
 	}
 
 	last := rows[len(rows)-1]
@@ -83,11 +83,11 @@ func TestBuildScheduleNonUSDCurrency(t *testing.T) {
 	}
 
 	for i, r := range rows {
-		if r.Balance.Currency() != money.JPY {
-			t.Errorf("row %d: expected balance currency JPY, got %v", i, r.Balance.Currency())
+		if r.Balance.GetCurrency() != money.JPY {
+			t.Errorf("row %d: expected balance currency JPY, got %v", i, r.Balance.GetCurrency())
 		}
-		if r.SumInterest.Currency() != money.JPY {
-			t.Errorf("row %d: expected sum-interest currency JPY, got %v", i, r.SumInterest.Currency())
+		if r.SumInterest.GetCurrency() != money.JPY {
+			t.Errorf("row %d: expected sum-interest currency JPY, got %v", i, r.SumInterest.GetCurrency())
 		}
 	}
 }

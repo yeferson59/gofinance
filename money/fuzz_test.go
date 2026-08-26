@@ -55,9 +55,9 @@ func FuzzUnmarshalJSON(f *testing.F) {
 			t.Fatalf("re-encoded %q as %q, which no longer decodes: %v", data, encoded, err)
 		}
 
-		if !again.Equal(decoded) || again.Currency() != decoded.Currency() {
+		if !again.Equal(decoded) || again.GetCurrency() != decoded.GetCurrency() {
 			t.Fatalf("round trip of %q changed %v %v into %v %v",
-				data, decoded, decoded.Currency(), again, again.Currency())
+				data, decoded, decoded.GetCurrency(), again, again.GetCurrency())
 		}
 	})
 }
@@ -124,7 +124,7 @@ func FuzzAllocateSumsBack(f *testing.F) {
 		}
 
 		currency := currencyAt(currencyIndex)
-		original := FromDecimal(value, currency)
+		original := NewFromDecimal(value, currency)
 
 		parts, err := original.Allocate(first, second, third)
 		if err != nil {
@@ -136,11 +136,11 @@ func FuzzAllocateSumsBack(f *testing.F) {
 			t.Fatalf("Allocate returned %d parts for 3 ratios", len(parts))
 		}
 
-		total := FromDecimal(decimal.Zero, currency)
+		total := NewFromDecimal(decimal.Zero, currency)
 
 		for _, part := range parts {
-			if part.Currency() != currency {
-				t.Fatalf("part %v carries %v, not %v", part, part.Currency(), currency)
+			if part.GetCurrency() != currency {
+				t.Fatalf("part %v carries %v, not %v", part, part.GetCurrency(), currency)
 			}
 
 			total, err = total.TryAdd(part)
@@ -175,14 +175,14 @@ func FuzzAllocateEvenlySumsBack(f *testing.F) {
 		}
 
 		currency := currencyAt(currencyIndex)
-		original := FromDecimal(value, currency)
+		original := NewFromDecimal(value, currency)
 
 		split, err := original.AllocateEvenly(parts)
 		if err != nil {
 			return
 		}
 
-		total := FromDecimal(decimal.Zero, currency)
+		total := NewFromDecimal(decimal.Zero, currency)
 
 		for _, part := range split {
 			total, err = total.TryAdd(part)
@@ -216,16 +216,16 @@ func FuzzArithmeticKeepsCurrency(f *testing.F) {
 		}
 
 		currency := currencyAt(currencyIndex)
-		left := FromDecimal(leftValue, currency)
-		right := FromDecimal(rightValue, currency)
+		left := NewFromDecimal(leftValue, currency)
+		right := NewFromDecimal(rightValue, currency)
 
 		sum, err := left.TryAdd(right)
 		if err != nil {
 			return
 		}
 
-		if sum.Currency() != currency {
-			t.Fatalf("addition changed the currency to %v", sum.Currency())
+		if sum.GetCurrency() != currency {
+			t.Fatalf("addition changed the currency to %v", sum.GetCurrency())
 		}
 
 		// Adding then subtracting the same amount must return the original.
@@ -240,8 +240,8 @@ func FuzzArithmeticKeepsCurrency(f *testing.F) {
 
 		// Scaling by a decimal keeps the currency too.
 		scaled := left.MulDecimal(decimal.MustFromInt64(2, 0))
-		if scaled.Currency() != currency {
-			t.Fatalf("MulDecimal changed the currency to %v", scaled.Currency())
+		if scaled.GetCurrency() != currency {
+			t.Fatalf("MulDecimal changed the currency to %v", scaled.GetCurrency())
 		}
 	})
 }
@@ -259,14 +259,14 @@ func FuzzRoundBankStaysWithinAUnit(f *testing.F) {
 		}
 
 		currency := currencyAt(currencyIndex)
-		original := FromDecimal(value, currency)
+		original := NewFromDecimal(value, currency)
 		rounded := original.RoundBank(target)
 
-		if rounded.Currency() != currency {
-			t.Fatalf("RoundBank changed the currency to %v", rounded.Currency())
+		if rounded.GetCurrency() != currency {
+			t.Fatalf("RoundBank changed the currency to %v", rounded.GetCurrency())
 		}
 
-		if !rounded.IsZero() && rounded.ToDecimal().Sign() != original.ToDecimal().Sign() {
+		if !rounded.IsZero() && rounded.GetDecimal().Sign() != original.GetDecimal().Sign() {
 			t.Fatalf("RoundBank(%d) changed the sign of %v to %v", target, original, rounded)
 		}
 
@@ -299,11 +299,11 @@ func FuzzJSONNumberFormIsAccepted(f *testing.F) {
 			return
 		}
 
-		if decoded.Currency() != USD {
-			t.Fatalf("bare number %q decoded with currency %v, want USD", data, decoded.Currency())
+		if decoded.GetCurrency() != USD {
+			t.Fatalf("bare number %q decoded with currency %v, want USD", data, decoded.GetCurrency())
 		}
 
-		if !decoded.ToDecimal().Equal(value) {
+		if !decoded.GetDecimal().Equal(value) {
 			t.Fatalf("bare number %q decoded to %v, want %v", data, decoded, value)
 		}
 	})

@@ -44,11 +44,11 @@ func TimeWeightedReturn(subperiods []Subperiod) (decimal.Decimal, error) {
 		return decimal.Decimal{}, ErrNoSubperiods
 	}
 
-	currency := subperiods[0].Begin.Currency()
+	currency := subperiods[0].Begin.GetCurrency()
 	growth := decimal.One
 
 	for _, sub := range subperiods {
-		if sub.Begin.Currency() != currency || sub.End.Currency() != currency {
+		if sub.Begin.GetCurrency() != currency || sub.End.GetCurrency() != currency {
 			return decimal.Decimal{}, money.ErrCurrencyMismatch
 		}
 
@@ -58,7 +58,7 @@ func TimeWeightedReturn(subperiods []Subperiod) (decimal.Decimal, error) {
 		// the natural way to describe a subperiod with no deposit or
 		// withdrawal.
 		if !sub.Flow.IsZero() {
-			if sub.Flow.Currency() != currency {
+			if sub.Flow.GetCurrency() != currency {
 				return decimal.Decimal{}, money.ErrCurrencyMismatch
 			}
 
@@ -69,7 +69,7 @@ func TimeWeightedReturn(subperiods []Subperiod) (decimal.Decimal, error) {
 			return decimal.Decimal{}, ErrNonPositiveValue
 		}
 
-		factor, err := sub.End.ToDecimal().Div(invested.ToDecimal())
+		factor, err := sub.End.GetDecimal().Div(invested.GetDecimal())
 		if err != nil {
 			return decimal.Decimal{}, err
 		}
@@ -155,7 +155,7 @@ func MustChainReturns(rates []decimal.Decimal) decimal.Decimal {
 // balances the flows.
 func MoneyWeightedReturn(initial money.Money, interimFlows []money.Money, final money.Money) (decimal.Decimal, error) {
 	flows := make([]money.Money, 0, len(interimFlows)+2)
-	quiet := money.FromDecimal(decimal.Zero, initial.Currency())
+	quiet := money.NewFromDecimal(decimal.Zero, initial.GetCurrency())
 
 	// Money paid into the portfolio is an outflow for the investor; the value
 	// recovered at the end is the inflow that has to justify it.

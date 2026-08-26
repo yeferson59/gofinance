@@ -14,7 +14,7 @@ func TestPerpetuity(t *testing.T) {
 	pv, err := Perpetuity(usd(100), decimal.MustFromFloat64(0.05))
 	require.NoError(t, err)
 	assert.InDelta(t, 2000.0, pv.InexactFloat64(), 1e-9)
-	assert.Equal(t, money.USD, pv.Currency())
+	assert.Equal(t, money.USD, pv.GetCurrency())
 }
 
 func TestPerpetuityNonPositiveRate(t *testing.T) {

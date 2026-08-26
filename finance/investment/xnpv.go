@@ -29,7 +29,7 @@ func XNPV(rate decimal.Decimal, flows []DatedCashFlow) (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(value, currency), nil
+	return money.NewFromDecimal(value, currency), nil
 }
 
 // MustXNPV is like XNPV but panics on error.

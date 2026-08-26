@@ -18,7 +18,7 @@ import (
 // ErrNonPositiveValue if begin is not positive, and ErrNonPositivePeriods if
 // periods is not positive.
 func CAGR(begin, end money.Money, periods decimal.Decimal) (decimal.Decimal, error) {
-	if begin.Currency() != end.Currency() {
+	if begin.GetCurrency() != end.GetCurrency() {
 		return decimal.Decimal{}, money.ErrCurrencyMismatch
 	}
 
@@ -30,7 +30,7 @@ func CAGR(begin, end money.Money, periods decimal.Decimal) (decimal.Decimal, err
 		return decimal.Decimal{}, ErrNonPositivePeriods
 	}
 
-	ratio, err := end.ToDecimal().Div(begin.ToDecimal())
+	ratio, err := end.GetDecimal().Div(begin.GetDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -70,7 +70,7 @@ func MustCAGR(begin, end money.Money, periods decimal.Decimal) decimal.Decimal {
 // It returns money.ErrCurrencyMismatch on mixed currencies and
 // ErrNonPositiveValue if initial is not positive.
 func ROI(initial, final money.Money) (decimal.Decimal, error) {
-	if initial.Currency() != final.Currency() {
+	if initial.GetCurrency() != final.GetCurrency() {
 		return decimal.Decimal{}, money.ErrCurrencyMismatch
 	}
 
@@ -86,7 +86,7 @@ func ROI(initial, final money.Money) (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	return profit.ToDecimal().Div(initial.ToDecimal())
+	return profit.GetDecimal().Div(initial.GetDecimal())
 }
 
 // MustROI is like ROI but panics on error.
@@ -126,17 +126,17 @@ func HoldingPeriodReturn(initial, final, income money.Money) (decimal.Decimal, e
 	// The Try variants rather than Sub/Add: with amounts at opposite ends of
 	// the decimal range the gain can overflow, and a function that returns an
 	// error must report that rather than panic.
-	gain, err := final.ToDecimal().TrySub(initial.ToDecimal())
+	gain, err := final.GetDecimal().TrySub(initial.GetDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	total, err := gain.TryAdd(income.ToDecimal())
+	total, err := gain.TryAdd(income.GetDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	return total.Div(initial.ToDecimal())
+	return total.Div(initial.GetDecimal())
 }
 
 // MustHoldingPeriodReturn is like HoldingPeriodReturn but panics on error.

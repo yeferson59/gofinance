@@ -16,7 +16,7 @@ func (s SimpleInterest) RateInterest() (decimal.Decimal, error) {
 		return decimal.Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	return s.interest.ToDecimal().Div(s.present.ToDecimal().Mul(numberOfPeriods))
+	return s.interest.GetDecimal().Div(s.present.GetDecimal().Mul(numberOfPeriods))
 }
 
 func (s SimpleInterest) RateInterestWithPresentAndFuture() (decimal.Decimal, error) {
@@ -29,7 +29,7 @@ func (s SimpleInterest) RateInterestWithPresentAndFuture() (decimal.Decimal, err
 		return decimal.Decimal{}, errors.New("invalid present or periods for operation")
 	}
 
-	num, err := s.future.ToDecimal().Div(s.present.ToDecimal())
+	num, err := s.future.GetDecimal().Div(s.present.GetDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

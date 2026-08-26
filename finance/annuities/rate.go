@@ -210,8 +210,8 @@ func (a Annuity) RateWithPresent() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	payment := a.value.ToDecimal()
-	target := present.ToDecimal()
+	payment := a.value.GetDecimal()
+	target := present.GetDecimal()
 
 	return solveRate(target, periods, func(r decimal.Decimal) (decimal.Decimal, error) {
 		return presentValueOrdinary(payment, r, periods)
@@ -244,8 +244,8 @@ func (a Annuity) RateWithFuture() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	payment := a.value.ToDecimal()
-	target := future.ToDecimal()
+	payment := a.value.GetDecimal()
+	target := future.GetDecimal()
 
 	return solveRate(target, periods, func(r decimal.Decimal) (decimal.Decimal, error) {
 		return futureValueOrdinary(payment, r, periods)
@@ -266,8 +266,8 @@ func (a Annuity) AnticipateRateWithPresent() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	payment := a.value.ToDecimal()
-	target := present.ToDecimal()
+	payment := a.value.GetDecimal()
+	target := present.GetDecimal()
 
 	return solveRate(target, periods, func(r decimal.Decimal) (decimal.Decimal, error) {
 		return presentValueDue(payment, r, periods)
@@ -288,8 +288,8 @@ func (a Annuity) AnticipateRateWithFuture() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	payment := a.value.ToDecimal()
-	target := future.ToDecimal()
+	payment := a.value.GetDecimal()
+	target := future.GetDecimal()
 
 	return solveRate(target, periods, func(r decimal.Decimal) (decimal.Decimal, error) {
 		return futureValueDue(payment, r, periods)

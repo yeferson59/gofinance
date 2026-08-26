@@ -49,10 +49,10 @@ func (c CompoundInterest) Present() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	present, err := c.future.ToDecimal().Div(discountFactor)
+	present, err := c.future.GetDecimal().Div(discountFactor)
 	if err != nil {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(present, c.future.Currency()), nil
+	return money.NewFromDecimal(present, c.future.GetCurrency()), nil
 }

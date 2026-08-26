@@ -26,7 +26,7 @@ func TestPresentWithPeriodicRate(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present.ToDecimal().InexactFloat64(), 0.1)
+	assert.InDelta(t, 1000.0, present.GetDecimal().InexactFloat64(), 0.1)
 }
 
 func TestPresentWithNominalRate(t *testing.T) {
@@ -46,7 +46,7 @@ func TestPresentWithNominalRate(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present.ToDecimal().InexactFloat64(), 0.1)
+	assert.InDelta(t, 1000.0, present.GetDecimal().InexactFloat64(), 0.1)
 }
 
 func TestPresentWithAnnuallyRate(t *testing.T) {
@@ -66,7 +66,7 @@ func TestPresentWithAnnuallyRate(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, 1000.0, present.ToDecimal().InexactFloat64(), 0.1)
+	assert.InDelta(t, 1000.0, present.GetDecimal().InexactFloat64(), 0.1)
 }
 
 func TestPresentWithDailyCompounding(t *testing.T) {
@@ -88,7 +88,7 @@ func TestPresentWithDailyCompounding(t *testing.T) {
 
 	// 10% effective annual compounded daily over 365 days is exactly one year:
 	// PV = 1105 / 1.10 = 1004.5455
-	assert.InDelta(t, 1004.5455, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1004.5455, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestPresentWithQuarterlyCompounding(t *testing.T) {
@@ -109,7 +109,7 @@ func TestPresentWithQuarterlyCompounding(t *testing.T) {
 	require.NoError(t, err)
 
 	// 12% nominal quarterly => i = 0.03, PV = 1000 / 1.03^4 = 888.4870
-	assert.InDelta(t, 888.4870, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 888.4870, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestPresentWithSemiAnnuallyCompounding(t *testing.T) {
@@ -132,7 +132,7 @@ func TestPresentWithSemiAnnuallyCompounding(t *testing.T) {
 	// 10% effective annual compounded semi-annually over 2 periods is exactly
 	// one year: PV = 5512.50 / 1.10 = 5011.3636 (5000 would only be correct
 	// for a 10% nominal rate, not the effective annual rate used here).
-	assert.InDelta(t, 5011.3636, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 5011.3636, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestPresentWithZeroFuture(t *testing.T) {
@@ -152,7 +152,7 @@ func TestPresentWithZeroFuture(t *testing.T) {
 	present, err := ci.Present()
 	require.Error(t, err)
 
-	assert.Equal(t, 0.0, present.ToDecimal().InexactFloat64())
+	assert.Equal(t, 0.0, present.GetDecimal().InexactFloat64())
 }
 
 func TestPresentWithMultipleDataSets(t *testing.T) {
@@ -213,7 +213,7 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 			present, err := ci.Present()
 			require.NoError(t, err)
 
-			assert.InDelta(t, tc.expected, present.ToDecimal().InexactFloat64(), 0.01)
+			assert.InDelta(t, tc.expected, present.GetDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }
@@ -235,7 +235,7 @@ func TestPresentWithTwelveMonthlyPeriods(t *testing.T) {
 	present, err := ci.Present()
 	require.NoError(t, err)
 	// PV = 1000 / 1.01^12 = 887.4492
-	assert.InDelta(t, 887.4492, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 887.4492, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestPresentWithBimonthlyCompounding(t *testing.T) {
@@ -256,7 +256,7 @@ func TestPresentWithBimonthlyCompounding(t *testing.T) {
 	require.NoError(t, err)
 
 	// 6% nominal bimonthly => i = 0.01, PV = 1000 / 1.01^6 = 942.0452
-	assert.InDelta(t, 942.0452, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 942.0452, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestPresentWithDifferentRateTypes(t *testing.T) {
@@ -293,7 +293,7 @@ func TestPresentWithDifferentRateTypes(t *testing.T) {
 			present, err := ci.Present()
 			require.NoError(t, err)
 
-			assert.InDelta(t, tc.expected, present.ToDecimal().InexactFloat64(), 0.01)
+			assert.InDelta(t, tc.expected, present.GetDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }
@@ -324,5 +324,5 @@ func TestPresentConsistencyWithFuture(t *testing.T) {
 	calculatedPresent, err := ci2.Present()
 	require.NoError(t, err)
 
-	assert.InDelta(t, originalPresent, calculatedPresent.ToDecimal().InexactFloat64(), 0.1)
+	assert.InDelta(t, originalPresent, calculatedPresent.GetDecimal().InexactFloat64(), 0.1)
 }

@@ -33,7 +33,7 @@ func (a Annuity) PeriodsWithPresent() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	ratio, err := a.value.ToDecimal().Div(a.value.ToDecimal().Sub(present.ToDecimal().Mul(rateInterest)))
+	ratio, err := a.value.GetDecimal().Div(a.value.GetDecimal().Sub(present.GetDecimal().Mul(rateInterest)))
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -87,7 +87,7 @@ func (a Annuity) PeriodsWithFuture() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	ratio, err := future.ToDecimal().Mul(rateInterest).Add(a.value.ToDecimal()).Div(a.value.ToDecimal())
+	ratio, err := future.GetDecimal().Mul(rateInterest).Add(a.value.GetDecimal()).Div(a.value.GetDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -130,12 +130,12 @@ func (a Annuity) AnticipatePeriodsWithPresent() (decimal.Decimal, error) {
 
 	growthFactor := rateInterest.Add(decimal.One)
 
-	equivalentPresent, err := present.ToDecimal().Div(growthFactor)
+	equivalentPresent, err := present.GetDecimal().Div(growthFactor)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	ratio, err := a.value.ToDecimal().Div(a.value.ToDecimal().Sub(equivalentPresent.Mul(rateInterest)))
+	ratio, err := a.value.GetDecimal().Div(a.value.GetDecimal().Sub(equivalentPresent.Mul(rateInterest)))
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -178,12 +178,12 @@ func (a Annuity) AnticipatePeriodsWithFuture() (decimal.Decimal, error) {
 
 	growthFactor := rateInterest.Add(decimal.One)
 
-	equivalentFuture, err := future.ToDecimal().Div(growthFactor)
+	equivalentFuture, err := future.GetDecimal().Div(growthFactor)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	ratio, err := equivalentFuture.Mul(rateInterest).Add(a.value.ToDecimal()).Div(a.value.ToDecimal())
+	ratio, err := equivalentFuture.Mul(rateInterest).Add(a.value.GetDecimal()).Div(a.value.GetDecimal())
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

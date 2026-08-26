@@ -27,13 +27,13 @@ func datedFlows(flows []DatedCashFlow) (amounts, times []decimal.Decimal, curren
 	}
 
 	base := flows[0].Date
-	currency = flows[0].Amount.Currency()
+	currency = flows[0].Amount.GetCurrency()
 
 	amounts = make([]decimal.Decimal, len(flows))
 	times = make([]decimal.Decimal, len(flows))
 
 	for i, flow := range flows {
-		if flow.Amount.Currency() != currency {
+		if flow.Amount.GetCurrency() != currency {
 			return nil, nil, 0, money.ErrCurrencyMismatch
 		}
 
@@ -46,7 +46,7 @@ func datedFlows(flows []DatedCashFlow) (amounts, times []decimal.Decimal, curren
 			return nil, nil, 0, err
 		}
 
-		amounts[i] = flow.Amount.ToDecimal()
+		amounts[i] = flow.Amount.GetDecimal()
 		times[i] = yf
 	}
 

@@ -57,7 +57,7 @@ type Comparison struct {
 // ErrNoBreakEven when the savings never recover the closing costs, and any term
 // error of either loan.
 func Compare(current, offer Config) (Comparison, error) {
-	if current.principal.Currency() != offer.principal.Currency() {
+	if current.principal.GetCurrency() != offer.principal.GetCurrency() {
 		return Comparison{}, money.ErrCurrencyMismatch
 	}
 
@@ -80,8 +80,8 @@ func Compare(current, offer Config) (Comparison, error) {
 		return Comparison{}, err
 	}
 
-	currency := offer.principal.Currency()
-	closingCosts := money.FromDecimal(offer.fees, currency)
+	currency := offer.principal.GetCurrency()
+	closingCosts := money.NewFromDecimal(offer.fees, currency)
 
 	savings := paymentDifferences(currentPayoff, offerPayoff, currency)
 
@@ -129,7 +129,7 @@ func MustCompare(current, offer Config) Comparison {
 // exactly how a shorter term shows up as a cost later in the horizon.
 func paymentDifferences(current, offer Payoff, currency money.Currency) []money.Money {
 	horizon := max(current.Periods, offer.Periods)
-	zero := money.FromDecimal(decimal.Zero, currency)
+	zero := money.NewFromDecimal(decimal.Zero, currency)
 
 	differences := make([]money.Money, 0, horizon)
 
@@ -154,7 +154,7 @@ func paymentAt(p Payoff, period int, zero money.Money) money.Money {
 // cover the closing costs, or ErrNoBreakEven if they never do. Costs of zero
 // break even immediately, before any payment is made.
 func breakEvenPeriod(savings []money.Money, closingCosts money.Money) (int, error) {
-	accumulated := money.FromDecimal(decimal.Zero, closingCosts.Currency())
+	accumulated := money.NewFromDecimal(decimal.Zero, closingCosts.GetCurrency())
 
 	if accumulated.GreaterThanOrEqual(closingCosts) {
 		return 0, nil

@@ -31,7 +31,7 @@ func TestAnnuityPresent(t *testing.T) {
 
 	presentValue, err := annuity.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 11255.0775, presentValue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 11255.0775, presentValue.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPresentWithZeroInterestRate(t *testing.T) {
@@ -56,7 +56,7 @@ func TestAnnuityPresentWithZeroInterestRate(t *testing.T) {
 
 	presentValue, err := annuity.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 12000.0, presentValue.ToDecimal().InexactFloat64(), 1e-9)
+	assert.InDelta(t, 12000.0, presentValue.GetDecimal().InexactFloat64(), 1e-9)
 }
 
 func TestAnnuityPresentWithSmallPeriods(t *testing.T) {
@@ -78,7 +78,7 @@ func TestAnnuityPresentWithSmallPeriods(t *testing.T) {
 
 	presentValue, err := annuity.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 95.2381, presentValue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 95.2381, presentValue.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityFutureAndPrincipalFuture(t *testing.T) {
@@ -103,11 +103,11 @@ func TestAnnuityFutureAndPrincipalFuture(t *testing.T) {
 
 	futureValue, err := annuity.Future()
 	require.NoError(t, err)
-	assert.InDelta(t, 12682.5030, futureValue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 12682.5030, futureValue.GetDecimal().InexactFloat64(), 0.01)
 
 	principalValue, err := annuity.PrincipalFuture()
 	require.NoError(t, err)
-	assert.InDelta(t, 11268.2503, principalValue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 11268.2503, principalValue.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityAnticipatePresent(t *testing.T) {
@@ -131,7 +131,7 @@ func TestAnnuityAnticipatePresent(t *testing.T) {
 
 	presentValue, err := annuity.AnticipatePresent()
 	require.NoError(t, err)
-	assert.InDelta(t, 11367.628275, presentValue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 11367.628275, presentValue.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPaymentFromPresentValue(t *testing.T) {
@@ -154,7 +154,7 @@ func TestAnnuityPaymentFromPresentValue(t *testing.T) {
 
 	payment, err := annuity.PaymentFromPresentValue()
 	require.NoError(t, err)
-	assert.InDelta(t, 888.4879, payment.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 888.4879, payment.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityPaymentFromFutureValue(t *testing.T) {
@@ -177,7 +177,7 @@ func TestAnnuityPaymentFromFutureValue(t *testing.T) {
 
 	payment, err := annuity.PaymentFromFutureValue()
 	require.NoError(t, err)
-	assert.InDelta(t, 1182.7318, payment.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 1182.7318, payment.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestNewAnnuityWithInvalidPeriod(t *testing.T) {
@@ -217,7 +217,7 @@ func TestAnnuityPresentMathematicalCorrectness(t *testing.T) {
 	expectedPresent := 1000 * (1 - 1/expectedPow) / 0.05
 
 	// Should match within floating point precision
-	assert.InDelta(t, expectedPresent, presentValue.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, expectedPresent, presentValue.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
@@ -256,11 +256,11 @@ func TestAnnuityWithDifferentCompoundingFrequencies(t *testing.T) {
 
 			presentValue, err := annuity.Present()
 			require.NoError(t, err)
-			assert.InDelta(t, tc.expectedPresent, presentValue.ToDecimal().InexactFloat64(), 0.01)
+			assert.InDelta(t, tc.expectedPresent, presentValue.GetDecimal().InexactFloat64(), 0.01)
 
 			futureValue, err := annuity.PrincipalFuture()
 			require.NoError(t, err)
-			assert.InDelta(t, tc.expectedFuture, futureValue.ToDecimal().InexactFloat64(), 0.01)
+			assert.InDelta(t, tc.expectedFuture, futureValue.GetDecimal().InexactFloat64(), 0.01)
 		})
 	}
 }
@@ -346,5 +346,5 @@ func TestAnticipatePresentWithZeroInterestRate(t *testing.T) {
 
 	presentValue, err := annuity.AnticipatePresent()
 	require.NoError(t, err)
-	assert.InDelta(t, 12000.0, presentValue.ToDecimal().InexactFloat64(), 1e-9)
+	assert.InDelta(t, 12000.0, presentValue.GetDecimal().InexactFloat64(), 1e-9)
 }

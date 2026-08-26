@@ -53,12 +53,12 @@ func (l Config) NetProceeds() (money.Money, error) {
 		return money.Money{}, ErrNegativeFees
 	}
 
-	net := l.principal.ToDecimal().Sub(l.fees)
+	net := l.principal.GetDecimal().Sub(l.fees)
 	if !net.IsPos() {
 		return money.Money{}, ErrFeesExceedPrincipal
 	}
 
-	return money.FromDecimal(net, l.principal.Currency()), nil
+	return money.NewFromDecimal(net, l.principal.GetCurrency()), nil
 }
 
 // MustNetProceeds is like NetProceeds but panics on error.
@@ -134,7 +134,7 @@ func (l Config) PeriodicAPR() (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	return solveAPR(payment.ToDecimal(), net.ToDecimal(), n)
+	return solveAPR(payment.GetDecimal(), net.GetDecimal(), n)
 }
 
 // MustPeriodicAPR is like PeriodicAPR but panics on error.

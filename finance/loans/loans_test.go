@@ -72,7 +72,7 @@ func TestNetProceeds(t *testing.T) {
 	net, err := mortgage().Fees(3500).NetProceeds()
 	require.NoError(t, err)
 	assert.InDelta(t, 246500.0, net.InexactFloat64(), 1e-9)
-	assert.Equal(t, money.USD, net.Currency())
+	assert.Equal(t, money.USD, net.GetCurrency())
 }
 
 func TestAPRWithoutFeesIsTheNoteRate(t *testing.T) {

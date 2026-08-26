@@ -27,7 +27,7 @@ func TestArithmeticPresent(t *testing.T) {
 
 	present, err := series.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 4476.9669, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 4476.9669, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestArithmeticFuture(t *testing.T) {
@@ -46,7 +46,7 @@ func TestArithmeticFuture(t *testing.T) {
 
 	future, err := series.Future()
 	require.NoError(t, err)
-	assert.InDelta(t, 7210.20, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 7210.20, future.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestArithmeticZeroGradientMatchesOrdinaryAnnuity(t *testing.T) {
@@ -66,7 +66,7 @@ func TestArithmeticZeroGradientMatchesOrdinaryAnnuity(t *testing.T) {
 
 	present, err := series.Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 3790.7868, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 3790.7868, present.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestArithmeticCurrencyMismatch(t *testing.T) {
@@ -92,7 +92,7 @@ func TestArithmeticConfigBuilder(t *testing.T) {
 		Annually().
 		Present()
 	require.NoError(t, err)
-	assert.InDelta(t, 4476.9669, present.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 4476.9669, present.GetDecimal().InexactFloat64(), 0.01)
 
 	future := NewArithmeticSeries().
 		FirstPayment(1000, money.USD).
@@ -101,5 +101,5 @@ func TestArithmeticConfigBuilder(t *testing.T) {
 		Periods(5).
 		Annually().
 		MustFuture()
-	assert.InDelta(t, 7210.20, future.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 7210.20, future.GetDecimal().InexactFloat64(), 0.01)
 }

@@ -14,7 +14,7 @@ func TestRealValue(t *testing.T) {
 	realAmount, err := RealValue(usd(1000), decimal.MustFromFloat64(0.03), decimal.MustFromFloat64(10))
 	require.NoError(t, err)
 	assert.InDelta(t, 744.09, realAmount.InexactFloat64(), 0.01)
-	assert.Equal(t, money.USD, realAmount.Currency())
+	assert.Equal(t, money.USD, realAmount.GetCurrency())
 }
 
 func TestNominalValueRoundTrip(t *testing.T) {

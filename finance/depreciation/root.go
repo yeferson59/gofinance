@@ -59,7 +59,7 @@ type Schedule struct {
 // validate checks the shared cost/salvage/life inputs and returns the two
 // amounts' currency.
 func validate(cost, salvage money.Money, life int) error {
-	if cost.Currency() != salvage.Currency() {
+	if cost.GetCurrency() != salvage.GetCurrency() {
 		return money.ErrCurrencyMismatch
 	}
 

@@ -1,6 +1,6 @@
 package money
 
-func (m *Money) StringMoney() (string, error) {
+func (m Money) StringMoney() (string, error) {
 	isoCode, err := m.currency.GetCurrencyISOCode()
 	if err != nil {
 		return "", err
@@ -16,7 +16,7 @@ func (m *Money) StringMoney() (string, error) {
 
 // Format renders m using its currency's display symbol instead of its ISO
 // code, e.g. "$10.00" rather than "USD 10.00".
-func (m *Money) Format() (string, error) {
+func (m Money) Format() (string, error) {
 	symbol, err := m.currency.Symbol()
 	if err != nil {
 		return "", err

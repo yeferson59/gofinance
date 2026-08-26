@@ -118,7 +118,7 @@ func (b Config) CouponPayment() (money.Money, error) {
 		return money.Money{}, ErrInvalidFrequency
 	}
 
-	annual, err := b.face.ToDecimal().TryMul(b.couponRate)
+	annual, err := b.face.GetDecimal().TryMul(b.couponRate)
 	if err != nil {
 		return money.Money{}, err
 	}
@@ -128,5 +128,5 @@ func (b Config) CouponPayment() (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(coupon, b.face.Currency()), nil
+	return money.NewFromDecimal(coupon, b.face.GetCurrency()), nil
 }

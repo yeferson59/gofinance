@@ -27,7 +27,7 @@ func NPV(rate decimal.Decimal, cashFlows []money.Money) (money.Money, error) {
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(value, currency), nil
+	return money.NewFromDecimal(value, currency), nil
 }
 
 // MustNPV is like NPV but panics on error.

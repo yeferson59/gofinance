@@ -38,7 +38,7 @@ type Schedule struct {
 // currency, ErrInvalidPeriods if nper isn't a positive whole number, and
 // wraps any error from parsing nper as an integer.
 func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, nper decimal.Decimal) ([]Schedule, error) {
-	if pv.Currency() != payment.Currency() {
+	if pv.GetCurrency() != payment.GetCurrency() {
 		return nil, money.ErrCurrencyMismatch
 	}
 
@@ -62,7 +62,7 @@ func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, np
 		return nil, ErrInvalidPeriods
 	}
 
-	currency := pv.Currency()
+	currency := pv.GetCurrency()
 	zero := money.MustMoneyFromFloat64(0, currency)
 
 	balance, rows := pv, make([]Schedule, 0, until+1)
@@ -139,7 +139,7 @@ func WriteCSVTo(out io.Writer, headers []string, rows []Schedule) (err error) {
 
 	rec := make([]string, 6)
 	for _, r := range rows {
-		prec, perr := r.Balance.Currency().GetCurrencyPrecisionCode()
+		prec, perr := r.Balance.GetCurrency().GetCurrencyPrecisionCode()
 		if perr != nil {
 			return perr
 		}

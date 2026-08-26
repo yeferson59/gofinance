@@ -130,5 +130,5 @@ func TestGetEqualsRateInterestPeriods_differentTime(t *testing.T) {
 	tx.NoError(err)
 	// 2 bimonthly periods = 4 months; 5% nominal monthly => i = 0.05/12
 	// FV = 5000 × (1 + 0.05/12)^4 = 5083.8556
-	tx.InDelta(5083.8556, future.ToDecimal().InexactFloat64(), 0.01)
+	tx.InDelta(5083.8556, future.GetDecimal().InexactFloat64(), 0.01)
 }

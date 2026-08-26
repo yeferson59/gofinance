@@ -27,22 +27,22 @@ func TestBuildInvestmentSchedule(t *testing.T) {
 
 	assert.True(t, rows[0].Balance.IsZero())
 
-	assert.InDelta(t, 100.00, rows[1].Balance.ToDecimal().InexactFloat64(), 0.01)
-	assert.InDelta(t, 100.00, rows[1].Change.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 100.00, rows[1].Balance.GetDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 100.00, rows[1].Change.GetDecimal().InexactFloat64(), 0.01)
 	assert.Equal(t, 0.0, rows[1].ChangePercent.InexactFloat64())
 
-	assert.InDelta(t, 201.00, rows[2].Balance.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 201.00, rows[2].Balance.GetDecimal().InexactFloat64(), 0.01)
 	assert.InDelta(t, 1.01, rows[2].ChangePercent.InexactFloat64(), 0.0001)
 
-	assert.InDelta(t, 303.01, rows[3].Balance.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 303.01, rows[3].Balance.GetDecimal().InexactFloat64(), 0.01)
 	assert.InDelta(t, 0.507512, rows[3].ChangePercent.InexactFloat64(), 0.0001)
 
 	// The contribution's relative weight shrinks over time as the balance
 	// compounds past it.
 	assert.True(t, rows[2].ChangePercent.GreaterThan(rows[3].ChangePercent))
 
-	assert.InDelta(t, 300.00, rows[3].SumContributions.ToDecimal().InexactFloat64(), 0.01)
-	assert.InDelta(t, 3.01, rows[3].SumInterest.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 300.00, rows[3].SumContributions.GetDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 3.01, rows[3].SumInterest.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestBuildAnticipateInvestmentSchedule(t *testing.T) {
@@ -61,9 +61,9 @@ func TestBuildAnticipateInvestmentSchedule(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, rows, 4)
 
-	assert.InDelta(t, 101.00, rows[1].Balance.ToDecimal().InexactFloat64(), 0.01)
-	assert.InDelta(t, 203.01, rows[2].Balance.ToDecimal().InexactFloat64(), 0.01)
-	assert.InDelta(t, 306.04, rows[3].Balance.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 101.00, rows[1].Balance.GetDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 203.01, rows[2].Balance.GetDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, 306.04, rows[3].Balance.GetDecimal().InexactFloat64(), 0.01)
 
 	// Each period's balance is at least as large as the ordinary annuity's,
 	// since contributions here earn interest a period earlier.
@@ -94,7 +94,7 @@ func TestBuildInvestmentScheduleWithPrincipal(t *testing.T) {
 		Monthly().
 		MustFutureValue()
 
-	assert.InDelta(t, total.ToDecimal().InexactFloat64(), rows[2].Balance.ToDecimal().InexactFloat64(), 0.01)
+	assert.InDelta(t, total.GetDecimal().InexactFloat64(), rows[2].Balance.GetDecimal().InexactFloat64(), 0.01)
 }
 
 func TestBuildInvestmentScheduleCurrencyMismatch(t *testing.T) {

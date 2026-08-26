@@ -60,7 +60,7 @@ func Balance(schedule []annuities.Schedule) ([]opts.LineData, error) {
 		return items, nil
 	}
 
-	prec, err := schedule[0].Balance.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Balance.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func Principal(schedule []annuities.Schedule) ([]opts.LineData, error) {
 		return items, nil
 	}
 
-	prec, err := schedule[0].Principal.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Principal.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func Interest(schedule []annuities.Schedule) ([]opts.LineData, error) {
 		return items, nil
 	}
 
-	prec, err := schedule[0].Interest.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Interest.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func TotalInterest(schedule []annuities.Schedule) ([]opts.LineData, error) {
 		return items, nil
 	}
 
-	prec, err := schedule[0].SumInterest.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].SumInterest.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func Payment(schedule []annuities.Schedule) ([]opts.LineData, error) {
 		return items, nil
 	}
 
-	prec, err := schedule[0].Payment.Currency().GetCurrencyPrecisionCode()
+	prec, err := schedule[0].Payment.GetCurrency().GetCurrencyPrecisionCode()
 	if err != nil {
 		return nil, err
 	}

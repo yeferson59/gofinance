@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This release is breaking; it should be tagged **v2.0.0** (root module) and **charts/v1.0.0** (charts module).
 
 ### Changed
+
 - **Breaking**: the module path is now `github.com/yeferson59/gofinance/v2`; update imports of `decimal`, `money` and `finance/...` accordingly. The `charts` module keeps its `github.com/yeferson59/gofinance/charts` path and now requires the `/v2` library
 - **Breaking**: `Money.Add`/`Sub` now panic on a currency mismatch (as they already did on overflow), mirroring the decimal engine's `Add`/`TryAdd` split; the new `Money.TryAdd`/`TrySub` return `ErrCurrencyMismatch` (or the overflow error) instead. `SafeAdd`/`SafeSub` remain as deprecated aliases of the `Try` variants
 - The investment contribution schedules (`BuildInvestmentSchedule`, `BuildAnticipateInvestmentSchedule`) compute interest with `MulDecimal` instead of the deprecated `Money.Mul` with a currency-attached rate
@@ -17,7 +18,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - **Breaking**: `finance/compositeinterest` renamed to `finance/compoundinterest` ("composite interest" is a non-standard term); `CompositeInterest`/`CompositeConfig`/`NewComposite` are now `CompoundInterest`/`CompoundConfig`/`NewCompound`
 - `simpleinterest.Periods` and `compoundinterest.CompoundingFrequency` are now aliases of the shared `term.Unit` and `term.Frequency` types; `QuarterlyOne`/`QuarterlyTwo` renamed to `Quarterly` (4×/yr) and `FourMonthly` (3×/yr) with the old names kept as deprecated aliases. Invalid-frequency errors are the typed `term.ErrInvalidFrequency`
 - `Money.Mul`, `Money.Div` and `Money.MustDiv` (Money-by-Money) are deprecated: use `MulDecimal`/`DivDecimal` to scale an amount, or `ToDecimal` on both operands for a ratio. `Money.Add`/`Sub` now document that they don't currency-check (prefer `SafeAdd`/`SafeSub`)
-- **Breaking**: `money.Decimal` is now a type alias of `decimal.Decimal` instead of a wrapper type. The full arithmetic API comes directly from the `decimal` package; `money`'s `NewFrom*`/`MustFrom*` decimal constructors and `money.Zero`/`money.One` remain as deprecated forwarders. `Decimal.ToMoney` was removed — use the new `money.FromDecimal(d, currency)`
+- **Breaking**: `money.Decimal` is now a type alias of `decimal.Decimal` instead of a wrapper type. The full arithmetic API comes directly from the `decimal` package; `money`'s `NewFrom*`/`MustFrom*` decimal constructors and `money.Zero`/`money.One` remain as deprecated forwarders. `Decimal.ToMoney` was removed — use the new `money.NewFromDecimal(d, currency)`
 - **Breaking**: the chart rendering package moved from `finance/charts` to the separate `charts` Go module (`github.com/yeferson59/gofinance/charts`); the root library module now has zero external runtime dependencies. `examples/` is also its own module
 - All `finance/*` packages now use `decimal.Decimal` directly for rates, factors and periods; `finance/tvm` and `finance/daycount` no longer depend on `money`
 - **Behaviour change**: `daycount.Thirty360` now applies the US (NASD) convention's February end-of-month rules, which its doc comment already claimed ("the standard end-of-month adjustments") but the code omitted. A period starting on the last day of February counts that day as the 30th, and a period between two February month-ends counts the later one as the 30th too. 29 February to 31 August 2024 now measures 180 days instead of 182, matching the bond market and spreadsheet `DAYS360` with the US method. Any accrued interest or year fraction spanning a February month-end changes accordingly
@@ -26,6 +27,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - Repository layering rules are documented in `ARCHITECTURE.md`
 
 ### Added
+
 - `money.ResolveCurrency(amounts ...Money)` returns the single currency a set of amounts is expressed in, ignoring the unset ones and reporting `ErrCurrencyMismatch` when two disagree. It is what the types carrying several optional amounts use so a partially configured value computes in the currency the caller set
 - `money.Currency` implements `fmt.Stringer`, so a currency prints as its ISO code rather than as the integer behind it. An unrecognised currency prints as `Currency(<n>)`, naming the problem instead of hiding it. `GetCurrencyISOCode` still reports the error — `String` is for reading output, not a substitute for validation
 - `annuities`: `AnnuityConfig.PresentValue`, `AnticipatePresentValue` and their `Must` variants, closing a symmetry gap — the builder offered `FutureValue` and `DeferredPresentValue` but no plain present value, so callers had to route through `Defer(0).DeferredPresentValue()`
@@ -38,7 +40,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - `finance/returns`: portfolio performance metrics — `TimeWeightedReturn` over valuation `Subperiod`s, `ChainReturns` for geometric linking of known per-period returns, and `MoneyWeightedReturn` (the IRR of the investor's own flows), with `Must*` variants and the typed errors `ErrNoSubperiods`/`ErrNoReturns`
 - `finance/returns`: risk metrics — `Mean`, sample and population `Variance`/`Volatility`, `AnnualizedVolatility` (square-root-of-time), `SharpeRatio` and `AnnualizedSharpeRatio`, all with `Must*` variants and the typed errors `ErrInsufficientReturns`/`ErrZeroVolatility`
 - New `finance/term` package: the shared time vocabulary (`Unit`, `Frequency`, `PeriodsPerYear`, `MonthsPerPeriod`) used by the interest packages
-- `money.FromDecimal(d, currency)` to turn a computed decimal into a monetary amount
+- `money.NewFromDecimal(d, currency)` to turn a computed decimal into a monetary amount
 - Dimensionally-correct `Money.MulDecimal`, `Money.DivDecimal` and `Money.MustDivDecimal` for amount×rate / amount÷rate math without attaching a placeholder currency
 - `annuities.WriteCSVTo(io.Writer, ...)` so schedule CSV export is destination-agnostic; `WriteCSV` remains as a file convenience wrapper
 - `finance/investment`: date-based `XNPV`/`XIRR` for irregular cash flows (`DatedCashFlow`, Actual/365 basis) and `Perpetuity`/`GrowingPerpetuity` (Gordon model), all with `Must*` variants and typed errors (`ErrDatesBeforeBase`, `ErrNonPositiveRate`, `ErrRateBelowGrowth`)
@@ -61,6 +63,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - `Decimal.Sqrt`/`MustSqrt` (in both `decimal` and `money`): direct square root via Newton's integer iteration on the exact 256-bit radicand — always correctly rounded to 19 fractional digits (exact for perfect squares), ~0.4µs and zero allocations; returns the new `decimal.ErrSqrtNegative` for negative input
 
 ### Changed
+
 - **Precision**: `Decimal.Pow`, `Ln`, `Log`, `Log2`, and `Log10` are now computed natively on the 128-bit decimal engine (120-bit binary fixed-point internals, zero allocations) instead of round-tripping through `float64`/`math.Pow`, so results are accurate to the full 19-digit precision (previously ~15-16 digits). Integer exponents use exact binary exponentiation on 38-significant-digit intermediates: powers whose exact value fits in 38 digits (e.g. `1.05^12`) now come out exact
 - **Performance**: 128-bit-divisor division (`u256/u128` and `u128/u128`) replaced bit-by-bit binary long division with normalized 2-word Knuth (algorithm D) steps built on `bits.Div64` — `Ln`/`Log10` run at ~0.2µs and `Pow` at ~0.5µs on Apple M1 (11-13× faster than the first native version), and `Decimal.Div` by divisors wider than 64 bits speeds up as a side effect
 - **Behavior**: `Pow` now defines `0^0 = 1`, returns `ErrDivideByZero` for `0^negative`, `ErrPowNegBase` for a negative base with a fractional exponent, `ErrOverflow` past the representable range, and rounds to zero below it; `Ln`/`Log*` now return `ErrLogNonPositive` for non-positive input instead of a formatting error
@@ -75,6 +78,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - `compositeinterest.Bimonthly` constant value corrected from `"Bimontly"` to `"bimonthly"`
 
 ### Fixed
+
 - The same unset-amount defect fixed in `annuities` (below) was swept for across every type carrying several optional amounts, and found in two more places. `simpleinterest` panicked with `money: currency mismatch` in `Future` and `InterestWithPresentAndFuture` whenever one of the three amounts was left unset, and returned zero amounts denominated in `XXX` from most of the others; every calculation now resolves one currency across the configured amounts. `returns.HoldingPeriodReturn` rejected an unset `income` — a share that paid no dividend — as a currency mismatch instead of reading it as zero. `compoundinterest` came through the sweep clean
 - `annuities` panicked with `money: currency mismatch` when computing the future value of an annuity described by a rate, a term and a present value, with no periodic payment — `NewAnnuity().Present(1000, money.USD).AnnualRate(0.12).Periods(12).Monthly().FutureValue()`. Every result took its currency from the periodic payment, and an annuity without one leaves that field as the zero `money.Money`, which carries `XXX` ("no currency"); adding contributions denominated in `XXX` to a principal denominated in USD then panicked. The annuity now resolves one currency from whichever of its amounts are set, so a partially configured annuity returns results in the currency the caller asked for. `Present`, `AnticipatePresent`, `Future`, `AnticipateFuture`, `PrincipalFuture` and the `WithContributions` variants were all affected
 - `annuities.New` rejects amounts in different currencies with `money.ErrCurrencyMismatch` instead of letting the disagreement surface later as a panic inside a calculation
@@ -86,7 +90,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - A sweep for the panicking-helper pattern across the whole library (the one behind the solver crashes above) found five more functions that panicked instead of returning their error on extreme but valid inputs: `bonds.CouponPayment` and the redemption cash flow in `bonds.Price`/`YTM`, `returns.ROI`, `returns.HoldingPeriodReturn`, `returns.NominalValue`, and `tvm.SolveN`. All now propagate the overflow
 - **`bonds.YTM` panicked for any bond longer than about eleven years**, including the 30-year semiannual bond. The yield search scans candidate yields up to 10000%, where a long bond's discount factor (1 + y/f)ⁿ overflows the decimal engine; the overflow was raised through the panicking `Add`/`Mul` helpers, and the scan then abandoned the search on any candidate it could not evaluate. The cash-flow sums now use the `Try` variants and report the overflow, and the scan skips an unevaluable candidate and carries on, since such a candidate says nothing about where the yield is. `Price` at an extreme yield likewise returns an error instead of panicking
 - `finance/tvm`: `SolveFV`, `SolvePV`, `SolvePMT` and `SolveRate` formed `PV·(1+i)ᴺ` and `PMT·coef` with the panicking `Mul`, so a large principal or payment crashed functions that return an error. They now propagate the overflow. `SolveRate`'s candidate scan skips unevaluable rates instead of aborting, matching the other solvers
-- `finance/investment`: `NPV`, `IRR` and `XIRR` accumulated the running sum and the discount factor with the panicking `Add`/`Mul`, so a long cash-flow series overflowed and crashed. Both bisection scans also aborted when their *first* candidate rate failed to evaluate, even though every later candidate was skipped on failure — at the extreme ends of the range the discount factors underflow on long series, so a 400-period cash flow could not compute an IRR at all
+- `finance/investment`: `NPV`, `IRR` and `XIRR` accumulated the running sum and the discount factor with the panicking `Add`/`Mul`, so a long cash-flow series overflowed and crashed. Both bisection scans also aborted when their _first_ candidate rate failed to evaluate, even though every later candidate was skipped on failure — at the extreme ends of the range the discount factors underflow on long series, so a 400-period cash flow could not compute an IRR at all
 - `gradients.Arithmetic.Present`/`Future` divided by the rate, so a 0% series returned an error on a legitimate input. They now return the analytic limit, `A×n + G×n(n−1)/2`. `Geometric` already handled its own singularity
 - `term.Daily.MonthsPerPeriod` returned a hand-written `0.03333333` (1/30, a thirty-day month) while `Daily.PeriodsPerYear` returned 365 — a 1.4% discrepancy that leaked into any calculation mixing the two, such as a compound-interest term given in days against a monthly rate. It is now 12/365, derived from `PeriodsPerYear` so the two cannot drift apart
 - `compoundinterest` rate conversions returned `0` with a nil error for 12 of the 25 rate-type/conversion combinations — every cross between the ordinary ("effecty") and anticipated (discount) families. The conversions were chains of `if`s with no `else` or default branch, so an unmatched rate type fell through and the zero value was returned as if it were a computed rate. All conversions now funnel through the effective periodic rate, so any of the five `TypeRate` forms converts to any other; an unknown rate type returns the new `ErrInvalidTypeRate`, and an anticipated rate of 100% or more (which has no finite ordinary equivalent) returns the new `ErrInvalidAnticipatedRate`
@@ -102,10 +106,12 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 ## [1.1.0] - 2026-01-06
 
 ### Added
+
 - Comprehensive root calculation tests for more complex operations
 - Data validation utilities for financial calculations
 
 ### Fixed
+
 - Validate zero values in Periods to prevent invalid calculations
 - Fixed equals periods with different compounding frequencies to include days period
 - Corrected operation logic for periods with different compounding frequencies
@@ -116,6 +122,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 ### Added
 
 #### Core Functionality
+
 - **Compound Interest Calculations**: Complete package for financial calculations
   - Future Value calculation using formula: FV = PV × (1 + i)^n
   - Present Value calculation using formula: PV = FV / (1 + i)^n
@@ -123,6 +130,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
   - Number of Periods calculation using formula: n = ln(FV/PV) / ln(1 + i)
 
 #### Compounding Frequencies Support
+
 - Daily (365 periods per year)
 - Monthly (12 periods per year)
 - Bimonthly (6 periods per year)
@@ -131,17 +139,21 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - Annually (1 period per year)
 
 #### Interest Rate Types Support
+
 **Ordinary Rates (charged at period end):**
+
 - Periodic Rate
 - Nominal Annual Rate
 - Effective Annual Rate
 
 **Anticipated Rates (charged at period beginning - discounts):**
+
 - Anticipated Periodic Rate
 - Anticipated Nominal Rate
 - Anticipated Effective Annual Rate
 
 #### Rate Conversion Methods
+
 - `RatePeriodic()` - Convert to periodic rate
 - `RateNominal()` - Convert to nominal rate
 - `RateEffectyAnnually()` - Convert to effective annual rate
@@ -156,6 +168,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - `ToPeriodic()` - Convert anticipated to ordinary periodic
 
 #### Type Definitions
+
 - `CompoundingFrequency` - Enum for compounding frequencies
 - `TypeRate` - Enum for rate types
 - `Period` - Structure for period specifications
@@ -163,12 +176,14 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 - `CompositeInterest` - Main structure for compound interest calculations
 
 #### Documentation
+
 - Complete README.md with installation and usage guide
 - DEVELOPMENT.md with comprehensive developer guide
 - EXAMPLES.md with practical usage examples
 - Inline code documentation for all public functions and types
 
 #### Testing
+
 - 105 comprehensive unit tests
 - 86.5% code coverage
 - Test files:
@@ -182,6 +197,7 @@ This release is breaking; it should be tagged **v2.0.0** (root module) and **cha
 ### Technical Details
 
 #### Package Structure
+
 ```
 finance/compositeinterest/
 ├── README.md              # Package documentation
@@ -200,6 +216,7 @@ finance/compositeinterest/
 ```
 
 #### Key Features
+
 - ✅ No external dependencies (only Go standard library)
 - ✅ Full support for multiple rate types and frequencies
 - ✅ Comprehensive error handling
@@ -209,21 +226,26 @@ finance/compositeinterest/
 - ✅ Production-ready code quality
 
 ### Dependencies
+
 - Go 1.18 or higher
 - Testing: `github.com/stretchr/testify` v1.x (test dependency only)
 
 ### Known Limitations
+
 None
 
 ### Performance
+
 - All calculations are performed using standard Go math library
 - No external dependencies for core functionality
 - Average calculation time: < 1 microsecond per operation
 
 ### Backward Compatibility
+
 - Initial release, no previous versions to compare
 
 ### Contributors
+
 - Yeferson Toloza (Initial development)
 
 ---

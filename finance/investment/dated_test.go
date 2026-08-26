@@ -25,7 +25,7 @@ func TestXNPVExactYear(t *testing.T) {
 	npv, err := XNPV(decimal.MustFromFloat64(0.10), fs)
 	require.NoError(t, err)
 	assert.InDelta(t, 0.0, npv.InexactFloat64(), 1e-6)
-	assert.Equal(t, money.USD, npv.Currency())
+	assert.Equal(t, money.USD, npv.GetCurrency())
 }
 
 func TestXNPVErrors(t *testing.T) {

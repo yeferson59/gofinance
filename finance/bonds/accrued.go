@@ -39,5 +39,5 @@ func AccruedInterest(couponPerPeriod money.Money, lastCoupon, settlement, nextCo
 		return money.Money{}, err
 	}
 
-	return money.FromDecimal(couponPerPeriod.ToDecimal().Mul(fraction), couponPerPeriod.Currency()), nil
+	return money.NewFromDecimal(couponPerPeriod.GetDecimal().Mul(fraction), couponPerPeriod.GetCurrency()), nil
 }
