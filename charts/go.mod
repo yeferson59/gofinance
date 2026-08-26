@@ -1,6 +1,6 @@
 module github.com/yeferson59/gofinance/charts
 
-go 1.26.5
+go 1.27.0
 
 require (
 	github.com/go-echarts/go-echarts/v2 v2.7.2

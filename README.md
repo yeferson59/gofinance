@@ -93,7 +93,7 @@ See [`FEATURES.md`](FEATURES.md) for the full roadmap of proposed and in-progres
 
 ### Prerequisites
 
-- Go 1.26.5 or higher
+- Go 1.27.0 or higher
 
 ### Installation
 
