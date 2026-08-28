@@ -260,8 +260,7 @@ gofinance/
 │   ├── currency.go                # ISO 4217 currencies, symbols, precision
 │   ├── allocate.go                # Penny-exact allocation
 │   ├── convert.go                 # Currency conversion
-│   └── decimal.go                 # Deprecated aliases into decimal + FromDecimal
-│
+
 ├── finance/
 │   ├── simpleinterest/            # Simple interest (fluent builder)
 │   ├── compoundinterest/         # Compound interest and rate conversions
