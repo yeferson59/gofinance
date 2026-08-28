@@ -1,7 +1,6 @@
 package benchmarks
 
 import (
-	"os"
 	"testing"
 
 	"github.com/yeferson59/gofinance/v2/decimal"
@@ -138,7 +137,7 @@ func BenchmarkWriteCSV(b *testing.B) {
 
 	headers := []string{"Period", "Balance", "Payment", "Interest", "SumInterest", "Principal"}
 
-	tmpFile := "/tmp/benchmark_test.csv"
+	tmpFile := b.TempDir() + "/tbenchmark_test.csv"
 
 	testcases := []struct {
 		name string
@@ -164,8 +163,6 @@ func BenchmarkWriteCSV(b *testing.B) {
 			}
 		})
 	}
-
-	os.Remove(tmpFile)
 }
 
 func BenchmarkAnnuityAllMethods(b *testing.B) {
