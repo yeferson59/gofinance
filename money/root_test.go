@@ -167,7 +167,7 @@ func TestMoneyEqualRequiresSameCurrency(t *testing.T) {
 }
 
 func TestMoneyMarshalJSONInvalidCurrency(t *testing.T) {
-	m := Money{value: decimal.One, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(255)}
 	if _, err := m.MarshalJSON(); err == nil {
 		t.Error("expected error marshalling money with an unknown currency")
 	}

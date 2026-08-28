@@ -60,7 +60,7 @@ func ExampleMoney_MulDecimal() {
 		panic(err)
 	}
 
-	fmt.Println(interest.RoundBankString(2), code)
+	fmt.Println(interest.RoundBankString(2), string(code[:]))
 	// Output: 112.50 EUR
 }
 

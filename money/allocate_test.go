@@ -94,7 +94,7 @@ func TestAllocateEvenlyInvalidCount(t *testing.T) {
 }
 
 func TestAllocateInvalidCurrency(t *testing.T) {
-	m := Money{value: decimal.One, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(255)}
 
 	if _, err := m.Allocate(1, 1); err == nil {
 		t.Error("expected error for unknown currency")
@@ -148,7 +148,7 @@ func TestAllocateZeroPrecisionCurrency(t *testing.T) {
 }
 
 func TestAllocateEvenlyInvalidCurrency(t *testing.T) {
-	m := Money{value: decimal.One, currency: Currency(9999)}
+	m := Money{value: decimal.One, currency: Currency(255)}
 
 	if _, err := m.AllocateEvenly(3); err == nil {
 		t.Error("expected error for unknown currency")

@@ -77,10 +77,14 @@ func (m Money) GetCurrency() Currency {
 	return m.currency
 }
 
-func (m Money) SetCurrency(currency Currency) Money {
-	m.currency = currency
+func (m Money) SetCurrency(c Currency) (Money, error) {
+	if _, ok := currencyCode[c]; !ok {
+		return Money{}, errors.New("invalid currency")
+	}
 
-	return m
+	m.currency = c
+
+	return m, nil
 }
 
 // TryAdd returns the sum of m and other, keeping the currency. It returns
@@ -331,7 +335,7 @@ func (m Money) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(moneyJSON{
 		Value:    m.value.String(),
-		Currency: isoCode,
+		Currency: string(isoCode[:]),
 	})
 }
 
@@ -376,7 +380,7 @@ func (m *Money) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	currency, err := CurrencyFromISOCode(mj.Currency)
+	currency, err := GetCurrencyFromISOCode(mj.Currency)
 	if err != nil {
 		return err
 	}

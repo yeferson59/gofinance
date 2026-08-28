@@ -52,7 +52,7 @@ func TestConvertInvalidRate(t *testing.T) {
 func TestConvertUnknownTargetCurrency(t *testing.T) {
 	usd := MustMoneyFromFloat64(10, USD)
 
-	if _, err := usd.Convert(Currency(9999), decimal.One); err == nil {
+	if _, err := usd.Convert(Currency(255), decimal.One); err == nil {
 		t.Error("expected error for unknown target currency")
 	}
 }

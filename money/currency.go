@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type Currency uint
+type Currency uint8
 
 const (
 	XXX Currency = 0   // No Currency
@@ -169,172 +169,174 @@ const (
 	ZWL Currency = 157 // Zimbabwe Dollar
 )
 
-var currencyCode = map[Currency]string{
-	XXX: "XXX",
-	XTS: "XTS",
-	AED: "AED",
-	AFN: "AFN",
-	ALL: "ALL",
-	AMD: "AMD",
-	ANG: "ANG",
-	AOA: "AOA",
-	ARS: "ARS",
-	AUD: "AUD",
-	AWG: "AWG",
-	AZN: "AZN",
-	BAM: "BAM",
-	BBD: "BBD",
-	BDT: "BDT",
-	BGN: "BGN",
-	BHD: "BHD",
-	BIF: "BIF",
-	BMD: "BMD",
-	BND: "BND",
-	BOB: "BOB",
-	BRL: "BRL",
-	BSD: "BSD",
-	BTN: "BTN",
-	BWP: "BWP",
-	BYN: "BYN",
-	BZD: "BZD",
-	CAD: "CAD",
-	CDF: "CDF",
-	CHF: "CHF",
-	CLP: "CLP",
-	CNY: "CNY",
-	COP: "COP",
-	CRC: "CRC",
-	CUP: "CUP",
-	CVE: "CVE",
-	CZK: "CZK",
-	DJF: "DJF",
-	DKK: "DKK",
-	DOP: "DOP",
-	DZD: "DZD",
-	EGP: "EGP",
-	ERN: "ERN",
-	ETB: "ETB",
-	EUR: "EUR",
-	FJD: "FJD",
-	FKP: "FKP",
-	GBP: "GBP",
-	GEL: "GEL",
-	GHS: "GHS",
-	GIP: "GIP",
-	GMD: "GMD",
-	GNF: "GNF",
-	GTQ: "GTQ",
-	GWP: "GWP",
-	GYD: "GYD",
-	HKD: "HKD",
-	HNL: "HNL",
-	HRK: "HRK",
-	HTG: "HTG",
-	HUF: "HUF",
-	IDR: "IDR",
-	ILS: "ILS",
-	INR: "INR",
-	IQD: "IQD",
-	IRR: "IRR",
-	ISK: "ISK",
-	JMD: "JMD",
-	JOD: "JOD",
-	JPY: "JPY",
-	KES: "KES",
-	KGS: "KGS",
-	KHR: "KHR",
-	KMF: "KMF",
-	KPW: "KPW",
-	KRW: "KRW",
-	KWD: "KWD",
-	KYD: "KYD",
-	KZT: "KZT",
-	LAK: "LAK",
-	LBP: "LBP",
-	LKR: "LKR",
-	LRD: "LRD",
-	LSL: "LSL",
-	LYD: "LYD",
-	MAD: "MAD",
-	MDL: "MDL",
-	MGA: "MGA",
-	MKD: "MKD",
-	MMK: "MMK",
-	MNT: "MNT",
-	MOP: "MOP",
-	MRU: "MRU",
-	MUR: "MUR",
-	MVR: "MVR",
-	MWK: "MWK",
-	MXN: "MXN",
-	MYR: "MYR",
-	MZN: "MZN",
-	NAD: "NAD",
-	NGN: "NGN",
-	NIO: "NIO",
-	NOK: "NOK",
-	NPR: "NPR",
-	NZD: "NZD",
-	OMR: "OMR",
-	PAB: "PAB",
-	PEN: "PEN",
-	PGK: "PGK",
-	PHP: "PHP",
-	PKR: "PKR",
-	PLN: "PLN",
-	PYG: "PYG",
-	QAR: "QAR",
-	RON: "RON",
-	RSD: "RSD",
-	RUB: "RUB",
-	RWF: "RWF",
-	SAR: "SAR",
-	SBD: "SBD",
-	SCR: "SCR",
-	SDG: "SDG",
-	SEK: "SEK",
-	SGD: "SGD",
-	SHP: "SHP",
-	SLL: "SLL",
-	SOS: "SOS",
-	SRD: "SRD",
-	SSP: "SSP",
-	STN: "STN",
-	SYP: "SYP",
-	SZL: "SZL",
-	THB: "THB",
-	TJS: "TJS",
-	TMT: "TMT",
-	TND: "TND",
-	TOP: "TOP",
-	TRY: "TRY",
-	TTD: "TTD",
-	TWD: "TWD",
-	TZS: "TZS",
-	UAH: "UAH",
-	UGX: "UGX",
-	USD: "USD",
-	UYU: "UYU",
-	UZS: "UZS",
-	VES: "VES",
-	VND: "VND",
-	VUV: "VUV",
-	WST: "WST",
-	XAF: "XAF",
-	XCD: "XCD",
-	XOF: "XOF",
-	XPF: "XPF",
-	YER: "YER",
-	ZAR: "ZAR",
-	ZMW: "ZMW",
-	ZWL: "ZWL",
+var currencyCode = map[Currency][3]byte{
+	XXX: {'X', 'X', 'X'},
+	XTS: {'X', 'T', 'S'},
+	AED: {'A', 'E', 'D'},
+	AFN: {'A', 'F', 'N'},
+	ALL: {'A', 'L', 'L'},
+	AMD: {'A', 'M', 'D'},
+	ANG: {'A', 'N', 'G'},
+	AOA: {'A', 'O', 'A'},
+	ARS: {'A', 'R', 'S'},
+	AUD: {'A', 'U', 'D'},
+	AWG: {'A', 'W', 'G'},
+	AZN: {'A', 'Z', 'N'},
+	BAM: {'B', 'A', 'M'},
+	BBD: {'B', 'B', 'D'},
+	BDT: {'B', 'D', 'T'},
+	BGN: {'B', 'G', 'N'},
+	BHD: {'B', 'H', 'D'},
+	BIF: {'B', 'I', 'F'},
+	BMD: {'B', 'M', 'D'},
+	BND: {'B', 'N', 'D'},
+	BOB: {'B', 'O', 'B'},
+	BRL: {'B', 'R', 'L'},
+	COP: {'C', 'O', 'P'},
+	USD: {'U', 'S', 'D'},
+	VND: {'V', 'N', 'D'},
+	VUV: {'V', 'U', 'V'},
+	WST: {'W', 'S', 'T'},
+	XAF: {'X', 'A', 'F'},
+	XCD: {'X', 'C', 'D'},
+	XOF: {'X', 'O', 'F'},
+	XPF: {'X', 'P', 'F'},
+	YER: {'Y', 'E', 'R'},
+	ZAR: {'Z', 'A', 'R'},
+	ZMW: {'Z', 'M', 'W'},
+	ZWL: {'Z', 'W', 'L'},
+	BSD: {'B', 'S', 'D'},
+	BTN: {'B', 'T', 'N'},
+	BWP: {'B', 'W', 'P'},
+	BYN: {'B', 'Y', 'N'},
+	BZD: {'B', 'Z', 'D'},
+	CAD: {'C', 'A', 'D'},
+	CDF: {'C', 'D', 'F'},
+	CHF: {'C', 'H', 'F'},
+	CLP: {'C', 'L', 'P'},
+	CNY: {'C', 'N', 'Y'},
+	UYU: {'U', 'Y', 'U'},
+	UZS: {'U', 'Z', 'S'},
+	VES: {'V', 'E', 'S'},
+	CRC: {'C', 'R', 'C'},
+	CUP: {'C', 'U', 'P'},
+	CVE: {'C', 'V', 'E'},
+	CZK: {'C', 'Z', 'K'},
+	DJF: {'D', 'J', 'F'},
+	DKK: {'D', 'K', 'K'},
+	DOP: {'D', 'O', 'P'},
+	DZD: {'D', 'Z', 'D'},
+	EGP: {'E', 'G', 'P'},
+	ERN: {'E', 'R', 'N'},
+	ETB: {'E', 'T', 'B'},
+	EUR: {'E', 'U', 'R'},
+	FJD: {'F', 'J', 'D'},
+	FKP: {'F', 'K', 'P'},
+	GBP: {'G', 'B', 'P'},
+	GEL: {'G', 'E', 'L'},
+	GHS: {'G', 'H', 'S'},
+	GIP: {'G', 'I', 'P'},
+	GMD: {'G', 'M', 'D'},
+	GNF: {'G', 'N', 'F'},
+	GTQ: {'G', 'T', 'Q'},
+	GWP: {'G', 'W', 'P'},
+	GYD: {'G', 'Y', 'D'},
+	HKD: {'H', 'K', 'D'},
+	HNL: {'H', 'N', 'L'},
+	HRK: {'H', 'R', 'K'},
+	HTG: {'H', 'T', 'G'},
+	HUF: {'H', 'U', 'F'},
+	IDR: {'I', 'D', 'R'},
+	ILS: {'I', 'L', 'S'},
+	INR: {'I', 'N', 'R'},
+	IQD: {'I', 'Q', 'D'},
+	IRR: {'I', 'R', 'R'},
+	ISK: {'I', 'S', 'K'},
+	JMD: {'J', 'M', 'D'},
+	JOD: {'J', 'O', 'D'},
+	JPY: {'J', 'P', 'Y'},
+	KES: {'K', 'E', 'S'},
+	KGS: {'K', 'G', 'S'},
+	KHR: {'K', 'H', 'R'},
+	KMF: {'K', 'M', 'F'},
+	KPW: {'K', 'P', 'W'},
+	KRW: {'K', 'R', 'W'},
+	KWD: {'K', 'W', 'D'},
+	KYD: {'K', 'Y', 'D'},
+	KZT: {'K', 'Z', 'T'},
+	LAK: {'L', 'A', 'K'},
+	LBP: {'L', 'B', 'P'},
+	LKR: {'L', 'K', 'R'},
+	LRD: {'L', 'R', 'D'},
+	LSL: {'L', 'S', 'L'},
+	LYD: {'L', 'Y', 'D'},
+	MAD: {'M', 'A', 'D'},
+	MDL: {'M', 'D', 'L'},
+	MGA: {'M', 'G', 'A'},
+	MKD: {'M', 'K', 'D'},
+	MMK: {'M', 'M', 'K'},
+	MNT: {'M', 'N', 'T'},
+	MOP: {'M', 'O', 'P'},
+	MRU: {'M', 'R', 'U'},
+	MUR: {'M', 'U', 'R'},
+	MVR: {'M', 'V', 'R'},
+	MWK: {'M', 'W', 'K'},
+	MXN: {'M', 'X', 'N'},
+	MYR: {'M', 'Y', 'R'},
+	MZN: {'M', 'Z', 'N'},
+	NAD: {'N', 'A', 'D'},
+	NGN: {'N', 'G', 'N'},
+	NIO: {'N', 'I', 'O'},
+	NOK: {'N', 'O', 'K'},
+	NPR: {'N', 'P', 'R'},
+	NZD: {'N', 'Z', 'D'},
+	OMR: {'O', 'M', 'R'},
+	PAB: {'P', 'A', 'B'},
+	PEN: {'P', 'E', 'N'},
+	PGK: {'P', 'G', 'K'},
+	PHP: {'P', 'H', 'P'},
+	PKR: {'P', 'K', 'R'},
+	PLN: {'P', 'L', 'N'},
+	PYG: {'P', 'Y', 'G'},
+	QAR: {'Q', 'A', 'R'},
+	RON: {'R', 'O', 'N'},
+	RSD: {'R', 'S', 'D'},
+	RUB: {'R', 'U', 'B'},
+	RWF: {'R', 'W', 'F'},
+	SAR: {'S', 'A', 'R'},
+	SBD: {'S', 'B', 'D'},
+	SCR: {'S', 'C', 'R'},
+	SDG: {'S', 'D', 'G'},
+	SEK: {'S', 'E', 'K'},
+	SGD: {'S', 'G', 'D'},
+	SHP: {'S', 'H', 'P'},
+	SLL: {'S', 'L', 'L'},
+	SOS: {'S', 'O', 'S'},
+	SRD: {'S', 'R', 'D'},
+	SSP: {'S', 'S', 'P'},
+	STN: {'S', 'T', 'N'},
+	SYP: {'S', 'Y', 'P'},
+	SZL: {'S', 'Z', 'L'},
+	THB: {'T', 'H', 'B'},
+	TJS: {'T', 'J', 'S'},
+	TMT: {'T', 'M', 'T'},
+	TND: {'T', 'N', 'D'},
+	TOP: {'T', 'O', 'P'},
+	TRY: {'T', 'R', 'Y'},
+	TTD: {'T', 'T', 'D'},
+	TWD: {'T', 'W', 'D'},
+	TZS: {'T', 'Z', 'S'},
+	UAH: {'U', 'A', 'H'},
+	UGX: {'U', 'G', 'X'},
 }
 
-var currencyByISOCode = func() map[string]Currency {
-	mapped := make(map[string]Currency, len(currencyCode))
+var currencyByISOCode = func() map[[3]byte]Currency {
+	mapped := make(map[[3]byte]Currency, len(currencyCode))
+
 	for currency, code := range currencyCode {
 		mapped[code] = currency
 	}
+
 	return mapped
 }()
 
@@ -429,7 +431,7 @@ func (c Currency) Symbol() (string, error) {
 		return symbol, nil
 	}
 
-	return isoCode, nil
+	return string(isoCode[:]), nil
 }
 
 // ResolveCurrency returns the single currency the given amounts are expressed
@@ -474,16 +476,16 @@ func ResolveCurrency(amounts ...Money) (Currency, error) {
 // with %v or passing it to Println produced a meaningless number.
 func (c Currency) String() string {
 	if isoCode, ok := currencyCode[c]; ok {
-		return isoCode
+		return string(isoCode[:])
 	}
 
 	return "Currency(" + strconv.FormatUint(uint64(c), 10) + ")"
 }
 
-func (c Currency) GetCurrencyISOCode() (string, error) {
+func (c Currency) GetCurrencyISOCode() ([3]byte, error) {
 	isoCode, ok := currencyCode[c]
 	if !ok {
-		return "", errors.New("invalid currency ISO code")
+		return [3]byte{}, errors.New("invalid currency ISO code")
 	}
 
 	return isoCode, nil
@@ -501,13 +503,19 @@ func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
 	return defaultCurrencyPrec, nil
 }
 
-func CurrencyFromISOCode(code string) (Currency, error) {
+func GetCurrencyFromISOCode(code string) (Currency, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(code))
 	if normalized == "" {
 		return 0, errors.New("invalid currency ISO code")
 	}
 
-	currency, ok := currencyByISOCode[normalized]
+	newCode := make([]byte, 0, 3)
+
+	for i := range 3 {
+		newCode = append(newCode, normalized[i])
+	}
+
+	currency, ok := currencyByISOCode[[3]byte(newCode)]
 	if !ok {
 		return 0, errors.New("invalid currency ISO code")
 	}

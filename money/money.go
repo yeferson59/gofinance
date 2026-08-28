@@ -11,7 +11,7 @@ func (m Money) StringMoney() (string, error) {
 		return "", err
 	}
 
-	return isoCode + " " + m.StringFixed(prec), nil
+	return string(isoCode[:]) + " " + m.StringFixed(prec), nil
 }
 
 // Format renders m using its currency's display symbol instead of its ISO

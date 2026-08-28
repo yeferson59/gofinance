@@ -29,9 +29,9 @@ func TestCurrencyString(t *testing.T) {
 // TestCurrencyStringUnknown checks an unrecognised currency names the problem
 // instead of printing a bare integer that means nothing to a reader.
 func TestCurrencyStringUnknown(t *testing.T) {
-	unknown := Currency(9999)
+	unknown := Currency(255)
 
-	assert.Equal(t, "Currency(9999)", unknown.String())
+	assert.Equal(t, "Currency(255)", unknown.String())
 
 	// The accessor still reports the error; String is for humans reading
 	// output, not a replacement for validation.
@@ -45,6 +45,6 @@ func TestCurrencyStringAgreesWithISOCode(t *testing.T) {
 	for currency := range currencyCode {
 		isoCode, err := currency.GetCurrencyISOCode()
 		assert.NoError(t, err)
-		assert.Equal(t, isoCode, currency.String())
+		assert.Equal(t, string(isoCode[:]), currency.String())
 	}
 }
