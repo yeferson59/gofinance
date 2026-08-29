@@ -1,6 +1,7 @@
 package money
 
 import (
+	"database/sql/driver"
 	"errors"
 	"strconv"
 	"strings"
@@ -503,10 +504,18 @@ func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
 	return defaultCurrencyPrec, nil
 }
 
+func (c Currency) Value() (driver.Value, error) {
+	return c.String(), nil
+}
+
 func GetCurrencyFromISOCode(code string) (Currency, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(code))
 	if normalized == "" {
 		return 0, errors.New("invalid currency ISO code")
+	}
+
+	if len(normalized) != 3 {
+		return 0, errors.New("iso code length must be 3")
 	}
 
 	newCode := make([]byte, 0, 3)

@@ -2,6 +2,7 @@ package decimal
 
 import (
 	"bytes"
+	"database/sql/driver"
 	"encoding/json/jsontext"
 	"strings"
 )
@@ -493,6 +494,10 @@ func (d *Decimal) UnmarshalJSON(data []byte) error {
 	d.value = dec
 
 	return nil
+}
+
+func (d Decimal) Value() (driver.Value, error) {
+	return d.String(), nil
 }
 
 func parseDecimalJSON(data []byte) (decimal128, error) {
