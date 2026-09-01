@@ -3,6 +3,10 @@ package money
 import "errors"
 
 var (
+	// ErrInvalidISOCode is returned when a currency ISO code cannot be
+	// recognized.
+	ErrInvalidISOCode = errors.New("invalid iso code")
+
 	// ErrNoAllocationRatios is returned by Allocate when called without any
 	// ratios to split by.
 	ErrNoAllocationRatios = errors.New("money: no allocation ratios given")

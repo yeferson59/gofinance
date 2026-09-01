@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var GenericErr = errors.New("invalid iso code")
-
 type Currency uint8
 
 const (
@@ -649,12 +647,12 @@ func parseCurrencyJSON(dec *jsontext.Decoder) (Currency, error) {
 		// truncated on the way in: 256 is not currency 0.
 		raw, err := strconv.ParseUint(token.String(), 10, 8)
 		if err != nil {
-			return 0, GenericErr
+			return 0, ErrInvalidISOCode
 		}
 
 		currency := Currency(raw)
 		if !currency.Valid() {
-			return 0, GenericErr
+			return 0, ErrInvalidISOCode
 		}
 
 		return currency, nil
@@ -663,7 +661,7 @@ func parseCurrencyJSON(dec *jsontext.Decoder) (Currency, error) {
 			return 0, err
 		}
 
-		return 0, GenericErr
+		return 0, ErrInvalidISOCode
 	}
 }
 
@@ -790,7 +788,7 @@ func (c *Currency) UnmarshalBinary(data []byte) error {
 func getCurrencyByISOCode(v [3]byte) (Currency, error) {
 	gv, ok := currencyByISOCode[v]
 	if !ok {
-		return 0, GenericErr
+		return 0, ErrInvalidISOCode
 	}
 
 	return gv, nil
@@ -812,7 +810,7 @@ func (c *Currency) Scan(src any) error {
 	case Currency:
 		ok := v.Valid()
 		if !ok {
-			err = GenericErr
+			err = ErrInvalidISOCode
 		}
 
 		nc = v

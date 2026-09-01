@@ -504,7 +504,6 @@ func (x fd) toDec(neg bool) (decimal128, error) {
 		}
 	}
 
-	//nolint:gosec // 0 <= sc <= 19
 	return newDec(neg, coef, uint8(sc)), nil
 }
 
