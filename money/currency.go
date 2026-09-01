@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql/driver"
 	"encoding/json/jsontext"
-	"encoding/json/v2"
 	"errors"
 	"strconv"
 	"strings"
@@ -522,51 +521,270 @@ func (c Currency) Value() (driver.Value, error) {
 	return c.String(), nil
 }
 
+// MarshalJSON implements json.Marshaler, writing the currency as its ISO 4217
+// code in a JSON string.
+//
+// An unrecognised currency is an error rather than the "Currency(<n>)" form
+// String uses, which no decoder can read back. This is the encoding/json v1
+// entry point; under encoding/json/v2, MarshalJSONTo takes precedence and
+// writes the same string.
 func (c Currency) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.String())
+	return c.appendJSON(nil)
 }
 
-func (c *Currency) UnmarshalJSON(data []byte) error {
-	var (
-		nc   Currency
-		errs error
-	)
-
-	v, err := jsontext.NewDecoder(bytes.NewBuffer(data)).ReadToken()
+// MarshalJSONTo implements json.MarshalerTo, the streaming encoder
+// encoding/json/v2 prefers. It writes the ISO code into the encoder's own
+// buffer, where MarshalJSON has to allocate a slice to return.
+func (c Currency) MarshalJSONTo(enc *jsontext.Encoder) error {
+	buf, err := c.appendJSON(enc.AvailableBuffer())
 	if err != nil {
 		return err
 	}
 
-	switch v.Kind() {
+	return enc.WriteValue(buf)
+}
+
+// appendJSON appends the quoted ISO code to dst. Both encoding paths go
+// through it so they cannot drift apart. The code is three uppercase letters,
+// so it never needs JSON escaping.
+func (c Currency) appendJSON(dst []byte) ([]byte, error) {
+	isoCode, err := c.GetCurrencyISOCode()
+	if err != nil {
+		return dst, err
+	}
+
+	dst = append(dst, '"')
+	dst = append(dst, isoCode[:]...)
+
+	return append(dst, '"'), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+//
+// It accepts the ISO 4217 code as a JSON string, normalised the way Scan and
+// UnmarshalText normalise it, and the integer behind a Currency constant as a
+// JSON number. The number form is this package's own numbering, not the ISO
+// 4217 numeric code — USD is 143 here and 840 there — so it only round-trips
+// with the same version of this package.
+//
+// This is the encoding/json v1 entry point; under encoding/json/v2,
+// UnmarshalJSONFrom takes precedence and accepts the same two forms.
+func (c *Currency) UnmarshalJSON(data []byte) error {
+	dec := jsontext.NewDecoder(bytes.NewReader(data))
+
+	parsed, err := parseCurrencyJSON(dec)
+	if err != nil {
+		return err
+	}
+
+	// UnmarshalJSON is handed raw bytes rather than a positioned decoder, so
+	// unlike UnmarshalJSONFrom it has to check that nothing follows the value
+	// it read. Reading the offset costs nothing beyond a scan of what is left,
+	// where decoding again would cost a second pass.
+	if hasTrailingJSON(data, dec.InputOffset()) {
+		return ErrTrailingJSONContent
+	}
+
+	*c = parsed
+
+	return nil
+}
+
+// UnmarshalJSONFrom implements json.UnmarshalerFrom, the streaming decoder
+// encoding/json/v2 prefers. It accepts the same forms as UnmarshalJSON.
+func (c *Currency) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	parsed, err := parseCurrencyJSON(dec)
+	if err != nil {
+		return err
+	}
+
+	*c = parsed
+
+	return nil
+}
+
+// hasTrailingJSON reports whether anything but whitespace follows the value
+// that ended at offset.
+//
+// JSON's whitespace is only space, tab, carriage return and newline.
+// bytes.TrimSpace would also swallow a vertical tab or a form feed, which JSON
+// does not allow, and accepting them here would make these decoders read
+// documents encoding/json/v2 rejects.
+func hasTrailingJSON(data []byte, offset int64) bool {
+	for _, c := range data[offset:] {
+		switch c {
+		case ' ', '\t', '\r', '\n':
+		default:
+			return true
+		}
+	}
+
+	return false
+}
+
+// parseCurrencyJSON reads one currency from dec. Both decoding paths go
+// through it so they cannot drift apart.
+//
+// A string or a number is read as a token rather than as a value: a scalar
+// token is already a complete JSON value, and the token hands back its
+// unescaped contents directly, where a value would have to be unquoted into a
+// second buffer. Anything else is skipped whole before being rejected, so the
+// decoder is left on the next value as UnmarshalJSONFrom requires.
+func parseCurrencyJSON(dec *jsontext.Decoder) (Currency, error) {
+	switch dec.PeekKind() {
 	case jsontext.KindString:
-		nc, errs = GetCurrencyFromISOCode(v.String())
-	case jsontext.KindNumber:
-		raw, err := v.Uint()
+		token, err := dec.ReadToken()
 		if err != nil {
-			errs = err
+			return 0, err
 		}
 
-		nc = Currency(raw)
-		if !nc.Valid() {
-			errs = GenericErr
+		return GetCurrencyFromISOCode(token.String())
+	case jsontext.KindNumber:
+		token, err := dec.ReadToken()
+		if err != nil {
+			return 0, err
 		}
+
+		// Parsed at the width of the type rather than as a uint64 that gets
+		// truncated on the way in: 256 is not currency 0.
+		raw, err := strconv.ParseUint(token.String(), 10, 8)
+		if err != nil {
+			return 0, GenericErr
+		}
+
+		currency := Currency(raw)
+		if !currency.Valid() {
+			return 0, GenericErr
+		}
+
+		return currency, nil
+	default:
+		if err := dec.SkipValue(); err != nil {
+			return 0, err
+		}
+
+		return 0, GenericErr
 	}
-
-	if errs != nil {
-		return errs
-	}
-
-	*c = nc
-
-	return nil
 }
 
-func (c *Currency) UnmarshalText(b []byte) error {
-	return nil
-}
-
+// MarshalText implements encoding.TextMarshaler, writing the currency as its
+// three-letter ISO 4217 code with no surrounding quotes.
+//
+// MarshalJSON already covers JSON, but it is not consulted by encoders that
+// work in plain text — YAML, TOML, XML, flag.TextVar, log/slog — nor by
+// encoding/json v1 for map keys, which must be strings. Without the text pair
+// a Currency reaches those formats as the integer behind the constant, which
+// no reader can turn back into a currency. JSON output here is unchanged:
+// encoding/json/v2 prefers MarshalJSON over MarshalText for values and keys
+// alike.
+//
+// An unrecognised currency is an error rather than the "Currency(<n>)" form
+// String uses: that text is for humans reading output, and encoding it would
+// produce a document UnmarshalText cannot read back.
 func (c Currency) MarshalText() ([]byte, error) {
-	return nil, nil
+	return c.AppendText(nil)
+}
+
+// AppendText implements encoding.TextAppender, appending the ISO 4217 code to
+// b. Callers encoding many currencies can reuse one buffer and avoid the
+// allocation MarshalText makes on every call. On error b is returned
+// unchanged, so a failure never truncates what the caller had already built.
+func (c Currency) AppendText(b []byte) ([]byte, error) {
+	isoCode, err := c.GetCurrencyISOCode()
+	if err != nil {
+		return b, err
+	}
+
+	return append(b, isoCode[:]...), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler, parsing a three-letter
+// ISO 4217 code.
+//
+// Input is normalised the way Scan and GetCurrencyFromISOCode normalise it —
+// surrounding space trimmed, case ignored — so "usd" and " USD " both decode
+// to USD, while MarshalText only ever writes the canonical uppercase form.
+// Empty text is an error: there is no currency it could mean, and silently
+// choosing one would hide a truncated document.
+//
+// text is only borrowed for the duration of the call; nothing derived from it
+// is retained.
+func (c *Currency) UnmarshalText(text []byte) error {
+	currency, err := GetCurrencyFromISOCode(string(text))
+	if err != nil {
+		return err
+	}
+
+	*c = currency
+
+	return nil
+}
+
+// The binary layout, version 1: a version byte followed by the three-letter
+// ISO 4217 code. Four bytes, fixed.
+//
+// The code is written rather than the integer behind the constant on purpose.
+// A Currency is an enumeration this package numbers itself, and inserting a
+// currency into the middle of that list would change what an old number means;
+// the ISO code cannot drift that way. The version byte is there because a
+// binary encoding is a persisted format, so a reader must be able to tell a
+// layout it does not know from one it does.
+const (
+	currencyBinaryVersion = 1
+	currencyBinaryLen     = 4
+)
+
+// MarshalBinary implements encoding.BinaryMarshaler.
+//
+// A Currency is an integer type, so encoding/gob can already encode one — as
+// its number, which is exactly the fragile form described above. Implementing
+// this takes precedence over that default and pins the encoding to the ISO
+// code instead.
+//
+// An unrecognised currency is an error, as it is in every other encoder here.
+func (c Currency) MarshalBinary() ([]byte, error) {
+	return c.AppendBinary(nil)
+}
+
+// AppendBinary implements encoding.BinaryAppender, appending the same bytes
+// MarshalBinary returns to b. On error b is returned unchanged, so a failure
+// never truncates what the caller had already built.
+func (c Currency) AppendBinary(b []byte) ([]byte, error) {
+	isoCode, err := c.GetCurrencyISOCode()
+	if err != nil {
+		return b, err
+	}
+
+	b = append(b, currencyBinaryVersion)
+
+	return append(b, isoCode[:]...), nil
+}
+
+// UnmarshalBinary implements encoding.BinaryUnmarshaler.
+//
+// The code is matched exactly, without the trimming and case folding
+// UnmarshalText allows: text may be hand-written, these bytes were written by
+// this package, and anything else in them means the reader and the writer
+// disagree about the format.
+//
+// data is only read, never retained.
+func (c *Currency) UnmarshalBinary(data []byte) error {
+	if len(data) != currencyBinaryLen {
+		return ErrInvalidBinary
+	}
+
+	if data[0] != currencyBinaryVersion {
+		return ErrUnknownBinaryVersion
+	}
+
+	currency, err := getCurrencyByISOCode([3]byte(data[1:]))
+	if err != nil {
+		return err
+	}
+
+	*c = currency
+
+	return nil
 }
 
 func getCurrencyByISOCode(v [3]byte) (Currency, error) {

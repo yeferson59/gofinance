@@ -1,6 +1,7 @@
 package decimal
 
 import (
+	json "encoding/json/v2"
 	"testing"
 )
 
@@ -94,5 +95,59 @@ func BenchmarkDecimalPowFrac(b *testing.B) {
 	b.ReportAllocs()
 	for b.Loop() {
 		_, _ = x.Pow(n)
+	}
+}
+
+func BenchmarkDecimalMarshalJSON(b *testing.B) {
+	xs := []Decimal{
+		MustFromString("12345.6789"),
+		MustFromString("-0.001"),
+		MustFromString("987.654321"),
+	}
+	b.ReportAllocs()
+	for b.Loop() {
+		_, _ = json.Marshal(xs)
+	}
+}
+
+func BenchmarkDecimalUnmarshalJSON(b *testing.B) {
+	data := []byte(`[12345.6789,-0.001,987.654321]`)
+	b.ReportAllocs()
+	for b.Loop() {
+		var xs []Decimal
+		_ = json.Unmarshal(data, &xs)
+	}
+}
+
+func BenchmarkDecimalMarshalText(b *testing.B) {
+	x := MustFromString("12345.6789")
+	buf := make([]byte, 0, 32)
+	b.ReportAllocs()
+	for b.Loop() {
+		buf, _ = x.AppendText(buf[:0])
+	}
+	_ = buf
+}
+
+func BenchmarkDecimalMarshalBinary(b *testing.B) {
+	x := MustFromString("12345.6789")
+	buf := make([]byte, 0, 32)
+	b.ReportAllocs()
+	for b.Loop() {
+		buf, _ = x.AppendBinary(buf[:0])
+	}
+	_ = buf
+}
+
+func BenchmarkDecimalUnmarshalBinary(b *testing.B) {
+	data, err := MustFromString("12345.6789").MarshalBinary()
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ReportAllocs()
+	for b.Loop() {
+		var x Decimal
+		_ = x.UnmarshalBinary(data)
 	}
 }

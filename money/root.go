@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql/driver"
 	"encoding/json/jsontext"
-	"encoding/json/v2"
 
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
@@ -319,74 +318,268 @@ func (m Money) Equal(other Money) bool {
 	return m.value.Equal(other.value) && m.currency == other.currency
 }
 
-type moneyJSON struct {
-	Value    string `json:"value"`
-	Currency string `json:"currency"`
-}
-
-type moneyJSONRaw struct {
-	Value    jsontext.Value `json:"value"`
-	Currency string         `json:"currency"`
-}
-
+// MarshalJSON implements json.Marshaler, writing the amount as an object of
+// two members: the value as a JSON string, and the ISO 4217 currency code.
+//
+// The value is a string rather than a number so it survives readers that parse
+// every JSON number as a float64 — JavaScript above all — which is exactly the
+// precision this package exists to keep. An unset or unrecognised currency is
+// an error: an amount whose currency cannot be named is not an amount.
+//
+// This is the encoding/json v1 entry point; under encoding/json/v2,
+// MarshalJSONTo takes precedence and writes the same object.
 func (m Money) MarshalJSON() ([]byte, error) {
+	return m.appendJSON(nil)
+}
+
+// MarshalJSONTo implements json.MarshalerTo, the streaming encoder
+// encoding/json/v2 prefers. It writes into the encoder's own buffer and builds
+// the object directly, where MarshalJSON goes through a struct and the
+// reflection-based encoder.
+func (m Money) MarshalJSONTo(enc *jsontext.Encoder) error {
+	buf, err := m.appendJSON(enc.AvailableBuffer())
+	if err != nil {
+		return err
+	}
+
+	return enc.WriteValue(buf)
+}
+
+// appendJSON appends the encoded amount to dst. Both encoding paths go through
+// it so they cannot drift apart.
+//
+// Neither member needs JSON escaping: the ISO code is three uppercase letters,
+// and the value is digits with an optional minus sign and decimal point.
+func (m Money) appendJSON(dst []byte) ([]byte, error) {
 	isoCode, err := m.currency.GetCurrencyISOCode()
 	if err != nil {
-		return nil, err
+		return dst, err
 	}
 
-	return json.Marshal(moneyJSON{
-		Value:    m.value.String(),
-		Currency: string(isoCode[:]),
-	})
+	dst = append(dst, `{"value":"`...)
+
+	dst, err = m.value.AppendText(dst)
+	if err != nil {
+		return dst, err
+	}
+
+	dst = append(dst, `","currency":"`...)
+	dst = append(dst, isoCode[:]...)
+
+	return append(dst, `"}`...), nil
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
+//
+// It accepts the object MarshalJSON writes, and a bare amount — a JSON number
+// or a string holding one — which is read as USD, the same default Scan
+// applies. Within the object the value may be either form too, the currency
+// may be left out or empty for USD, and unknown members are ignored.
+//
+// This is the encoding/json v1 entry point; under encoding/json/v2,
+// UnmarshalJSONFrom takes precedence and accepts the same forms.
 func (m *Money) UnmarshalJSON(data []byte) error {
-	v, err := jsontext.NewDecoder(bytes.NewBuffer(data)).ReadValue()
+	dec := jsontext.NewDecoder(bytes.NewReader(data))
+
+	parsed, err := parseMoneyJSON(dec)
 	if err != nil {
 		return err
 	}
 
-	if v.Kind() == jsontext.KindNumber {
-		var dec decimal.Decimal
-		if err := dec.UnmarshalJSON(data); err != nil {
-			return err
+	// UnmarshalJSON is handed raw bytes rather than a positioned decoder, so
+	// unlike UnmarshalJSONFrom it has to check that nothing follows the value
+	// it read. Reading the offset costs nothing beyond a scan of what is left,
+	// where decoding again would cost a second pass.
+	if hasTrailingJSON(data, dec.InputOffset()) {
+		return ErrTrailingJSONContent
+	}
+
+	*m = parsed
+
+	return nil
+}
+
+// UnmarshalJSONFrom implements json.UnmarshalerFrom, the streaming decoder
+// encoding/json/v2 prefers. It accepts the same forms as UnmarshalJSON.
+//
+// It consumes exactly one JSON value, including one it goes on to reject, as
+// the interface requires.
+func (m *Money) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	parsed, err := parseMoneyJSON(dec)
+	if err != nil {
+		return err
+	}
+
+	*m = parsed
+
+	return nil
+}
+
+// parseMoneyJSON reads one amount from dec. Both decoding paths go through it
+// so they cannot drift apart.
+func parseMoneyJSON(dec *jsontext.Decoder) (Money, error) {
+	if dec.PeekKind() == jsontext.KindBeginObject {
+		return parseMoneyJSONObject(dec)
+	}
+
+	// A bare amount carries no currency, so it takes the default. Anything
+	// that is not a number or a string holding one is rejected by the decimal
+	// decoder, which consumes the value either way.
+	var value decimal.Decimal
+	if err := value.UnmarshalJSONFrom(dec); err != nil {
+		return Money{}, err
+	}
+
+	return Money{value: value, currency: USD}, nil
+}
+
+// parseMoneyJSONObject reads the object form member by member rather than into
+// a struct, so the amount and the currency are decoded by the same code that
+// decodes them on their own.
+func parseMoneyJSONObject(dec *jsontext.Decoder) (Money, error) {
+	if _, err := dec.ReadToken(); err != nil { // '{'
+		return Money{}, err
+	}
+
+	var (
+		value     decimal.Decimal
+		currency  = USD
+		seenValue bool
+	)
+
+	for dec.PeekKind() != jsontext.KindEndObject {
+		name, err := dec.ReadToken()
+		if err != nil {
+			return Money{}, err
 		}
 
-		m.value = dec
-		m.currency = USD
+		switch name.String() {
+		case "value":
+			if err := value.UnmarshalJSONFrom(dec); err != nil {
+				return Money{}, err
+			}
 
-		return nil
+			seenValue = true
+		case "currency":
+			currency, err = parseMoneyJSONCurrency(dec)
+			if err != nil {
+				return Money{}, err
+			}
+		default:
+			// Unknown members are ignored, as the struct-based decoder did.
+			if err := dec.SkipValue(); err != nil {
+				return Money{}, err
+			}
+		}
 	}
 
-	var mj moneyJSONRaw
-	if err := json.Unmarshal(data, &mj); err != nil {
-		return err
+	if _, err := dec.ReadToken(); err != nil { // '}'
+		return Money{}, err
 	}
 
-	t, err := jsontext.NewDecoder(bytes.NewBuffer(mj.Value)).ReadToken()
+	if !seenValue {
+		return Money{}, ErrMissingJSONValue
+	}
+
+	return Money{value: value, currency: currency}, nil
+}
+
+// parseMoneyJSONCurrency reads the "currency" member, where an empty code
+// means "unset" and is read as USD rather than rejected: a document that
+// leaves the currency blank describes dollars the same way one that omits the
+// member does. Currency's own decoder has no such amount to fall back on, so
+// it rejects the empty string.
+func parseMoneyJSONCurrency(dec *jsontext.Decoder) (Currency, error) {
+	if dec.PeekKind() != jsontext.KindString {
+		return parseCurrencyJSON(dec)
+	}
+
+	token, err := dec.ReadToken()
+	if err != nil {
+		return 0, err
+	}
+
+	code := token.String()
+	if code == "" {
+		return USD, nil
+	}
+
+	return GetCurrencyFromISOCode(code)
+}
+
+// The binary layout, version 1: a version byte, the three-letter ISO 4217
+// code, then the amount in the decimal package's own binary form. Twenty-two
+// bytes with that package's current layout.
+//
+// The currency is written before the amount so both sit at fixed offsets, and
+// the amount is delegated rather than reproduced: its layout is the decimal
+// package's to define and to version, and it carries its own version byte for
+// exactly that reason.
+const (
+	moneyBinaryVersion = 1
+
+	// moneyBinaryPrefixLen covers the version byte and the ISO code. What
+	// follows is the decimal's own encoding, whose length is its business.
+	moneyBinaryPrefixLen = 4
+)
+
+// MarshalBinary implements encoding.BinaryMarshaler.
+//
+// It exists because a Money's fields are unexported, which leaves
+// encoding/gob — and every codec that follows the same rule — unable to encode
+// one at all: gob consults GobEncoder and BinaryMarshaler, and never falls
+// back to MarshalText. It is also what lets an amount be handed straight to a
+// cache client such as go-redis.
+//
+// An amount whose currency cannot be named is an error, as it is for the JSON
+// encoders.
+func (m Money) MarshalBinary() ([]byte, error) {
+	return m.AppendBinary(nil)
+}
+
+// AppendBinary implements encoding.BinaryAppender, appending the same bytes
+// MarshalBinary returns to b. On error b is returned unchanged, so a failure
+// never truncates what the caller had already built.
+func (m Money) AppendBinary(b []byte) ([]byte, error) {
+	isoCode, err := m.currency.GetCurrencyISOCode()
+	if err != nil {
+		return b, err
+	}
+
+	b = append(b, moneyBinaryVersion)
+	b = append(b, isoCode[:]...)
+
+	return m.value.AppendBinary(b)
+}
+
+// UnmarshalBinary implements encoding.BinaryUnmarshaler.
+//
+// Unlike the JSON decoder, it has no bare-amount form to fall back on: these
+// bytes were written by this package, and one that carries no currency is not
+// an amount this package wrote. data is only read, never retained.
+func (m *Money) UnmarshalBinary(data []byte) error {
+	if len(data) < moneyBinaryPrefixLen {
+		return ErrInvalidBinary
+	}
+
+	if data[0] != moneyBinaryVersion {
+		return ErrUnknownBinaryVersion
+	}
+
+	currency, err := getCurrencyByISOCode([3]byte(data[1:moneyBinaryPrefixLen]))
 	if err != nil {
 		return err
 	}
 
-	var dec decimal.Decimal
-	if err := dec.UnmarshalJSON([]byte(t.String())); err != nil {
+	// The decimal validates its own length, so a truncated or padded amount is
+	// caught there rather than by a length check that would have to know its
+	// layout.
+	var value decimal.Decimal
+	if err := value.UnmarshalBinary(data[moneyBinaryPrefixLen:]); err != nil {
 		return err
 	}
 
-	m.value = dec
-
-	if mj.Currency == "" {
-		m.currency = USD
-
-		return nil
-	}
-
-	currency, err := GetCurrencyFromISOCode(mj.Currency)
-	if err != nil {
-		return err
-	}
-
+	m.value = value
 	m.currency = currency
 
 	return nil

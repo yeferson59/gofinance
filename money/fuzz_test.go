@@ -1,7 +1,9 @@
 package money
 
 import (
+	"bytes"
 	"encoding/json"
+	jsonv2 "encoding/json/v2"
 	"testing"
 
 	"github.com/yeferson59/gofinance/v2/decimal"
@@ -305,6 +307,268 @@ func FuzzJSONNumberFormIsAccepted(f *testing.F) {
 
 		if !decoded.GetDecimal().Equal(value) {
 			t.Fatalf("bare number %q decoded to %v, want %v", data, decoded, value)
+		}
+	})
+}
+
+// FuzzCurrencyUnmarshalText checks the text decoder never panics on arbitrary
+// bytes, that anything it accepts is a currency this package recognises, and
+// that the pair round-trips through the canonical uppercase ISO code.
+func FuzzCurrencyUnmarshalText(f *testing.F) {
+	seeds := []string{
+		"USD", "usd", " EUR ", "JPY", "XXX", "BHD",
+		"", " ", "US", "USDD", "ZZZ", "840", "us\x00", "€",
+	}
+
+	for _, seed := range seeds {
+		f.Add([]byte(seed))
+	}
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var decoded Currency
+		if err := decoded.UnmarshalText(input); err != nil {
+			// Rejecting an input is always allowed; it must simply not panic.
+			return
+		}
+
+		if !decoded.Valid() {
+			t.Fatalf("UnmarshalText(%q) accepted an invalid currency: %v", input, decoded)
+		}
+
+		encoded, err := decoded.MarshalText()
+		if err != nil {
+			t.Fatalf("UnmarshalText(%q) accepted, but MarshalText then failed: %v", input, err)
+		}
+
+		if len(encoded) != 3 {
+			t.Fatalf("MarshalText produced %q, want a three-letter ISO code", encoded)
+		}
+
+		var again Currency
+		if err := again.UnmarshalText(encoded); err != nil {
+			t.Fatalf("MarshalText produced %q, which no longer decodes: %v", encoded, err)
+		}
+
+		if again != decoded {
+			t.Fatalf("UnmarshalText(%q) = %v, encoded %q, decoded back to %v",
+				input, decoded, encoded, again)
+		}
+	})
+}
+
+// FuzzJSONPathsAgree checks the v1 and v2 entry points accept and reject the
+// same documents and decode them to the same amount. MarshalerTo's contract is
+// that a type implementing both behaves equivalently under default options,
+// and the two are now separate code paths.
+func FuzzJSONPathsAgree(f *testing.F) {
+	seeds := []string{
+		`{"value":"1234.56","currency":"USD"}`,
+		`{"value":1234.56,"currency":"USD"}`,
+		`{"value":"1","currency":""}`,
+		`{"value":"1"}`,
+		`{"value":"1","currency":143}`,
+		`{"value":"1","note":{"a":[1,2]}}`,
+		`{"currency":"USD"}`,
+		`{"value":"1","value":"2"}`,
+		`1234.56`, `"1234.56"`, `1e2`,
+		`{}`, `[]`, `null`, ``, `{`, `{"value":}`, `{"value":"1"} 2`,
+	}
+
+	for _, seed := range seeds {
+		f.Add([]byte(seed))
+	}
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		var viaV1 Money
+		errV1 := viaV1.UnmarshalJSON(data)
+
+		var viaV2 Money
+		errV2 := jsonv2.Unmarshal(data, &viaV2)
+
+		if (errV1 == nil) != (errV2 == nil) {
+			t.Fatalf("UnmarshalJSON(%q) = %v, but json.Unmarshal = %v", data, errV1, errV2)
+		}
+
+		if errV1 != nil {
+			return
+		}
+
+		if !viaV1.Equal(viaV2) {
+			t.Fatalf("UnmarshalJSON(%q) = %v %v, but json.Unmarshal = %v %v",
+				data, viaV1, viaV1.GetCurrency(), viaV2, viaV2.GetCurrency())
+		}
+
+		// The two encoders must agree as well, on a value the decoder just
+		// accepted.
+		encV1, err1 := viaV1.MarshalJSON()
+		encV2, err2 := jsonv2.Marshal(viaV1)
+
+		if (err1 == nil) != (err2 == nil) {
+			t.Fatalf("MarshalJSON = %v, but json.Marshal = %v", err1, err2)
+		}
+
+		if err1 == nil && string(encV1) != string(encV2) {
+			t.Fatalf("MarshalJSON produced %q, json.Marshal produced %q", encV1, encV2)
+		}
+	})
+}
+
+// FuzzCurrencyUnmarshalJSON checks the currency decoder never panics, that the
+// two entry points agree, and that anything accepted is a currency this
+// package can name again.
+func FuzzCurrencyUnmarshalJSON(f *testing.F) {
+	seeds := []string{
+		`"USD"`, `"usd"`, `" EUR "`, `"XXX"`, `"ZZZ"`, `""`,
+		`0`, `1`, `143`, `157`, `158`, `256`, `-1`, `1.5`, `1e2`,
+		`true`, `null`, `[1]`, `{"a":1}`, `"USD" "EUR"`, ``, `not-json`,
+	}
+
+	for _, seed := range seeds {
+		f.Add([]byte(seed))
+	}
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		var viaV1 Currency
+		errV1 := viaV1.UnmarshalJSON(data)
+
+		var viaV2 Currency
+		errV2 := jsonv2.Unmarshal(data, &viaV2)
+
+		if (errV1 == nil) != (errV2 == nil) {
+			t.Fatalf("UnmarshalJSON(%q) = %v, but json.Unmarshal = %v", data, errV1, errV2)
+		}
+
+		if errV1 != nil {
+			return
+		}
+
+		if viaV1 != viaV2 {
+			t.Fatalf("UnmarshalJSON(%q) = %v, but json.Unmarshal = %v", data, viaV1, viaV2)
+		}
+
+		// Anything accepted must encode again, which the ISO accessor is what
+		// decides: a currency with no code is not a currency.
+		encoded, err := viaV1.MarshalJSON()
+		if err != nil {
+			t.Fatalf("UnmarshalJSON(%q) accepted %v, which cannot be encoded: %v", data, viaV1, err)
+		}
+
+		var again Currency
+		if err := again.UnmarshalJSON(encoded); err != nil {
+			t.Fatalf("re-encoded %q as %q, which no longer decodes: %v", data, encoded, err)
+		}
+
+		if again != viaV1 {
+			t.Fatalf("round trip of %q changed %v into %v", data, viaV1, again)
+		}
+	})
+}
+
+// FuzzMoneyUnmarshalBinary checks the binary decoders never panic on arbitrary
+// bytes, and that whatever they accept encodes back to exactly the same bytes.
+// A binary format is persisted, so byte-for-byte stability is the property
+// that matters.
+func FuzzMoneyUnmarshalBinary(f *testing.F) {
+	for _, seed := range []Money{
+		MustMoneyFromString("1234.56", USD),
+		MustMoneyFromString("-0.001", BHD),
+		MustMoneyFromString("0", JPY),
+	} {
+		encoded, err := seed.MarshalBinary()
+		if err != nil {
+			f.Fatal(err)
+		}
+
+		f.Add(encoded)
+	}
+
+	f.Add([]byte(nil))
+	f.Add([]byte{moneyBinaryVersion, 'U', 'S', 'D'})
+	f.Add(make([]byte, moneyBinaryPrefixLen+18))
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var decoded Money
+		if err := decoded.UnmarshalBinary(input); err != nil {
+			// Rejecting an input is always allowed; it must simply not panic.
+			return
+		}
+
+		encoded, err := decoded.MarshalBinary()
+		if err != nil {
+			t.Fatalf("UnmarshalBinary(%x) accepted, but MarshalBinary then failed: %v", input, err)
+		}
+
+		if !bytes.Equal(encoded, input) {
+			t.Fatalf("UnmarshalBinary(%x) re-encoded as %x", input, encoded)
+		}
+
+		var again Money
+		if err := again.UnmarshalBinary(encoded); err != nil {
+			t.Fatalf("re-encoded %x, which no longer decodes: %v", encoded, err)
+		}
+
+		if !again.Equal(decoded) || again.GetCurrency() != decoded.GetCurrency() {
+			t.Fatalf("round trip of %x changed %v %v into %v %v",
+				input, decoded, decoded.GetCurrency(), again, again.GetCurrency())
+		}
+
+		// The binary and JSON forms must describe the same amount, however
+		// differently they store it.
+		document, err := decoded.MarshalJSON()
+		if err != nil {
+			t.Fatalf("decoded %x but could not write it as JSON: %v", input, err)
+		}
+
+		var viaJSON Money
+		if err := viaJSON.UnmarshalJSON(document); err != nil {
+			t.Fatalf("decoded %x, whose JSON %s does not parse: %v", input, document, err)
+		}
+
+		if !viaJSON.Equal(decoded) || viaJSON.GetCurrency() != decoded.GetCurrency() {
+			t.Fatalf("%x is %v %v as binary but %v %v as JSON",
+				input, decoded, decoded.GetCurrency(), viaJSON, viaJSON.GetCurrency())
+		}
+	})
+}
+
+// FuzzCurrencyUnmarshalBinary checks the same for a currency on its own.
+func FuzzCurrencyUnmarshalBinary(f *testing.F) {
+	for _, seed := range []Currency{USD, EUR, JPY, XXX} {
+		encoded, err := seed.MarshalBinary()
+		if err != nil {
+			f.Fatal(err)
+		}
+
+		f.Add(encoded)
+	}
+
+	f.Add([]byte(nil))
+	f.Add([]byte{currencyBinaryVersion, 'Z', 'Z', 'Z'})
+	f.Add(make([]byte, currencyBinaryLen))
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var decoded Currency
+		if err := decoded.UnmarshalBinary(input); err != nil {
+			return
+		}
+
+		encoded, err := decoded.MarshalBinary()
+		if err != nil {
+			t.Fatalf("UnmarshalBinary(%x) accepted %v, which cannot be encoded: %v", input, decoded, err)
+		}
+
+		if !bytes.Equal(encoded, input) {
+			t.Fatalf("UnmarshalBinary(%x) re-encoded as %x", input, encoded)
+		}
+
+		// Whatever the binary form accepts, the text form must name too.
+		text, err := decoded.MarshalText()
+		if err != nil {
+			t.Fatalf("decoded %x but could not write it as text: %v", input, err)
+		}
+
+		if string(text) != string(input[1:]) {
+			t.Fatalf("%x decoded to %v, whose text is %q", input, decoded, text)
 		}
 	})
 }

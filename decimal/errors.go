@@ -13,4 +13,13 @@ var (
 	ErrPowNegBase      = errors.New("negative base with a non-integer exponent is undefined")
 	ErrSqrtNegative    = errors.New("square root of a negative number is undefined")
 	ErrSymbolFraction  = errors.New("fraction must contain exactly one '/'")
+
+	// ErrInvalidBinary is returned by UnmarshalBinary when the bytes are not a
+	// decimal this package wrote: a wrong length, or reserved bits in use.
+	ErrInvalidBinary = errors.New("invalid binary encoding")
+
+	// ErrUnknownBinaryVersion is returned by UnmarshalBinary when the leading
+	// version byte names a layout this build does not know, which is what
+	// stops it from reading a newer encoding as if it were this one.
+	ErrUnknownBinaryVersion = errors.New("unknown binary encoding version")
 )

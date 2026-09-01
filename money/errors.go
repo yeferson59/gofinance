@@ -22,4 +22,23 @@ var (
 	// ErrCurrencyMismatch is returned by operations that require both operands
 	// to share the same currency, such as SafeAdd and SafeSub.
 	ErrCurrencyMismatch = errors.New("money: currency mismatch")
+
+	// ErrTrailingJSONContent is returned by UnmarshalJSON when something
+	// follows the JSON value it decoded. json.Unmarshal never passes such
+	// input, but these methods are also called directly.
+	ErrTrailingJSONContent = errors.New("money: unexpected content after the JSON value")
+
+	// ErrMissingJSONValue is returned when a JSON object describing an amount
+	// has no "value" member. The currency may be left out — it defaults to USD
+	// — but the amount cannot.
+	ErrMissingJSONValue = errors.New("money: JSON object has no \"value\" member")
+
+	// ErrInvalidBinary is returned by UnmarshalBinary when the bytes are not
+	// something this package wrote: too short, or the wrong length.
+	ErrInvalidBinary = errors.New("money: invalid binary encoding")
+
+	// ErrUnknownBinaryVersion is returned by UnmarshalBinary when the leading
+	// version byte names a layout this build does not know, which is what
+	// stops it from reading a newer encoding as if it were this one.
+	ErrUnknownBinaryVersion = errors.New("money: unknown binary encoding version")
 )

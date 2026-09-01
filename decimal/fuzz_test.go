@@ -1,6 +1,8 @@
 package decimal
 
 import (
+	"bytes"
+	json "encoding/json/v2"
 	"math/big"
 	"strings"
 	"testing"
@@ -361,6 +363,211 @@ func FuzzAbsNegAreInverses(f *testing.F) {
 
 		if value.Neg().Sign() == value.Sign() {
 			t.Fatalf("Neg(%v) kept the sign", value)
+		}
+	})
+}
+
+// FuzzUnmarshalText checks the text decoder never panics on arbitrary bytes,
+// and that whatever it accepts encodes back to text that decodes to the same
+// value. Round-tripping is the contract every text-based encoder relies on.
+func FuzzUnmarshalText(f *testing.F) {
+	seeds := []string{
+		"0", "-0", "+0", "1", "-1", "0.1", "-0.1", "3.14159",
+		"1234567890123456789", "-1234567890123456789",
+		"0.0000000000000000001", "1.500", "42",
+		"", " ", "1 ", "1e2", "1E-5", ".5", "5.", "abc", "$1.00",
+		"1,000", "1.2.3", "--1", "0x10", "NaN", "Inf",
+		"99999999999999999999999999999999999999999",
+	}
+
+	for _, seed := range seeds {
+		f.Add([]byte(seed))
+	}
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var decoded Decimal
+		if err := decoded.UnmarshalText(input); err != nil {
+			// Rejecting an input is always allowed; it must simply not panic.
+			return
+		}
+
+		encoded, err := decoded.MarshalText()
+		if err != nil {
+			t.Fatalf("UnmarshalText(%q) accepted, but MarshalText then failed: %v", input, err)
+		}
+
+		// The encoder must never emit notation its own decoder rejects.
+		if strings.ContainsAny(string(encoded), "eE") {
+			t.Fatalf("MarshalText produced scientific notation: %q", encoded)
+		}
+
+		var again Decimal
+		if err := again.UnmarshalText(encoded); err != nil {
+			t.Fatalf("MarshalText produced %q, which no longer decodes: %v", encoded, err)
+		}
+
+		if !again.Equal(decoded) {
+			t.Fatalf("UnmarshalText(%q) = %v, encoded %q, decoded back to %v",
+				input, decoded, encoded, again)
+		}
+	})
+}
+
+// FuzzUnmarshalJSON checks the JSON decoder never panics on arbitrary bytes,
+// that the v1 and v2 entry points agree on every input, and that whatever is
+// accepted round-trips through MarshalJSON to the same value.
+func FuzzUnmarshalJSON(f *testing.F) {
+	seeds := []string{
+		"0", "-0", "1", "-1", "1.5", "-0.001", "1234567890123456789",
+		"0.0000000000000000001", `"9.99"`, `"-0.5"`, `"1.500"`, `"1.5"`,
+		"1e2", `"1e2"`, `""`, `" 1"`, `"abc"`, "true", "null", "[1]", `{"a":1}`,
+		"not-json", "", "0.00000000000000000001",
+	}
+
+	for _, seed := range seeds {
+		f.Add([]byte(seed))
+	}
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var viaV1 Decimal
+		errV1 := viaV1.UnmarshalJSON(input)
+
+		var viaV2 Decimal
+		errV2 := json.Unmarshal(input, &viaV2)
+
+		// The two entry points must accept and reject the same documents;
+		// MarshalerTo's contract is that they behave equivalently under
+		// default options.
+		if (errV1 == nil) != (errV2 == nil) {
+			t.Fatalf("UnmarshalJSON(%q) = %v, but json.Unmarshal = %v", input, errV1, errV2)
+		}
+
+		if errV1 != nil {
+			// Rejecting an input is always allowed; it must simply not panic.
+			return
+		}
+
+		if !viaV1.Equal(viaV2) {
+			t.Fatalf("UnmarshalJSON(%q) = %v, but json.Unmarshal = %v", input, viaV1, viaV2)
+		}
+
+		encoded, err := viaV1.MarshalJSON()
+		if err != nil {
+			t.Fatalf("UnmarshalJSON(%q) accepted, but MarshalJSON then failed: %v", input, err)
+		}
+
+		var again Decimal
+		if err := again.UnmarshalJSON(encoded); err != nil {
+			t.Fatalf("MarshalJSON produced %q, which no longer decodes: %v", encoded, err)
+		}
+
+		if !again.Equal(viaV1) {
+			t.Fatalf("UnmarshalJSON(%q) = %v, encoded %q, decoded back to %v",
+				input, viaV1, encoded, again)
+		}
+	})
+}
+
+// FuzzJSONMapKeyRoundTrip checks a Decimal used as a map key survives the
+// round trip that MarshalJSON alone could not even start.
+//
+// The decoded key is compared with Equal rather than ==. A Decimal is
+// comparable, so Go lets it be a map key, but == compares the stored
+// representation while Equal compares the value: the encoded form is String's,
+// which trims trailing zeros, so NewFromInt64(150, 2) comes back as coefficient
+// 15 scale 1. Numerically the same number, a different struct.
+func FuzzJSONMapKeyRoundTrip(f *testing.F) {
+	f.Add(int64(0), uint8(0))
+	f.Add(int64(1), uint8(0))
+	f.Add(int64(-1), uint8(5))
+	f.Add(int64(1234567890), uint8(9))
+	f.Add(int64(-999999999999999999), uint8(19))
+
+	f.Fuzz(func(t *testing.T, coefficient int64, precision uint8) {
+		key, err := NewFromInt64(coefficient, precision)
+		if err != nil {
+			return
+		}
+
+		encoded, err := json.Marshal(map[Decimal]int{key: 1})
+		if err != nil {
+			t.Fatalf("marshaling %v as a map key: %v", key, err)
+		}
+
+		var decoded map[Decimal]int
+		if err := json.Unmarshal(encoded, &decoded); err != nil {
+			t.Fatalf("%q no longer decodes: %v", encoded, err)
+		}
+
+		if len(decoded) != 1 {
+			t.Fatalf("%v encoded to %q, which decoded to %d keys", key, encoded, len(decoded))
+		}
+
+		for got, count := range decoded {
+			if !got.Equal(key) || count != 1 {
+				t.Fatalf("%v encoded to %q, which decoded to %v", key, encoded, decoded)
+			}
+		}
+	})
+}
+
+// FuzzUnmarshalBinary checks the binary decoder never panics on arbitrary
+// bytes, and that whatever it accepts encodes back to exactly the same bytes.
+// A binary format is persisted, so byte-for-byte stability is the property
+// that matters: two writers of the same value must produce the same blob.
+func FuzzUnmarshalBinary(f *testing.F) {
+	for _, seed := range []string{"0", "1", "-1", "1.5", "-0.001", "1234567890123456789"} {
+		encoded, err := MustFromString(seed).MarshalBinary()
+		if err != nil {
+			f.Fatal(err)
+		}
+
+		f.Add(encoded)
+	}
+
+	f.Add([]byte(nil))
+	f.Add([]byte{binaryVersion})
+	f.Add(make([]byte, binaryLen))
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		var decoded Decimal
+		if err := decoded.UnmarshalBinary(input); err != nil {
+			// Rejecting an input is always allowed; it must simply not panic.
+			return
+		}
+
+		encoded, err := decoded.MarshalBinary()
+		if err != nil {
+			t.Fatalf("UnmarshalBinary(%x) accepted, but MarshalBinary then failed: %v", input, err)
+		}
+
+		if !bytes.Equal(encoded, input) {
+			t.Fatalf("UnmarshalBinary(%x) re-encoded as %x", input, encoded)
+		}
+
+		var again Decimal
+		if err := again.UnmarshalBinary(encoded); err != nil {
+			t.Fatalf("re-encoded %x, which no longer decodes: %v", encoded, err)
+		}
+
+		if again != decoded {
+			t.Fatalf("round trip of %x changed %v into %v", input, decoded, again)
+		}
+
+		// The binary and text forms must describe the same number, however
+		// differently they store it.
+		text, err := decoded.MarshalText()
+		if err != nil {
+			t.Fatalf("decoded %x but could not write it as text: %v", input, err)
+		}
+
+		var viaText Decimal
+		if err := viaText.UnmarshalText(text); err != nil {
+			t.Fatalf("decoded %x, whose text %q does not parse: %v", input, text, err)
+		}
+
+		if !viaText.Equal(decoded) {
+			t.Fatalf("%x is %v as binary but %v as text %q", input, decoded, viaText, text)
 		}
 	})
 }
