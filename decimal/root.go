@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"database/sql/driver"
 	"encoding/json/jsontext"
+	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -511,4 +513,40 @@ func parseDecimalJSON(data []byte) (decimal128, error) {
 	}
 
 	return parseDecimal(t.String())
+}
+
+func (d *Decimal) Scan(src any) error {
+	var (
+		dec decimal128
+		err error
+	)
+
+	switch v := src.(type) {
+	case []byte:
+		dec, err = parseDecimal(string(v))
+	case string:
+		dec, err = parseDecimal(v)
+	case uint64:
+		dec, err = decFromUint64(v, 0)
+	case int64:
+		dec, err = decFromInt64(v, 0)
+	case int:
+		dec, err = decFromInt64(int64(v), 0)
+	case int32:
+		dec, err = decFromInt64(int64(v), 0)
+	case float64:
+		dec, err = decFromFloat64(v)
+	case nil:
+		err = errors.New("can't scan nil")
+	default:
+		err = fmt.Errorf("can't scan %T", src)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	d.value = dec
+
+	return nil
 }

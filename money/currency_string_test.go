@@ -48,3 +48,41 @@ func TestCurrencyStringAgreesWithISOCode(t *testing.T) {
 		assert.Equal(t, string(isoCode[:]), currency.String())
 	}
 }
+
+func TestMarshal(t *testing.T) {
+	_, err := USD.MarshalJSON()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestUnmarshalFromMarshal(t *testing.T) {
+	d, err := USD.MarshalJSON()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var c Currency
+
+	if err := c.UnmarshalJSON(d); err != nil {
+		t.Fatal(err)
+	}
+
+	if c != USD {
+		t.Fatal("no equals values")
+	}
+}
+
+func TestUnmarshalNumber(t *testing.T) {
+	var c Currency
+
+	if err := c.UnmarshalJSON([]byte("1")); err != nil {
+		t.Fatal(err)
+	}
+
+	if c != XTS {
+		t.Fatal("no equals values")
+	}
+}

@@ -5,8 +5,6 @@ import (
 	"database/sql/driver"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
-	"errors"
-	"fmt"
 
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
@@ -77,14 +75,18 @@ func (m Money) GetCurrency() Currency {
 	return m.currency
 }
 
-func (m Money) SetCurrency(c Currency) (Money, error) {
-	if _, ok := currencyCode[c]; !ok {
-		return Money{}, errors.New("invalid currency")
+func (m *Money) SetCurrency(c Currency) {
+	if m == nil {
+		return
+	}
+
+	if !c.Valid() {
+		m.currency = USD
+
+		return
 	}
 
 	m.currency = c
-
-	return m, nil
 }
 
 // TryAdd returns the sum of m and other, keeping the currency. It returns
@@ -395,38 +397,11 @@ func (m Money) Value() (driver.Value, error) {
 }
 
 func (m *Money) Scan(src any) error {
-	var (
-		dec decimal.Decimal
-		err error
-	)
-
-	switch v := src.(type) {
-	case []byte:
-		dec, err = decimal.NewFromString(string(v))
-	case string:
-		dec, err = decimal.NewFromString(v)
-	case uint64:
-		dec, err = decimal.NewFromUint64(v, 0)
-	case int64:
-		dec, err = decimal.NewFromInt64(v, 0)
-	case int:
-		dec, err = decimal.NewFromInt64(int64(v), 0)
-	case int32:
-		dec, err = decimal.NewFromInt64(int64(v), 0)
-	case float64:
-		dec, err = decimal.NewFromFloat64(v)
-	case nil:
-		err = errors.New("money: can't scan nil to Money")
-	default:
-		err = fmt.Errorf("money: can't scan %T to Money", src)
-	}
-
-	if err != nil {
+	if err := m.value.Scan(src); err != nil {
 		return err
 	}
 
-	m.value = dec
-	m.currency = USD
+	m.SetCurrency(USD)
 
 	return nil
 }

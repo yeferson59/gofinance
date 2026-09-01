@@ -1,11 +1,16 @@
 package money
 
 import (
+	"bytes"
 	"database/sql/driver"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"strconv"
 	"strings"
 )
+
+var GenericErr = errors.New("invalid iso code")
 
 type Currency uint8
 
@@ -169,6 +174,15 @@ const (
 	ZMW Currency = 156 // Zambian Kwacha
 	ZWL Currency = 157 // Zimbabwe Dollar
 )
+
+func (c Currency) Valid() bool {
+	switch {
+	case c <= 157:
+		return true
+	default:
+		return false
+	}
+}
 
 var currencyCode = map[Currency][3]byte{
 	XXX: {'X', 'X', 'X'},
@@ -506,6 +520,93 @@ func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
 
 func (c Currency) Value() (driver.Value, error) {
 	return c.String(), nil
+}
+
+func (c Currency) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.String())
+}
+
+func (c *Currency) UnmarshalJSON(data []byte) error {
+	var (
+		nc   Currency
+		errs error
+	)
+
+	v, err := jsontext.NewDecoder(bytes.NewBuffer(data)).ReadToken()
+	if err != nil {
+		return err
+	}
+
+	switch v.Kind() {
+	case jsontext.KindString:
+		nc, errs = GetCurrencyFromISOCode(v.String())
+	case jsontext.KindNumber:
+		raw, err := v.Uint()
+		if err != nil {
+			errs = err
+		}
+
+		nc = Currency(raw)
+		if !nc.Valid() {
+			errs = GenericErr
+		}
+	}
+
+	if errs != nil {
+		return errs
+	}
+
+	*c = nc
+
+	return nil
+}
+
+func (c *Currency) UnmarshalText(b []byte) error {
+	return nil
+}
+
+func (c Currency) MarshalText() ([]byte, error) {
+	return nil, nil
+}
+
+func getCurrencyByISOCode(v [3]byte) (Currency, error) {
+	gv, ok := currencyByISOCode[v]
+	if !ok {
+		return 0, GenericErr
+	}
+
+	return gv, nil
+}
+
+func (c *Currency) Scan(src any) error {
+	var (
+		nc  Currency
+		err error
+	)
+
+	switch v := src.(type) {
+	case string:
+		nc, err = GetCurrencyFromISOCode(v)
+	case []byte:
+		nc, err = GetCurrencyFromISOCode(string(v))
+	case [3]byte:
+		nc, err = getCurrencyByISOCode(v)
+	case Currency:
+		ok := v.Valid()
+		if !ok {
+			err = GenericErr
+		}
+
+		nc = v
+	}
+
+	if err != nil {
+		return err
+	}
+
+	*c = nc
+
+	return nil
 }
 
 func GetCurrencyFromISOCode(code string) (Currency, error) {
