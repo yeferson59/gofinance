@@ -1,6 +1,6 @@
 module github.com/yeferson59/gofinance/examples
 
-go 1.27.0
+go 1.27.3
 
 require (
 	github.com/go-echarts/go-echarts/v2 v2.7.2
