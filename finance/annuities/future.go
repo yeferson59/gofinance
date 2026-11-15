@@ -3,6 +3,8 @@ package annuities
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
 	"github.com/yeferson59/gofinance/v2/money"
@@ -17,7 +19,9 @@ import (
 // It never substitutes the principal's growth or a pre-set future value —
 // use PrincipalFuture for the compounded principal alone, or
 // FutureWithContributions for principal plus payments.
-func (a Annuity) Future() (money.Money, error) {
+func (a Annuity) Future() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	return a.contributionsFuture()
 }
 
@@ -55,7 +59,9 @@ func (a Annuity) contributionsFuture() (money.Money, error) {
 // beginning of its period (annuity due), so it also earns interest during its
 // own first period: FV_due = FV_ordinary × (1+i). Like Future, it never
 // substitutes the principal's growth or a pre-set future value.
-func (a Annuity) AnticipateFuture() (money.Money, error) {
+func (a Annuity) AnticipateFuture() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	return a.contributionsAnticipateFuture()
 }
 
@@ -85,7 +91,9 @@ func (a Annuity) contributionsAnticipateFuture() (money.Money, error) {
 // If no principal was configured, it returns zero instead of an error, so it
 // can be added freely to the payments' future value (which is exactly what
 // FutureWithContributions does).
-func (a Annuity) PrincipalFuture() (money.Money, error) {
+func (a Annuity) PrincipalFuture() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	principal, err := a.compoundInterest.Future()
 	if errors.Is(err, compoundinterest.ErrInvalidOperation) {
 		return money.MustMoneyFromFloat64(0, a.currency), nil
@@ -117,7 +125,9 @@ func (a Annuity) PrincipalFuture() (money.Money, error) {
 //	    Monthly().
 //	    MustBuild().
 //	    FutureWithContributions()
-func (a Annuity) FutureWithContributions() (money.Money, error) {
+func (a Annuity) FutureWithContributions() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	contributions, err := a.contributionsFuture()
 	if err != nil {
 		return money.Money{}, err
@@ -137,7 +147,9 @@ func (a Annuity) FutureWithContributions() (money.Money, error) {
 // AnticipateFutureWithContributions is like FutureWithContributions, but
 // assumes each contribution is made at the beginning of its period (annuity
 // due), so it also earns interest during its own first period.
-func (a Annuity) AnticipateFutureWithContributions() (money.Money, error) {
+func (a Annuity) AnticipateFutureWithContributions() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	contributions, err := a.contributionsAnticipateFuture()
 	if err != nil {
 		return money.Money{}, err

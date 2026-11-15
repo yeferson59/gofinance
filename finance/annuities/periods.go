@@ -1,6 +1,9 @@
 package annuities
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // PeriodsWithPresent calculates the number of periods needed for periodic payments to reach
 // a specific present value using the formula:
@@ -22,7 +25,9 @@ import "github.com/yeferson59/gofinance/v2/decimal"
 //	ann, _ := New(500, 5000, 0, period, rate)
 //	periods, err := ann.PeriodsWithPresent()
 //	// periods is how many payment periods needed to pay off $5,000 with $500 payments
-func (a Annuity) PeriodsWithPresent() (decimal.Decimal, error) {
+func (a Annuity) PeriodsWithPresent() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -76,7 +81,9 @@ func (a Annuity) PeriodsWithPresent() (decimal.Decimal, error) {
 //	ann, _ := New(500, 0, 10000, period, rate)
 //	periods, err := ann.PeriodsWithFuture()
 //	// periods is how many payment periods needed to accumulate $10,000 with $500 payments
-func (a Annuity) PeriodsWithFuture() (decimal.Decimal, error) {
+func (a Annuity) PeriodsWithFuture() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -117,7 +124,9 @@ func (a Annuity) PeriodsWithFuture() (decimal.Decimal, error) {
 // Since PV_due = PV_ordinary × (1+i) for the same payment and number of
 // periods, dividing the present value by (1+i) first reduces this to the
 // same ordinary formula: n = ln(PMT / (PMT - [PV/(1+i)] × i)) / ln(1+i)
-func (a Annuity) AnticipatePeriodsWithPresent() (decimal.Decimal, error) {
+func (a Annuity) AnticipatePeriodsWithPresent() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -165,7 +174,9 @@ func (a Annuity) AnticipatePeriodsWithPresent() (decimal.Decimal, error) {
 // Since FV_due = FV_ordinary × (1+i) for the same payment and number of
 // periods, dividing the future value by (1+i) first reduces this to the
 // same ordinary formula: n = ln(([FV/(1+i)] × i + PMT) / PMT) / ln(1+i)
-func (a Annuity) AnticipatePeriodsWithFuture() (decimal.Decimal, error) {
+func (a Annuity) AnticipatePeriodsWithFuture() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	_, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err

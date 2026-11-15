@@ -1,6 +1,9 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // RateConversionConfig is a builder for converting interest rates between
 // types (periodic, nominal, effective annual, anticipated) and compounding
@@ -154,7 +157,9 @@ func (r RateConversionConfig) isAnticipated() bool {
 // Returns:
 //   - A RateInterest instance with the configured rate, frequency, and type
 //   - An error if validation fails (e.g., negative rate)
-func (r RateConversionConfig) Build() (RateInterest, error) {
+func (r RateConversionConfig) Build() (_ RateInterest, err error) {
+	defer guard.Recover(&err)
+
 	return NewRateInterest(r.rate, r.frequency, r.rateType)
 }
 
@@ -175,7 +180,9 @@ func (r RateConversionConfig) MustBuild() RateInterest {
 //
 //	periodic, err := NewRateConversion().Rate(0.12).Nominal().Monthly().ToPeriodic()
 //	// periodic is 0.01 (1% monthly)
-func (r RateConversionConfig) ToPeriodic() (decimal.Decimal, error) {
+func (r RateConversionConfig) ToPeriodic() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rt, err := r.Build()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -190,7 +197,9 @@ func (r RateConversionConfig) ToPeriodic() (decimal.Decimal, error) {
 
 // ToNominal converts the configured rate to a nominal annual rate.
 // Anticipated source rates are converted through their effective annual equivalent.
-func (r RateConversionConfig) ToNominal() (decimal.Decimal, error) {
+func (r RateConversionConfig) ToNominal() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rt, err := r.Build()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -204,7 +213,9 @@ func (r RateConversionConfig) ToNominal() (decimal.Decimal, error) {
 }
 
 // ToEffectiveAnnual converts the configured rate to an effective annual rate.
-func (r RateConversionConfig) ToEffectiveAnnual() (decimal.Decimal, error) {
+func (r RateConversionConfig) ToEffectiveAnnual() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rt, err := r.Build()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -219,7 +230,9 @@ func (r RateConversionConfig) ToEffectiveAnnual() (decimal.Decimal, error) {
 
 // ToAnticipatedPeriodic converts the configured rate to an anticipated
 // (discount) periodic rate.
-func (r RateConversionConfig) ToAnticipatedPeriodic() (decimal.Decimal, error) {
+func (r RateConversionConfig) ToAnticipatedPeriodic() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rt, err := r.Build()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -234,7 +247,9 @@ func (r RateConversionConfig) ToAnticipatedPeriodic() (decimal.Decimal, error) {
 
 // ToAnticipatedNominal converts the configured rate to an anticipated
 // (discount) nominal rate.
-func (r RateConversionConfig) ToAnticipatedNominal() (decimal.Decimal, error) {
+func (r RateConversionConfig) ToAnticipatedNominal() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rt, err := r.Build()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -254,7 +269,9 @@ func (r RateConversionConfig) ToAnticipatedNominal() (decimal.Decimal, error) {
 //
 //	// Convert a 1% monthly periodic rate to its quarterly equivalent
 //	quarterly, err := NewRateConversion().Rate(0.01).Periodic().Monthly().ToPeriodicAt(Quarterly)
-func (r RateConversionConfig) ToPeriodicAt(newFrequency CompoundingFrequency) (decimal.Decimal, error) {
+func (r RateConversionConfig) ToPeriodicAt(newFrequency CompoundingFrequency) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rt, err := r.Build()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -265,7 +282,9 @@ func (r RateConversionConfig) ToPeriodicAt(newFrequency CompoundingFrequency) (d
 
 // ToNominalAt converts the configured rate to the equivalent nominal rate
 // at a different compounding frequency.
-func (r RateConversionConfig) ToNominalAt(newFrequency CompoundingFrequency) (decimal.Decimal, error) {
+func (r RateConversionConfig) ToNominalAt(newFrequency CompoundingFrequency) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rt, err := r.Build()
 	if err != nil {
 		return decimal.Decimal{}, err

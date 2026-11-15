@@ -2,6 +2,7 @@ package bonds
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -119,7 +120,9 @@ func (b Config) periodicYield() (decimal.Decimal, error) {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, or ErrInvalidYield on
 // invalid terms.
-func (b Config) Price() (money.Money, error) {
+func (b Config) Price() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	y, err := b.periodicYield()
 	if err != nil {
 		return money.Money{}, err

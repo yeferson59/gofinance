@@ -3,6 +3,7 @@ package gradients
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -33,7 +34,9 @@ type Geometric struct {
 //	    money.MustMoneyFromFloat64(1000, money.USD),
 //	    decimal.MustFromFloat64(0.08),
 //	    period, rate)
-func NewGeometric(firstPayment money.Money, growthRate decimal.Decimal, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (Geometric, error) {
+func NewGeometric(firstPayment money.Money, growthRate decimal.Decimal, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (_ Geometric, err error) {
+	defer guard.Recover(&err)
+
 	b, err := newBase(firstPayment.GetCurrency(), period, rateInterest)
 	if err != nil {
 		return Geometric{}, err
@@ -53,7 +56,9 @@ func NewGeometric(firstPayment money.Money, growthRate decimal.Decimal, period c
 // Otherwise:
 //
 //	PV = A × [1 - ((1+g)/(1+i))^n] / (i-g)
-func (g Geometric) Present() (money.Money, error) {
+func (g Geometric) Present() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := g.periodsAndRate()
 	if err != nil {
 		return money.Money{}, err
@@ -95,7 +100,9 @@ func (g Geometric) Present() (money.Money, error) {
 // Otherwise:
 //
 //	FV = A × [(1+i)^n - (1+g)^n] / (i-g)
-func (g Geometric) Future() (money.Money, error) {
+func (g Geometric) Future() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := g.periodsAndRate()
 	if err != nil {
 		return money.Money{}, err

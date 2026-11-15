@@ -3,6 +3,7 @@ package annuities
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -366,7 +367,9 @@ func (a AnnuityConfig) Defer(periods int) AnnuityConfig {
 //	    Periods(360).
 //	    Monthly().
 //	    Build()
-func (a AnnuityConfig) Build() (Annuity, error) {
+func (a AnnuityConfig) Build() (_ Annuity, err error) {
+	defer guard.Recover(&err)
+
 	if a.err != nil {
 		return Annuity{}, a.err
 	}
@@ -445,7 +448,9 @@ func (a AnnuityConfig) MustBuild() Annuity {
 //	    Periods(360).
 //	    Monthly().
 //	    Payment()
-func (a AnnuityConfig) Payment() (money.Money, error) {
+func (a AnnuityConfig) Payment() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -494,7 +499,9 @@ func (a AnnuityConfig) MustPayment() money.Money {
 //	    Periods(360).
 //	    Monthly().
 //	    AnticipatePayment()
-func (a AnnuityConfig) AnticipatePayment() (money.Money, error) {
+func (a AnnuityConfig) AnticipatePayment() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -535,7 +542,9 @@ func (a AnnuityConfig) MustAnticipatePayment() money.Money {
 //	    Periods(12).
 //	    Monthly().
 //	    FutureValue()
-func (a AnnuityConfig) FutureValue() (money.Money, error) {
+func (a AnnuityConfig) FutureValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -569,7 +578,9 @@ func (a AnnuityConfig) MustFutureValue() money.Money {
 //	    Periods(12).
 //	    Monthly().
 //	    PresentValue()
-func (a AnnuityConfig) PresentValue() (money.Money, error) {
+func (a AnnuityConfig) PresentValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -590,7 +601,9 @@ func (a AnnuityConfig) MustPresentValue() money.Money {
 
 // AnticipatePresentValue is like PresentValue, but assumes each payment is
 // made at the beginning of its period (annuity due) instead of at the end.
-func (a AnnuityConfig) AnticipatePresentValue() (money.Money, error) {
+func (a AnnuityConfig) AnticipatePresentValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -612,7 +625,9 @@ func (a AnnuityConfig) MustAnticipatePresentValue() money.Money {
 
 // AnticipateFutureValue is like FutureValue, but assumes each contribution is
 // made at the beginning of its period (annuity due) instead of at the end.
-func (a AnnuityConfig) AnticipateFutureValue() (money.Money, error) {
+func (a AnnuityConfig) AnticipateFutureValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -645,7 +660,9 @@ func (a AnnuityConfig) MustAnticipateFutureValue() money.Money {
 //	    Monthly().
 //	    Defer(3).
 //	    DeferredPresentValue()
-func (a AnnuityConfig) DeferredPresentValue() (money.Money, error) {
+func (a AnnuityConfig) DeferredPresentValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -668,7 +685,9 @@ func (a AnnuityConfig) MustDeferredPresentValue() money.Money {
 // AnticipateDeferredPresentValue is like DeferredPresentValue, but assumes
 // each payment, once the grace period ends, is made at the beginning of its
 // period (annuity due) instead of the end.
-func (a AnnuityConfig) AnticipateDeferredPresentValue() (money.Money, error) {
+func (a AnnuityConfig) AnticipateDeferredPresentValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -701,7 +720,9 @@ func (a AnnuityConfig) MustAnticipateDeferredPresentValue() money.Money {
 //	    Monthly().
 //	    Defer(6).
 //	    DeferredPayment()
-func (a AnnuityConfig) DeferredPayment() (money.Money, error) {
+func (a AnnuityConfig) DeferredPayment() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	annuity, err := a.Build()
 	if err != nil {
 		return money.Money{}, err

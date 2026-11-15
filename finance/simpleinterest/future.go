@@ -2,6 +2,7 @@ package simpleinterest
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -10,7 +11,9 @@ import (
 //
 // It returns money.ErrCurrencyMismatch if the configured amounts are not all
 // in one currency.
-func (s SimpleInterest) Future() (money.Money, error) {
+func (s SimpleInterest) Future() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if s.err != nil {
 		return money.Money{}, s.err
 	}
@@ -33,7 +36,9 @@ func (s SimpleInterest) Future() (money.Money, error) {
 //
 // It returns money.ErrCurrencyMismatch if the configured amounts are not all
 // in one currency.
-func (s SimpleInterest) FutureWithRateInterest() (money.Money, error) {
+func (s SimpleInterest) FutureWithRateInterest() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if s.err != nil {
 		return money.Money{}, s.err
 	}

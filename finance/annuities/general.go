@@ -3,6 +3,7 @@ package annuities
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -29,7 +30,9 @@ import (
 //	    money.MustMoneyFromFloat64(100, money.USD),
 //	    money.MoneyZero, money.MoneyZero,
 //	    24, compoundinterest.Monthly, rate)
-func NewGeneral(value, present, future money.Money, paymentPeriods int, paymentFrequency compoundinterest.CompoundingFrequency, rateInterest compoundinterest.RateInterest) (Annuity, error) {
+func NewGeneral(value, present, future money.Money, paymentPeriods int, paymentFrequency compoundinterest.CompoundingFrequency, rateInterest compoundinterest.RateInterest) (_ Annuity, err error) {
+	defer guard.Recover(&err)
+
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(float64(paymentPeriods)), paymentFrequency)
 	if err != nil {
 		return Annuity{}, err

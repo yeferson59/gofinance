@@ -3,6 +3,7 @@ package returns
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/investment"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -39,7 +40,9 @@ type Subperiod struct {
 // It returns ErrNoSubperiods for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, and ErrNonPositiveValue when a subperiod starts with no
 // capital at work.
-func TimeWeightedReturn(subperiods []Subperiod) (decimal.Decimal, error) {
+func TimeWeightedReturn(subperiods []Subperiod) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if len(subperiods) == 0 {
 		return decimal.Decimal{}, ErrNoSubperiods
 	}
@@ -104,7 +107,9 @@ func MustTimeWeightedReturn(subperiods []Subperiod) decimal.Decimal {
 //
 // It returns ErrNoReturns for an empty slice and ErrNonPositiveValue if a
 // return wipes out more than the whole capital.
-func ChainReturns(rates []decimal.Decimal) (decimal.Decimal, error) {
+func ChainReturns(rates []decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if len(rates) == 0 {
 		return decimal.Decimal{}, ErrNoReturns
 	}
@@ -153,7 +158,9 @@ func MustChainReturns(rates []decimal.Decimal) decimal.Decimal {
 // It returns money.ErrCurrencyMismatch on mixed currencies and the solver
 // errors of investment.IRR (ErrNoSignChange, ErrNoConvergence) when no rate
 // balances the flows.
-func MoneyWeightedReturn(initial money.Money, interimFlows []money.Money, final money.Money) (decimal.Decimal, error) {
+func MoneyWeightedReturn(initial money.Money, interimFlows []money.Money, final money.Money) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	flows := make([]money.Money, 0, len(interimFlows)+2)
 	quiet := money.NewFromDecimal(decimal.Zero, initial.GetCurrency())
 

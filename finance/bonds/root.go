@@ -23,6 +23,8 @@ package bonds
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/money"
 )
@@ -113,7 +115,9 @@ func (b Config) MarketPrice(p float64) Config {
 // frequency, in the face value's currency.
 //
 // It returns ErrInvalidFrequency if the frequency is not at least 1.
-func (b Config) CouponPayment() (money.Money, error) {
+func (b Config) CouponPayment() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if b.freq < 1 {
 		return money.Money{}, ErrInvalidFrequency
 	}

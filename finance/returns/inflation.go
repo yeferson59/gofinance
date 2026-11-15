@@ -2,6 +2,7 @@ package returns
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -15,7 +16,9 @@ import (
 // than −1. The result carries the nominal amount's currency.
 //
 // It returns ErrInvalidInflationRate if 1+inflation is not positive.
-func RealValue(nominal money.Money, inflation, periods decimal.Decimal) (money.Money, error) {
+func RealValue(nominal money.Money, inflation, periods decimal.Decimal) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	factor, err := priceLevelFactor(inflation, periods)
 	if err != nil {
 		return money.Money{}, err
@@ -48,7 +51,9 @@ func MustRealValue(nominal money.Money, inflation, periods decimal.Decimal) mone
 // than −1. The result carries the real amount's currency.
 //
 // It returns ErrInvalidInflationRate if 1+inflation is not positive.
-func NominalValue(realAmount money.Money, inflation, periods decimal.Decimal) (money.Money, error) {
+func NominalValue(realAmount money.Money, inflation, periods decimal.Decimal) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	factor, err := priceLevelFactor(inflation, periods)
 	if err != nil {
 		return money.Money{}, err
@@ -84,7 +89,9 @@ func MustNominalValue(realAmount money.Money, inflation, periods decimal.Decimal
 // −1. The result is a decimal.Decimal fraction.
 //
 // It returns ErrInvalidInflationRate if 1+inflation is not positive.
-func RealRate(nominalRate, inflation decimal.Decimal) (decimal.Decimal, error) {
+func RealRate(nominalRate, inflation decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	onePlusInflation := decimal.One.Add(inflation)
 	if !onePlusInflation.IsPos() {
 		return decimal.Decimal{}, ErrInvalidInflationRate

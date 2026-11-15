@@ -2,6 +2,7 @@ package loans
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -23,7 +24,9 @@ var (
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, ErrNonPositivePrincipal,
 // or ErrInvalidRate on invalid terms.
-func (l Config) Payment() (money.Money, error) {
+func (l Config) Payment() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	rate, n, err := l.terms()
 	if err != nil {
 		return money.Money{}, err
@@ -48,7 +51,9 @@ func (l Config) MustPayment() money.Money {
 //
 // It returns ErrNegativeFees if the fees are negative and
 // ErrFeesExceedPrincipal if they leave nothing to finance.
-func (l Config) NetProceeds() (money.Money, error) {
+func (l Config) NetProceeds() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if l.err != nil {
 		return money.Money{}, l.err
 	}
@@ -85,7 +90,9 @@ func (l Config) MustNetProceeds() money.Money {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, ErrNonPositivePrincipal,
 // or ErrInvalidRate on invalid terms.
-func (l Config) EffectiveAnnualRate() (decimal.Decimal, error) {
+func (l Config) EffectiveAnnualRate() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rate, _, err := l.terms()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -116,7 +123,9 @@ func (l Config) MustEffectiveAnnualRate() decimal.Decimal {
 //
 // It returns ErrNegativeFees, ErrFeesExceedPrincipal, the term errors of
 // PeriodicRate, and ErrNoConvergence if no rate reproduces the net proceeds.
-func (l Config) PeriodicAPR() (decimal.Decimal, error) {
+func (l Config) PeriodicAPR() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rate, n, err := l.terms()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -156,7 +165,9 @@ func (l Config) MustPeriodicAPR() decimal.Decimal {
 // under US Regulation Z and the EU's APRC-equivalent nominal figure.
 //
 // It returns the same errors as PeriodicAPR.
-func (l Config) APR() (decimal.Decimal, error) {
+func (l Config) APR() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periodic, err := l.PeriodicAPR()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -189,7 +200,9 @@ func (l Config) MustAPR() decimal.Decimal {
 // comparing loans that pay on different schedules.
 //
 // It returns the same errors as PeriodicAPR.
-func (l Config) EffectiveAPR() (decimal.Decimal, error) {
+func (l Config) EffectiveAPR() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periodic, err := l.PeriodicAPR()
 	if err != nil {
 		return decimal.Decimal{}, err

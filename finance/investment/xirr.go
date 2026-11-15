@@ -1,6 +1,9 @@
 package investment
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // XIRR returns the internal rate of return of cash flows that occur on specific
 // dates: the annual rate at which their date-based net present value (XNPV) is
@@ -15,7 +18,9 @@ import "github.com/yeferson59/gofinance/v2/decimal"
 // mixed currencies, ErrDatesBeforeBase if a date precedes the first,
 // ErrNoSignChange when no sign change is present, and ErrNoConvergence if no
 // root can be located.
-func XIRR(flows []DatedCashFlow) (decimal.Decimal, error) {
+func XIRR(flows []DatedCashFlow) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	amounts, times, _, err := datedFlows(flows)
 	if err != nil {
 		return decimal.Decimal{}, err

@@ -2,6 +2,7 @@ package compoundinterest
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -222,7 +223,9 @@ func (c CompoundConfig) Daily() CompoundConfig {
 //	    Periods(12).
 //	    Monthly().
 //	    Build()
-func (c CompoundConfig) Build() (CompoundInterest, error) {
+func (c CompoundConfig) Build() (_ CompoundInterest, err error) {
+	defer guard.Recover(&err)
+
 	period, err := NewPeriod(decimal.MustFromFloat64(float64(c.periods)), c.frequency)
 	if err != nil {
 		return CompoundInterest{}, err

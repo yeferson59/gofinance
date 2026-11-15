@@ -2,6 +2,7 @@ package investment
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -13,7 +14,9 @@ import (
 // rate must be strictly positive. The result carries the payment's currency.
 //
 // It returns ErrNonPositiveRate if rate is not positive.
-func Perpetuity(payment money.Money, rate decimal.Decimal) (money.Money, error) {
+func Perpetuity(payment money.Money, rate decimal.Decimal) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if !rate.IsPos() {
 		return money.Money{}, ErrNonPositiveRate
 	}
@@ -45,7 +48,9 @@ func MustPerpetuity(payment money.Money, rate decimal.Decimal) money.Money {
 // series to converge. The result carries the payment's currency.
 //
 // It returns ErrRateBelowGrowth if rate ≤ growth.
-func GrowingPerpetuity(payment money.Money, rate, growth decimal.Decimal) (money.Money, error) {
+func GrowingPerpetuity(payment money.Money, rate, growth decimal.Decimal) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if rate.LessThanOrEqual(growth) {
 		return money.Money{}, ErrRateBelowGrowth
 	}

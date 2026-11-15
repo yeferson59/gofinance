@@ -3,6 +3,8 @@ package daycount
 import (
 	"time"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
@@ -110,7 +112,9 @@ func thirty360Days(start, end time.Time) int {
 //
 // It returns ErrEndBeforeStart if end precedes start and ErrInvalidConvention
 // for an unknown convention.
-func Days(start, end time.Time, conv Convention) (int, error) {
+func Days(start, end time.Time, conv Convention) (_ int, err error) {
+	defer guard.Recover(&err)
+
 	s := normalize(start)
 	e := normalize(end)
 
@@ -134,7 +138,9 @@ func Days(start, end time.Time, conv Convention) (int, error) {
 //
 // It returns ErrEndBeforeStart if end precedes start and ErrInvalidConvention
 // for an unknown convention.
-func YearFraction(start, end time.Time, conv Convention) (decimal.Decimal, error) {
+func YearFraction(start, end time.Time, conv Convention) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	s := normalize(start)
 	e := normalize(end)
 

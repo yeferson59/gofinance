@@ -62,6 +62,20 @@ The rules, from the bottom up:
    build on `compoundinterest`. Root-finding is the deliberate exception:
    each package keeps its own bracketing search in `root.go` or next to the
    solve it serves, because the residual being bisected is domain-specific.
+6. **A function that returns an error never panics.** Formulas in
+   `finance/*` use the decimal engine's panicking helpers (`Add`, `Mul`,
+   `MustDiv`, `Money.Add`, …) because threading an error through every
+   intermediate step would bury the math. Every exported function or method
+   there that returns an error therefore opens with
+   `defer guard.Recover(&err)` (`internal/guard`), which turns a panic
+   carrying an error value — overflow, division by zero, a currency
+   mismatch — into that function's error. Runtime errors (nil dereference,
+   index out of range) still panic: they are bugs, not out-of-range input.
+   `internal/guard` imports nothing from this module, so it adds no edge to
+   the layering above. `invariants/guard_coverage_test.go` fails if a new
+   exported function forgets the guard; the fluent builders' setters, which
+   cannot return an error, record the first invalid input instead and the
+   terminal call reports it.
 
 ## History: what the 2026-07 restructuring changed
 

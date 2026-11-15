@@ -2,6 +2,7 @@ package investment
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -16,7 +17,9 @@ import (
 //
 // It returns ErrNoCashFlows for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, and ErrInvalidRate if rate ≤ −1.
-func NPV(rate decimal.Decimal, cashFlows []money.Money) (money.Money, error) {
+func NPV(rate decimal.Decimal, cashFlows []money.Money) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	amounts, currency, err := decimalFlows(cashFlows)
 	if err != nil {
 		return money.Money{}, err

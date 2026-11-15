@@ -2,6 +2,7 @@ package annuities
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -35,7 +36,9 @@ type InvestmentSchedule struct {
 // a single final value.
 //
 // It returns ErrInvalidPeriods if nper isn't a positive whole number.
-func BuildInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal) ([]InvestmentSchedule, error) {
+func BuildInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal) (_ []InvestmentSchedule, err error) {
+	defer guard.Recover(&err)
+
 	return buildInvestmentSchedule(principal, contribution, rate, nper, false)
 }
 
@@ -43,7 +46,9 @@ func BuildInvestmentSchedule(principal, contribution money.Money, rate decimal.D
 // assumes each contribution is made at the beginning of its period (annuity
 // due) instead of the end, so it also earns interest during its own first
 // period: Balance[p] = (Balance[p-1] + contribution) × (1+rate).
-func BuildAnticipateInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal) ([]InvestmentSchedule, error) {
+func BuildAnticipateInvestmentSchedule(principal, contribution money.Money, rate decimal.Decimal, nper decimal.Decimal) (_ []InvestmentSchedule, err error) {
+	defer guard.Recover(&err)
+
 	return buildInvestmentSchedule(principal, contribution, rate, nper, true)
 }
 

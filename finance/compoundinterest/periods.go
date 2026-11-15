@@ -1,6 +1,9 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // Periods calculates the number of compounding periods needed to reach a target future value
 // from a present value at a given interest rate.
@@ -26,7 +29,9 @@ import "github.com/yeferson59/gofinance/v2/decimal"
 //	)
 //	periods, _ := ci.Periods()
 //	// periods contains how many periods needed to reach $1500 from $1000
-func (c CompoundInterest) Periods() (decimal.Decimal, error) {
+func (c CompoundInterest) Periods() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if periodValue, _, err := c.periods.getPeriod(); err == nil && !periodValue.IsZero() {
 		return periodValue, nil
 	}

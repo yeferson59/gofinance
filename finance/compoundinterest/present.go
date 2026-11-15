@@ -2,6 +2,7 @@ package compoundinterest
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -29,7 +30,9 @@ import (
 //	)
 //	present, _ := ci.Present()
 //	// present contains the amount needed today to reach $1500
-func (c CompoundInterest) Present() (money.Money, error) {
+func (c CompoundInterest) Present() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if !c.present.IsZero() {
 		return c.present, nil
 	}

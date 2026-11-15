@@ -2,6 +2,7 @@ package simpleinterest
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -319,7 +320,9 @@ func (s SimpleConfig) Build() SimpleInterest {
 //	    Periods(18).
 //	    Months().
 //	    FutureValue()
-func (s SimpleConfig) FutureValue() (money.Money, error) {
+func (s SimpleConfig) FutureValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	si := s.Build()
 	return si.FutureWithRateInterest()
 }
@@ -341,7 +344,9 @@ func (s SimpleConfig) FutureValue() (money.Money, error) {
 //	    Periods(18).
 //	    Months().
 //	    PresentValue()
-func (s SimpleConfig) PresentValue() (money.Money, error) {
+func (s SimpleConfig) PresentValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	si := s.Build()
 	return si.PresentWithFuture()
 }

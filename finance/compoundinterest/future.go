@@ -2,6 +2,7 @@ package compoundinterest
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -29,7 +30,9 @@ import (
 //	)
 //	future, _ := ci.Future()
 //	// future contains the calculated future value
-func (c CompoundInterest) Future() (money.Money, error) {
+func (c CompoundInterest) Future() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	if !c.future.IsZero() {
 		return c.future, nil
 	}

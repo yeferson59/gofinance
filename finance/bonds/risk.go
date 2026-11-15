@@ -1,6 +1,9 @@
 package bonds
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // MacaulayDuration returns the Macaulay duration in years: the present-value
 // weighted average time to the bond's cash flows, discounted at the configured
@@ -10,7 +13,9 @@ import "github.com/yeferson59/gofinance/v2/decimal"
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, or ErrInvalidYield on
 // invalid terms.
-func (b Config) MacaulayDuration() (decimal.Decimal, error) {
+func (b Config) MacaulayDuration() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	y, err := b.periodicYield()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -45,7 +50,9 @@ func (b Config) MustMacaulayDuration() decimal.Decimal {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, or ErrInvalidYield on
 // invalid terms.
-func (b Config) ModifiedDuration() (decimal.Decimal, error) {
+func (b Config) ModifiedDuration() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	macaulay, err := b.MacaulayDuration()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -78,7 +85,9 @@ func (b Config) MustModifiedDuration() decimal.Decimal {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, or ErrInvalidYield on
 // invalid terms.
-func (b Config) Convexity() (decimal.Decimal, error) {
+func (b Config) Convexity() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	y, err := b.periodicYield()
 	if err != nil {
 		return decimal.Decimal{}, err

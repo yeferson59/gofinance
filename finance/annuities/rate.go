@@ -3,6 +3,8 @@ package annuities
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
@@ -199,7 +201,9 @@ func futureValueDue(payment, rate, periods decimal.Decimal) (decimal.Decimal, er
 //	ann, _ := New(500, 10000, 0, period, rate)
 //	rate, err := ann.RateWithPresent()
 //	// rate is the periodic rate at which $500 payments amortize $10,000
-func (a Annuity) RateWithPresent() (decimal.Decimal, error) {
+func (a Annuity) RateWithPresent() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -233,7 +237,9 @@ func (a Annuity) RateWithPresent() (decimal.Decimal, error) {
 //	ann, _ := New(500, 0, 10000, period, rate)
 //	rate, err := ann.RateWithFuture()
 //	// rate is the periodic rate at which $500 payments accumulate to $10,000
-func (a Annuity) RateWithFuture() (decimal.Decimal, error) {
+func (a Annuity) RateWithFuture() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -255,7 +261,9 @@ func (a Annuity) RateWithFuture() (decimal.Decimal, error) {
 // AnticipateRateWithPresent is like RateWithPresent, but assumes each payment
 // is made at the beginning of its period (annuity due) instead of the end:
 // PV = PMT × [1-(1+i)^-n]/i × (1+i).
-func (a Annuity) AnticipateRateWithPresent() (decimal.Decimal, error) {
+func (a Annuity) AnticipateRateWithPresent() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -277,7 +285,9 @@ func (a Annuity) AnticipateRateWithPresent() (decimal.Decimal, error) {
 // AnticipateRateWithFuture is like RateWithFuture, but assumes each payment
 // is made at the beginning of its period (annuity due) instead of the end:
 // FV = PMT × [(1+i)^n-1]/i × (1+i).
-func (a Annuity) AnticipateRateWithFuture() (decimal.Decimal, error) {
+func (a Annuity) AnticipateRateWithFuture() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periods, _, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return decimal.Decimal{}, err

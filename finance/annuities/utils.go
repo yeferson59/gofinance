@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/money"
 )
@@ -37,7 +39,9 @@ type Schedule struct {
 // It returns ErrCurrencyMismatch if pv and payment aren't in the same
 // currency, ErrInvalidPeriods if nper isn't a positive whole number, and
 // wraps any error from parsing nper as an integer.
-func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, nper decimal.Decimal) ([]Schedule, error) {
+func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, nper decimal.Decimal) (_ []Schedule, err error) {
+	defer guard.Recover(&err)
+
 	if pv.GetCurrency() != payment.GetCurrency() {
 		return nil, money.ErrCurrencyMismatch
 	}
@@ -99,6 +103,8 @@ func BuildSchedule(pv money.Money, rate decimal.Decimal, payment money.Money, np
 // WriteCSV writes rows to filenamePath as CSV. It is a convenience wrapper
 // around WriteCSVTo for the common file-on-disk case.
 func WriteCSV(filenamePath string, headers []string, rows []Schedule) (err error) {
+	defer guard.Recover(&err)
+
 	f, err := os.Create(filenamePath)
 	if err != nil {
 		return err
@@ -118,6 +124,8 @@ func WriteCSV(filenamePath string, headers []string, rows []Schedule) (err error
 // destination — a file, an HTTP response, a buffer — so the schedule
 // domain logic stays free of filesystem concerns.
 func WriteCSVTo(out io.Writer, headers []string, rows []Schedule) (err error) {
+	defer guard.Recover(&err)
+
 	bw := bufio.NewWriterSize(out, 65536)
 	defer func() {
 		if ferr := bw.Flush(); err == nil {

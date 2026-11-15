@@ -1,6 +1,9 @@
 package tvm
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // factors returns (1+rate)ᴺ and the coefficient that multiplies PMT in the
 // TVM equation, (1 + rate·type)·((1+rate)ᴺ − 1)/rate, using the annuity-timing
@@ -38,7 +41,9 @@ func (t Config) factors(rate decimal.Decimal) (pow, pmtCoef decimal.Decimal, err
 // SolveFV returns the future value implied by the other four variables:
 //
 //	FV = −(PV·(1+i)ᴺ + PMT·coef)
-func (t Config) SolveFV() (decimal.Decimal, error) {
+func (t Config) SolveFV() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -85,7 +90,9 @@ func (t Config) MustSolveFV() decimal.Decimal {
 // SolvePV returns the present value implied by the other four variables:
 //
 //	PV = −(FV + PMT·coef) / (1+i)ᴺ
-func (t Config) SolvePV() (decimal.Decimal, error) {
+func (t Config) SolvePV() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -120,7 +127,9 @@ func (t Config) MustSolvePV() decimal.Decimal {
 //
 // It returns ErrNoSolution when the payment coefficient is zero (for example
 // when N is zero).
-func (t Config) SolvePMT() (decimal.Decimal, error) {
+func (t Config) SolvePMT() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -168,7 +177,9 @@ func (t Config) MustSolvePMT() decimal.Decimal {
 // the inputs admit no finite, positive-argument logarithm (for example a zero
 // payment at a zero rate, or values that force a non-positive growth factor),
 // or when the only root is negative.
-func (t Config) SolveN() (decimal.Decimal, error) {
+func (t Config) SolveN() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periods, err := t.solveN()
 	if err != nil {
 		return decimal.Decimal{}, err

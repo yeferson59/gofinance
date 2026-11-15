@@ -37,6 +37,8 @@ package compoundinterest
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/term"
 	"github.com/yeferson59/gofinance/v2/money"
@@ -77,7 +79,9 @@ type Period struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func NewPeriod(value decimal.Decimal, compoundingFrequency CompoundingFrequency) (Period, error) {
+func NewPeriod(value decimal.Decimal, compoundingFrequency CompoundingFrequency) (_ Period, err error) {
+	defer guard.Recover(&err)
+
 	if value.IsNeg() {
 		return Period{}, errors.New("value periods must be greater or equal to zero")
 	}
@@ -134,7 +138,9 @@ type RateInterest struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func NewRateInterest(value decimal.Decimal, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (RateInterest, error) {
+func NewRateInterest(value decimal.Decimal, compoundingFrequency CompoundingFrequency, typeRate TypeRate) (_ RateInterest, err error) {
+	defer guard.Recover(&err)
+
 	if value.IsNeg() {
 		return RateInterest{}, errors.New("invalid value for rate interest must be greater or equal to zero")
 	}
@@ -182,7 +188,9 @@ type CompoundInterest struct {
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-func New(present, future money.Money, rateInterest RateInterest, periods Period) (CompoundInterest, error) {
+func New(present, future money.Money, rateInterest RateInterest, periods Period) (_ CompoundInterest, err error) {
+	defer guard.Recover(&err)
+
 	return CompoundInterest{
 		present:      present,
 		future:       future,
@@ -200,7 +208,9 @@ func New(present, future money.Money, rateInterest RateInterest, periods Period)
 //   - The adjusted number of periods
 //   - The equivalent periodic rate
 //   - An error if valid values cannot be obtained
-func (c CompoundInterest) GetEqualsRateInterestPeriods() (decimal.Decimal, decimal.Decimal, error) {
+func (c CompoundInterest) GetEqualsRateInterestPeriods() (_ decimal.Decimal, _ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	periodValue, compoundingFrequency, err := c.periods.getPeriod()
 	if err != nil {
 		return decimal.Decimal{}, decimal.Decimal{}, err

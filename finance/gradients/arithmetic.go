@@ -3,6 +3,7 @@ package gradients
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -33,7 +34,9 @@ type Arithmetic struct {
 //	    money.MustMoneyFromFloat64(1000, money.USD),
 //	    money.MustMoneyFromFloat64(100, money.USD),
 //	    period, rate)
-func NewArithmetic(firstPayment, gradient money.Money, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (Arithmetic, error) {
+func NewArithmetic(firstPayment, gradient money.Money, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (_ Arithmetic, err error) {
+	defer guard.Recover(&err)
+
 	if firstPayment.GetCurrency() != gradient.GetCurrency() {
 		return Arithmetic{}, money.ErrCurrencyMismatch
 	}
@@ -71,7 +74,9 @@ func (g Arithmetic) zeroRateValue(periods decimal.Decimal) money.Money {
 // the number of periods.
 //
 // At a zero rate this reduces to the sum of the payments, A×n + G×n(n−1)/2.
-func (g Arithmetic) Present() (money.Money, error) {
+func (g Arithmetic) Present() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := g.periodsAndRate()
 	if err != nil {
 		return money.Money{}, err
@@ -111,7 +116,9 @@ func (g Arithmetic) Present() (money.Money, error) {
 // At a zero rate this reduces to the sum of the payments, A×n + G×n(n−1)/2,
 // the same as Present: with no interest there is nothing to move the money
 // through time.
-func (g Arithmetic) Future() (money.Money, error) {
+func (g Arithmetic) Future() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := g.periodsAndRate()
 	if err != nil {
 		return money.Money{}, err

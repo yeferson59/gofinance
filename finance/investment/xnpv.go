@@ -2,6 +2,7 @@ package investment
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -18,7 +19,9 @@ import (
 // It returns ErrNoCashFlows for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, ErrDatesBeforeBase if a date precedes the first, and
 // ErrInvalidRate if rate ≤ −1.
-func XNPV(rate decimal.Decimal, flows []DatedCashFlow) (money.Money, error) {
+func XNPV(rate decimal.Decimal, flows []DatedCashFlow) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	amounts, times, currency, err := datedFlows(flows)
 	if err != nil {
 		return money.Money{}, err

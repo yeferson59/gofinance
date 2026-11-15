@@ -1,6 +1,9 @@
 package tvm
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 const maxRateBisectIter = 200
 
@@ -34,7 +37,9 @@ func (t Config) residual(rate decimal.Decimal) (decimal.Decimal, error) {
 //
 // It returns ErrNoConvergence when no rate in the searched range balances the
 // equation (which also happens when the cash flows never cross zero).
-func (t Config) SolveRate() (decimal.Decimal, error) {
+func (t Config) SolveRate() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	var (
 		prevRate  decimal.Decimal
 		prevRes   decimal.Decimal

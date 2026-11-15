@@ -20,12 +20,12 @@ import (
 //
 //	a function that returns an error must never panic.
 //
-// It says nothing about the fluent builders' float64 setters — Face, PMT,
-// ExtraPayment and friends. Those return a Config, not an error, so a value
-// the decimal engine cannot represent has no channel but a panic, which is the
-// documented contract of the Must-style constructors behind them. The sweeps
-// therefore only feed setters values that are exactly representable, and hold
-// the terminal, error-returning calls to the no-panic rule.
+// The fluent builders' float64 setters return a Config, not an error, so they
+// record the first value the decimal engine cannot represent and the
+// terminal, error-returning call reports it. The sweeps hold those terminal
+// calls to the no-panic rule; every exported error-returning function in
+// finance/* defers internal/guard.Recover to keep it (ARCHITECTURE.md, rule
+// 6), and guard_coverage_test.go checks that none forgets to.
 //
 // This exists because Phase 2 found four separate panics of exactly this shape
 // (TESTING_PLAN.md §2.8), all from the panicking decimal helpers used inside

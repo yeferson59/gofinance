@@ -1,11 +1,16 @@
 package returns
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // Mean returns the arithmetic mean of a series of per-period returns.
 //
 // It returns ErrNoReturns for an empty slice.
-func Mean(rates []decimal.Decimal) (decimal.Decimal, error) {
+func Mean(rates []decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if len(rates) == 0 {
 		return decimal.Decimal{}, ErrNoReturns
 	}
@@ -44,7 +49,9 @@ func MustMean(rates []decimal.Decimal) decimal.Decimal {
 // a sample of a longer history — the usual case for realized performance.
 //
 // It returns ErrInsufficientReturns when given fewer than two returns.
-func Variance(rates []decimal.Decimal) (decimal.Decimal, error) {
+func Variance(rates []decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if len(rates) < 2 {
 		return decimal.Decimal{}, ErrInsufficientReturns
 	}
@@ -67,7 +74,9 @@ func MustVariance(rates []decimal.Decimal) decimal.Decimal {
 // population of interest rather than a sample of it.
 //
 // It returns ErrNoReturns for an empty slice.
-func PopulationVariance(rates []decimal.Decimal) (decimal.Decimal, error) {
+func PopulationVariance(rates []decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if len(rates) == 0 {
 		return decimal.Decimal{}, ErrNoReturns
 	}
@@ -91,7 +100,9 @@ func MustPopulationVariance(rates []decimal.Decimal) decimal.Decimal {
 // as the returns — annualize it with AnnualizedVolatility.
 //
 // It returns ErrInsufficientReturns when given fewer than two returns.
-func Volatility(rates []decimal.Decimal) (decimal.Decimal, error) {
+func Volatility(rates []decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	v, err := Variance(rates)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -114,7 +125,9 @@ func MustVolatility(rates []decimal.Decimal) decimal.Decimal {
 // of returns: the square root of PopulationVariance.
 //
 // It returns ErrNoReturns for an empty slice.
-func PopulationVolatility(rates []decimal.Decimal) (decimal.Decimal, error) {
+func PopulationVolatility(rates []decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	v, err := PopulationVariance(rates)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -143,7 +156,9 @@ func MustPopulationVolatility(rates []decimal.Decimal) decimal.Decimal {
 // which is the standard convention for quoting volatility.
 //
 // It returns ErrNonPositivePeriods if periodsPerYear is not positive.
-func AnnualizedVolatility(volatility, periodsPerYear decimal.Decimal) (decimal.Decimal, error) {
+func AnnualizedVolatility(volatility, periodsPerYear decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	scale, err := timeScale(periodsPerYear)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -174,7 +189,9 @@ func MustAnnualizedVolatility(volatility, periodsPerYear decimal.Decimal) decima
 //
 // It returns ErrInsufficientReturns when given fewer than two returns and
 // ErrZeroVolatility when the returns never vary.
-func SharpeRatio(rates []decimal.Decimal, riskFree decimal.Decimal) (decimal.Decimal, error) {
+func SharpeRatio(rates []decimal.Decimal, riskFree decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	mean, err := Mean(rates)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -217,7 +234,9 @@ func MustSharpeRatio(rates []decimal.Decimal, riskFree decimal.Decimal) decimal.
 //
 // It returns the errors of SharpeRatio plus ErrNonPositivePeriods if
 // periodsPerYear is not positive.
-func AnnualizedSharpeRatio(rates []decimal.Decimal, riskFree, periodsPerYear decimal.Decimal) (decimal.Decimal, error) {
+func AnnualizedSharpeRatio(rates []decimal.Decimal, riskFree, periodsPerYear decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	sharpe, err := SharpeRatio(rates, riskFree)
 	if err != nil {
 		return decimal.Decimal{}, err

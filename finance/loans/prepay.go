@@ -3,6 +3,7 @@ package loans
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/annuities"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -60,7 +61,9 @@ type Savings struct {
 //
 // It returns the term errors of PeriodicRate and ErrNegativeExtra if the extra
 // payment is negative.
-func (l Config) Payoff() (Payoff, error) {
+func (l Config) Payoff() (_ Payoff, err error) {
+	defer guard.Recover(&err)
+
 	rate, n, err := l.terms()
 	if err != nil {
 		return Payoff{}, err
@@ -92,7 +95,9 @@ func (l Config) MustPayoff() Payoff {
 // comparable. With no extra payment configured the savings are zero.
 //
 // It returns the same errors as Payoff.
-func (l Config) Savings() (Savings, error) {
+func (l Config) Savings() (_ Savings, err error) {
+	defer guard.Recover(&err)
+
 	accelerated, err := l.Payoff()
 	if err != nil {
 		return Savings{}, err

@@ -2,10 +2,13 @@ package annuities
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
-func (a Annuity) Present() (money.Money, error) {
+func (a Annuity) Present() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
@@ -31,7 +34,9 @@ func (a Annuity) Present() (money.Money, error) {
 	return money.NewFromDecimal(a.value.GetDecimal().Mul(quotient), a.currency), nil
 }
 
-func (a Annuity) AnticipatePresent() (money.Money, error) {
+func (a Annuity) AnticipatePresent() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err

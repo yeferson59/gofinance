@@ -2,6 +2,7 @@ package investment
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -44,7 +45,9 @@ var (
 // It returns ErrNoCashFlows for an empty slice, money.ErrCurrencyMismatch on
 // mixed currencies, ErrNoSignChange when no sign change is present, and
 // ErrNoConvergence if no root can be located.
-func IRR(cashFlows []money.Money) (decimal.Decimal, error) {
+func IRR(cashFlows []money.Money) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	amounts, _, err := decimalFlows(cashFlows)
 	if err != nil {
 		return decimal.Decimal{}, err

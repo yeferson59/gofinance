@@ -3,6 +3,7 @@ package loans
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/investment"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -56,7 +57,9 @@ type Comparison struct {
 // currencies, ErrFrequencyMismatch when they pay on different schedules,
 // ErrNoBreakEven when the savings never recover the closing costs, and any term
 // error of either loan.
-func Compare(current, offer Config) (Comparison, error) {
+func Compare(current, offer Config) (_ Comparison, err error) {
+	defer guard.Recover(&err)
+
 	if current.principal.GetCurrency() != offer.principal.GetCurrency() {
 		return Comparison{}, money.ErrCurrencyMismatch
 	}

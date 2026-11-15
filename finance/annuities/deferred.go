@@ -2,6 +2,7 @@ package annuities
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -31,7 +32,9 @@ func (a Annuity) discountByPeriods(value money.Money, count int) (money.Money, e
 //	PV_deferred = PV_ordinary / (1+i)^deferPeriods
 //
 // deferPeriods = 0 reduces to Present().
-func (a Annuity) PresentDeferred(deferPeriods int) (money.Money, error) {
+func (a Annuity) PresentDeferred(deferPeriods int) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	present, err := a.Present()
 	if err != nil {
 		return money.Money{}, err
@@ -43,7 +46,9 @@ func (a Annuity) PresentDeferred(deferPeriods int) (money.Money, error) {
 // AnticipatePresentDeferred is like PresentDeferred, but assumes each
 // payment, once the grace period ends, is made at the beginning of its
 // period (annuity due) instead of the end.
-func (a Annuity) AnticipatePresentDeferred(deferPeriods int) (money.Money, error) {
+func (a Annuity) AnticipatePresentDeferred(deferPeriods int) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	present, err := a.AnticipatePresent()
 	if err != nil {
 		return money.Money{}, err
@@ -60,7 +65,9 @@ func (a Annuity) AnticipatePresentDeferred(deferPeriods int) (money.Money, error
 //	PMT = PV × (1+i)^deferPeriods × i(1+i)^n / [(1+i)^n - 1]
 //
 // deferPeriods = 0 reduces to PaymentFromPresentValue().
-func (a Annuity) PaymentFromPresentValueDeferred(deferPeriods int) (money.Money, error) {
+func (a Annuity) PaymentFromPresentValueDeferred(deferPeriods int) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err

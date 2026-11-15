@@ -3,13 +3,17 @@ package simpleinterest
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
 // Periods calculates the number of periods using interest, present value, and rate.
 // Formula: Periods = Interest / (Present × Rate)
 // Returns an error if present or rate is zero.
-func (s SimpleInterest) Periods() (decimal.Decimal, error) {
+func (s SimpleInterest) Periods() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if s.err != nil {
 		return decimal.Decimal{}, s.err
 	}
@@ -24,7 +28,9 @@ func (s SimpleInterest) Periods() (decimal.Decimal, error) {
 // PeriodsWithPresentAndFuture calculates the number of periods using future, present value, and rate.
 // Formula: Periods = (Future / Present - 1) / Rate
 // Returns an error if present or rate is zero.
-func (s SimpleInterest) PeriodsWithPresentAndFuture() (decimal.Decimal, error) {
+func (s SimpleInterest) PeriodsWithPresentAndFuture() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if s.err != nil {
 		return decimal.Decimal{}, s.err
 	}

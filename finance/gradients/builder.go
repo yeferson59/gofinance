@@ -3,6 +3,7 @@ package gradients
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -185,7 +186,9 @@ func (a ArithmeticConfig) Annually() ArithmeticConfig {
 }
 
 // Build creates the Arithmetic series from the configured parameters.
-func (a ArithmeticConfig) Build() (Arithmetic, error) {
+func (a ArithmeticConfig) Build() (_ Arithmetic, err error) {
+	defer guard.Recover(&err)
+
 	period, rateInterest, err := a.buildPeriodAndRate()
 	if err != nil {
 		return Arithmetic{}, err
@@ -205,7 +208,9 @@ func (a ArithmeticConfig) MustBuild() Arithmetic {
 }
 
 // Present builds the series and returns its present value.
-func (a ArithmeticConfig) Present() (money.Money, error) {
+func (a ArithmeticConfig) Present() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	g, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -225,7 +230,9 @@ func (a ArithmeticConfig) MustPresent() money.Money {
 }
 
 // Future builds the series and returns its future value.
-func (a ArithmeticConfig) Future() (money.Money, error) {
+func (a ArithmeticConfig) Future() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	g, err := a.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -325,7 +332,9 @@ func (g GeometricConfig) Annually() GeometricConfig {
 }
 
 // Build creates the Geometric series from the configured parameters.
-func (g GeometricConfig) Build() (Geometric, error) {
+func (g GeometricConfig) Build() (_ Geometric, err error) {
+	defer guard.Recover(&err)
+
 	period, rateInterest, err := g.buildPeriodAndRate()
 	if err != nil {
 		return Geometric{}, err
@@ -345,7 +354,9 @@ func (g GeometricConfig) MustBuild() Geometric {
 }
 
 // Present builds the series and returns its present value.
-func (g GeometricConfig) Present() (money.Money, error) {
+func (g GeometricConfig) Present() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	series, err := g.Build()
 	if err != nil {
 		return money.Money{}, err
@@ -365,7 +376,9 @@ func (g GeometricConfig) MustPresent() money.Money {
 }
 
 // Future builds the series and returns its future value.
-func (g GeometricConfig) Future() (money.Money, error) {
+func (g GeometricConfig) Future() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	series, err := g.Build()
 	if err != nil {
 		return money.Money{}, err

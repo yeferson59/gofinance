@@ -3,6 +3,8 @@ package bonds
 import (
 	"time"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/daycount"
 	"github.com/yeferson59/gofinance/v2/money"
@@ -19,7 +21,9 @@ import (
 //
 // It returns daycount errors for out-of-order dates and ErrInvalidPeriods if
 // the coupon period has zero length.
-func AccruedInterest(couponPerPeriod money.Money, lastCoupon, settlement, nextCoupon time.Time, conv daycount.Convention) (money.Money, error) {
+func AccruedInterest(couponPerPeriod money.Money, lastCoupon, settlement, nextCoupon time.Time, conv daycount.Convention) (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	accruedDays, err := daycount.Days(lastCoupon, settlement, conv)
 	if err != nil {
 		return money.Money{}, err

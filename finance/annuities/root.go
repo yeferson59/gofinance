@@ -4,6 +4,7 @@ package annuities
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/compoundinterest"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -23,7 +24,9 @@ type Annuity struct {
 // The amounts that are set must share one currency; New returns
 // money.ErrCurrencyMismatch otherwise, since an annuity denominated in two
 // currencies has no meaning.
-func New(value, present, future money.Money, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (Annuity, error) {
+func New(value, present, future money.Money, period compoundinterest.Period, rateInterest compoundinterest.RateInterest) (_ Annuity, err error) {
+	defer guard.Recover(&err)
+
 	currency, err := money.ResolveCurrency(value, present, future)
 	if err != nil {
 		return Annuity{}, err
@@ -91,7 +94,9 @@ func dueFactor(factor, rate decimal.Decimal) (decimal.Decimal, error) {
 //	PMT = PV × i(1+i)^n / [(1+i)^n - 1]
 //
 // At a zero rate this reduces to PV/n.
-func (a Annuity) PaymentFromPresentValue() (money.Money, error) {
+func (a Annuity) PaymentFromPresentValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
@@ -117,7 +122,9 @@ func (a Annuity) PaymentFromPresentValue() (money.Money, error) {
 //	PMT = FV × i / [(1+i)^n - 1]
 //
 // At a zero rate this reduces to FV/n.
-func (a Annuity) PaymentFromFutureValue() (money.Money, error) {
+func (a Annuity) PaymentFromFutureValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
@@ -147,7 +154,9 @@ func (a Annuity) PaymentFromFutureValue() (money.Money, error) {
 // At a zero rate this reduces to PV/n, the same as the ordinary annuity:
 // with no interest, when the payment falls inside the period makes no
 // difference.
-func (a Annuity) AnticipatePaymentFromPresentValue() (money.Money, error) {
+func (a Annuity) AnticipatePaymentFromPresentValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err
@@ -179,7 +188,9 @@ func (a Annuity) AnticipatePaymentFromPresentValue() (money.Money, error) {
 // This is PaymentFromFutureValue divided by (1+i).
 //
 // At a zero rate this reduces to FV/n.
-func (a Annuity) AnticipatePaymentFromFutureValue() (money.Money, error) {
+func (a Annuity) AnticipatePaymentFromFutureValue() (_ money.Money, err error) {
+	defer guard.Recover(&err)
+
 	periods, rateInterest, err := a.compoundInterest.GetEqualsRateInterestPeriods()
 	if err != nil {
 		return money.Money{}, err

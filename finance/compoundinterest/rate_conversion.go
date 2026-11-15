@@ -1,6 +1,9 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // periodicEffective returns the effective periodic rate implied by rt — the
 // rate actually applied at the end of each compounding period — together with
@@ -107,7 +110,9 @@ func effectiveToAnticipated(periodic decimal.Decimal) (decimal.Decimal, error) {
 //
 //	rate, _ := NewRateInterest(0.12, Monthly, RateEffectyNominal)
 //	periodicRate, _ := rate.RatePeriodic()  // Converts 12% nominal to ~1% monthly
-func (rt RateInterest) RatePeriodic() (decimal.Decimal, error) {
+func (rt RateInterest) RatePeriodic() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if rt.typeRate == RateEffectyPeriodic {
 		return rt.value, nil
 	}
@@ -126,7 +131,9 @@ func (rt RateInterest) RatePeriodic() (decimal.Decimal, error) {
 //   - The nominal interest rate as a Decimal
 //   - ErrInvalidTypeRate for an unknown rate type, ErrInvalidAnticipatedRate for
 //     an anticipated rate of 100% or more, or an error if the conversion fails
-func (rt RateInterest) RateNominal() (decimal.Decimal, error) {
+func (rt RateInterest) RateNominal() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if rt.typeRate == RateEffectyNominal {
 		return rt.value, nil
 	}
@@ -149,7 +156,9 @@ func (rt RateInterest) RateNominal() (decimal.Decimal, error) {
 //   - The effective annual interest rate as a Decimal
 //   - ErrInvalidTypeRate for an unknown rate type, ErrInvalidAnticipatedRate for
 //     an anticipated rate of 100% or more, or an error if the conversion fails
-func (rt RateInterest) RateEffectyAnnually() (decimal.Decimal, error) {
+func (rt RateInterest) RateEffectyAnnually() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if rt.typeRate == RateEffectyAnnually {
 		return rt.value, nil
 	}
@@ -183,7 +192,9 @@ func (rt RateInterest) RateEffectyAnnually() (decimal.Decimal, error) {
 //
 //	rate, _ := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
 //	quarterlyRate, _ := rate.RatePeriodicToPeriodic(Quarterly)
-func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (decimal.Decimal, error) {
+func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	currentPeriodicRate, currentPeriodsPerYear, err := rt.periodicEffective()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -216,7 +227,9 @@ func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency Compoundin
 // Returns:
 //   - The converted nominal rate for the new frequency as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingFrequency) (decimal.Decimal, error) {
+func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingFrequency) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	newPeriodicRate, err := rt.RatePeriodicToPeriodic(newCompoundingFrequency)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -240,7 +253,9 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
 //   - The effective annual rate as a Decimal
 //   - ErrInvalidTypeRate for an unknown rate type, ErrInvalidAnticipatedRate for
 //     an anticipated rate of 100% or more, or an error if the conversion fails
-func (rt RateInterest) RateAnticipateEffectyAnnually() (decimal.Decimal, error) {
+func (rt RateInterest) RateAnticipateEffectyAnnually() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	return rt.RateEffectyAnnually()
 }
 
@@ -252,7 +267,9 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (decimal.Decimal, error) 
 //   - The anticipated nominal rate as a Decimal
 //   - ErrInvalidTypeRate for an unknown rate type, ErrInvalidAnticipatedRate for
 //     an anticipated rate of 100% or more, or an error if the conversion fails
-func (rt RateInterest) RateAnticipateNominal() (decimal.Decimal, error) {
+func (rt RateInterest) RateAnticipateNominal() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if rt.typeRate == RateAnticipateEffectyNominal {
 		return rt.value, nil
 	}
@@ -279,7 +296,9 @@ func (rt RateInterest) RateAnticipateNominal() (decimal.Decimal, error) {
 //   - The anticipated periodic rate as a Decimal
 //   - ErrInvalidTypeRate for an unknown rate type, ErrInvalidAnticipatedRate for
 //     an anticipated rate of 100% or more, or an error if the conversion fails
-func (rt RateInterest) RateAnticipatePeriodic() (decimal.Decimal, error) {
+func (rt RateInterest) RateAnticipatePeriodic() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if rt.typeRate == RateAnticipateEffectyPeriodic {
 		return rt.value, nil
 	}
@@ -300,7 +319,9 @@ func (rt RateInterest) RateAnticipatePeriodic() (decimal.Decimal, error) {
 // Returns:
 //   - The anticipated nominal rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToAnticipateNominal() (decimal.Decimal, error) {
+func (rt RateInterest) ToAnticipateNominal() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	return rt.RateAnticipateNominal()
 }
 
@@ -311,7 +332,9 @@ func (rt RateInterest) ToAnticipateNominal() (decimal.Decimal, error) {
 // Returns:
 //   - The anticipated periodic rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToAnticipatePeriodic() (decimal.Decimal, error) {
+func (rt RateInterest) ToAnticipatePeriodic() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	return rt.RateAnticipatePeriodic()
 }
 
@@ -322,7 +345,9 @@ func (rt RateInterest) ToAnticipatePeriodic() (decimal.Decimal, error) {
 // Returns:
 //   - The nominal rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToNominal() (decimal.Decimal, error) {
+func (rt RateInterest) ToNominal() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	return rt.RateNominal()
 }
 
@@ -333,6 +358,8 @@ func (rt RateInterest) ToNominal() (decimal.Decimal, error) {
 // Returns:
 //   - The periodic rate as a Decimal
 //   - An error if the conversion fails
-func (rt RateInterest) ToPeriodic() (decimal.Decimal, error) {
+func (rt RateInterest) ToPeriodic() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	return rt.RatePeriodic()
 }

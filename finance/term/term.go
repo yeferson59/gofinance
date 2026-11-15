@@ -16,6 +16,8 @@ package term
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
@@ -70,7 +72,9 @@ func (f Frequency) Valid() bool {
 // PeriodsPerYear returns how many periods of frequency f fit in one year
 // (e.g. 12 for Monthly). It returns ErrInvalidFrequency for an unknown
 // frequency.
-func (f Frequency) PeriodsPerYear() (decimal.Decimal, error) {
+func (f Frequency) PeriodsPerYear() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	switch f {
 	case Daily:
 		return decimal.MustFromInt64(365, 0), nil
@@ -102,7 +106,9 @@ var dailyMonthsPerPeriod = decimal.MustFromInt64(12, 0).MustDiv(decimal.MustFrom
 //
 // The value is always 12 / PeriodsPerYear, so for Daily it is 12/365 ≈
 // 0.032876712, not 1/30.
-func (f Frequency) MonthsPerPeriod() (decimal.Decimal, error) {
+func (f Frequency) MonthsPerPeriod() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	switch f {
 	case Daily:
 		return dailyMonthsPerPeriod, nil

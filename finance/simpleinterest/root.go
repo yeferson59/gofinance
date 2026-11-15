@@ -6,6 +6,8 @@ package simpleinterest
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/finance/term"
 	"github.com/yeferson59/gofinance/v2/money"
@@ -118,7 +120,9 @@ func New(future, present, interest money.Money, rateInterest decimal.Decimal, pe
 
 // GetPeriods returns the period value from the associated Period.
 // Returns an error if periods is invalid.
-func (s SimpleInterest) GetPeriods() (decimal.Decimal, error) {
+func (s SimpleInterest) GetPeriods() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if s.err != nil {
 		return decimal.Decimal{}, s.err
 	}

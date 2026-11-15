@@ -3,6 +3,8 @@ package compoundinterest
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/money"
 )
@@ -35,7 +37,9 @@ type GrowthSchedule struct {
 // single final value.
 //
 // It returns ErrInvalidPeriods if nper isn't a positive whole number.
-func BuildGrowthSchedule(present money.Money, rate decimal.Decimal, nper decimal.Decimal) ([]GrowthSchedule, error) {
+func BuildGrowthSchedule(present money.Money, rate decimal.Decimal, nper decimal.Decimal) (_ []GrowthSchedule, err error) {
+	defer guard.Recover(&err)
+
 	until, err := nper.Int64()
 	if err != nil {
 		return nil, err

@@ -1,6 +1,9 @@
 package bonds
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 const maxYieldBisectIter = 200
 
@@ -17,7 +20,9 @@ var (
 // It returns ErrNonPositivePrice if the price is not positive,
 // ErrInvalidFrequency or ErrInvalidPeriods on invalid terms, and
 // ErrNoConvergence if no yield reproduces the price.
-func (b Config) YTM() (decimal.Decimal, error) {
+func (b Config) YTM() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if !b.price.IsPos() {
 		return decimal.Decimal{}, ErrNonPositivePrice
 	}

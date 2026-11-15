@@ -27,6 +27,8 @@ package loans
 import (
 	"errors"
 
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+
 	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/money"
 )
@@ -214,7 +216,9 @@ func (l Config) ExtraPayment(amount float64) Config {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, ErrNonPositivePrincipal,
 // or ErrInvalidRate on invalid terms.
-func (l Config) PeriodicRate() (decimal.Decimal, error) {
+func (l Config) PeriodicRate() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	rate, _, err := l.terms()
 
 	return rate, err
@@ -235,7 +239,9 @@ func (l Config) MustPeriodicRate() decimal.Decimal {
 //
 // It returns ErrInvalidFrequency, ErrInvalidPeriods, ErrNonPositivePrincipal,
 // or ErrInvalidRate on invalid terms.
-func (l Config) NumberOfPayments() (int, error) {
+func (l Config) NumberOfPayments() (_ int, err error) {
+	defer guard.Recover(&err)
+
 	_, n, err := l.terms()
 
 	return n, err

@@ -2,6 +2,7 @@ package returns
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -17,7 +18,9 @@ import (
 // It returns money.ErrCurrencyMismatch on mixed currencies,
 // ErrNonPositiveValue if begin is not positive, and ErrNonPositivePeriods if
 // periods is not positive.
-func CAGR(begin, end money.Money, periods decimal.Decimal) (decimal.Decimal, error) {
+func CAGR(begin, end money.Money, periods decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if begin.GetCurrency() != end.GetCurrency() {
 		return decimal.Decimal{}, money.ErrCurrencyMismatch
 	}
@@ -69,7 +72,9 @@ func MustCAGR(begin, end money.Money, periods decimal.Decimal) decimal.Decimal {
 //
 // It returns money.ErrCurrencyMismatch on mixed currencies and
 // ErrNonPositiveValue if initial is not positive.
-func ROI(initial, final money.Money) (decimal.Decimal, error) {
+func ROI(initial, final money.Money) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if initial.GetCurrency() != final.GetCurrency() {
 		return decimal.Decimal{}, money.ErrCurrencyMismatch
 	}
@@ -110,7 +115,9 @@ func MustROI(initial, final money.Money) decimal.Decimal {
 //
 // It returns money.ErrCurrencyMismatch on mixed currencies and
 // ErrNonPositiveValue if initial is not positive.
-func HoldingPeriodReturn(initial, final, income money.Money) (decimal.Decimal, error) {
+func HoldingPeriodReturn(initial, final, income money.Money) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	// ResolveCurrency rather than comparing the three directly: income is
 	// optional — a share that paid no dividend — and an unset money.Money
 	// carries no currency, so a direct comparison rejected the ordinary case
@@ -160,7 +167,9 @@ func MustHoldingPeriodReturn(initial, final, income money.Money) decimal.Decimal
 //
 // It returns ErrNonPositiveValue if 1 + totalReturn is not positive and
 // ErrNonPositivePeriods if periods is not positive.
-func Annualized(totalReturn, periods decimal.Decimal) (decimal.Decimal, error) {
+func Annualized(totalReturn, periods decimal.Decimal) (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if !periods.IsPos() {
 		return decimal.Decimal{}, ErrNonPositivePeriods
 	}

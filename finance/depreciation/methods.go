@@ -2,6 +2,7 @@ package depreciation
 
 import (
 	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -14,7 +15,9 @@ import (
 //
 // It returns money.ErrCurrencyMismatch, ErrNonPositiveCost, ErrInvalidLife, or
 // ErrInvalidSalvage on invalid input.
-func StraightLine(cost, salvage money.Money, life int) ([]Schedule, error) {
+func StraightLine(cost, salvage money.Money, life int) (_ []Schedule, err error) {
+	defer guard.Recover(&err)
+
 	if err := validate(cost, salvage, life); err != nil {
 		return nil, err
 	}
@@ -63,7 +66,9 @@ func MustStraightLine(cost, salvage money.Money, life int) []Schedule {
 //
 // It returns money.ErrCurrencyMismatch, ErrNonPositiveCost, ErrInvalidLife, or
 // ErrInvalidSalvage on invalid input.
-func DecliningBalance(cost, salvage money.Money, life int, factor decimal.Decimal) ([]Schedule, error) {
+func DecliningBalance(cost, salvage money.Money, life int, factor decimal.Decimal) (_ []Schedule, err error) {
+	defer guard.Recover(&err)
+
 	if err := validate(cost, salvage, life); err != nil {
 		return nil, err
 	}
@@ -107,7 +112,9 @@ func MustDecliningBalance(cost, salvage money.Money, life int, factor decimal.De
 //
 // It returns money.ErrCurrencyMismatch, ErrNonPositiveCost, ErrInvalidLife, or
 // ErrInvalidSalvage on invalid input.
-func DoubleDecliningBalance(cost, salvage money.Money, life int) ([]Schedule, error) {
+func DoubleDecliningBalance(cost, salvage money.Money, life int) (_ []Schedule, err error) {
+	defer guard.Recover(&err)
+
 	if err := validate(cost, salvage, life); err != nil {
 		return nil, err
 	}
@@ -168,7 +175,9 @@ func MustDoubleDecliningBalance(cost, salvage money.Money, life int) []Schedule 
 //
 // It returns money.ErrCurrencyMismatch, ErrNonPositiveCost, ErrInvalidLife, or
 // ErrInvalidSalvage on invalid input.
-func SumOfYearsDigits(cost, salvage money.Money, life int) ([]Schedule, error) {
+func SumOfYearsDigits(cost, salvage money.Money, life int) (_ []Schedule, err error) {
+	defer guard.Recover(&err)
+
 	if err := validate(cost, salvage, life); err != nil {
 		return nil, err
 	}
@@ -216,7 +225,9 @@ func MustSumOfYearsDigits(cost, salvage money.Money, life int) []Schedule {
 //
 // It returns ErrNonPositiveCost for a non-positive cost and
 // ErrUnsupportedRecovery for a recovery period without a GDS table.
-func MACRS(cost money.Money, recovery int) ([]Schedule, error) {
+func MACRS(cost money.Money, recovery int) (_ []Schedule, err error) {
+	defer guard.Recover(&err)
+
 	if !cost.IsPositive() {
 		return nil, ErrNonPositiveCost
 	}

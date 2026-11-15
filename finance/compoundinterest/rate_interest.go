@@ -1,6 +1,9 @@
 package compoundinterest
 
-import "github.com/yeferson59/gofinance/v2/decimal"
+import (
+	"github.com/yeferson59/gofinance/v2/decimal"
+	"github.com/yeferson59/gofinance/v2/internal/guard"
+)
 
 // Interest calculates the periodic interest rate given present value, future value, and number of periods.
 // This method derives the interest rate from the compound interest formula.
@@ -26,7 +29,9 @@ import "github.com/yeferson59/gofinance/v2/decimal"
 //	)
 //	rate, _ := ci.Interest()
 //	// rate contains the calculated periodic interest rate
-func (c CompoundInterest) Interest() (decimal.Decimal, error) {
+func (c CompoundInterest) Interest() (_ decimal.Decimal, err error) {
+	defer guard.Recover(&err)
+
 	if !c.rateInterest.value.IsZero() {
 		return c.rateInterest.value, nil
 	}
