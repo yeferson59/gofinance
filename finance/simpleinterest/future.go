@@ -11,6 +11,10 @@ import (
 // It returns money.ErrCurrencyMismatch if the configured amounts are not all
 // in one currency.
 func (s SimpleInterest) Future() (money.Money, error) {
+	if s.err != nil {
+		return money.Money{}, s.err
+	}
+
 	currency, err := s.currency()
 	if err != nil {
 		return money.Money{}, err
@@ -30,6 +34,10 @@ func (s SimpleInterest) Future() (money.Money, error) {
 // It returns money.ErrCurrencyMismatch if the configured amounts are not all
 // in one currency.
 func (s SimpleInterest) FutureWithRateInterest() (money.Money, error) {
+	if s.err != nil {
+		return money.Money{}, s.err
+	}
+
 	currency, err := s.currency()
 	if err != nil {
 		return money.Money{}, err

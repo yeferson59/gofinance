@@ -7,6 +7,10 @@ import (
 )
 
 func (s SimpleInterest) RateInterest() (decimal.Decimal, error) {
+	if s.err != nil {
+		return decimal.Decimal{}, s.err
+	}
+
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -20,6 +24,10 @@ func (s SimpleInterest) RateInterest() (decimal.Decimal, error) {
 }
 
 func (s SimpleInterest) RateInterestWithPresentAndFuture() (decimal.Decimal, error) {
+	if s.err != nil {
+		return decimal.Decimal{}, s.err
+	}
+
 	numberOfPeriods, err := s.periods.getPeriod()
 	if err != nil {
 		return decimal.Decimal{}, err

@@ -139,3 +139,22 @@ func TestMustConvertPanicsOnInvalidRate(t *testing.T) {
 	usd := MustMoneyFromFloat64(10, USD)
 	usd.MustConvert(EUR, decimal.Zero)
 }
+
+// A COP→USD rate quoted as 1/4100 has more fractional digits than a Decimal
+// keeps. ConvertFloat64 must round it rather than reject the conversion.
+func TestConvertFloat64AcceptsSmallRates(t *testing.T) {
+	cop := MustMoneyFromFloat64(100000, COP)
+
+	usd, err := cop.ConvertFloat64(USD, 1.0/4100)
+	if err != nil {
+		t.Fatalf("ConvertFloat64 returned error %v", err)
+	}
+
+	if usd.GetCurrency() != USD {
+		t.Errorf("expected USD, got %v", usd.GetCurrency())
+	}
+
+	if got := usd.StringFixed(2); got != "24.39" {
+		t.Errorf("expected 24.39, got %s", got)
+	}
+}

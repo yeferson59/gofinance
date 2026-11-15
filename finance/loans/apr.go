@@ -49,6 +49,10 @@ func (l Config) MustPayment() money.Money {
 // It returns ErrNegativeFees if the fees are negative and
 // ErrFeesExceedPrincipal if they leave nothing to finance.
 func (l Config) NetProceeds() (money.Money, error) {
+	if l.err != nil {
+		return money.Money{}, l.err
+	}
+
 	if l.fees.IsNeg() {
 		return money.Money{}, ErrNegativeFees
 	}

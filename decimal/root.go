@@ -22,6 +22,11 @@ type Decimal struct {
 	value decimal128
 }
 
+// NewFromFloat64 converts f to a Decimal using its shortest decimal form, so
+// 0.1 becomes exactly 0.1. When that form needs more than 19 fractional
+// digits (e.g. 1.0/4100), the value is rounded to 19 digits instead, and a
+// magnitude below half of 1e-19 rounds to zero. It returns ErrInvalidFormat
+// for NaN and ±Inf, and ErrOverflow if the integer part does not fit.
 func NewFromFloat64(f float64) (Decimal, error) {
 	decimal, err := decFromFloat64(f)
 

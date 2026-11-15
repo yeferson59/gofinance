@@ -2,6 +2,7 @@ package loans
 
 import (
 	"bytes"
+	"math"
 	"strings"
 	"testing"
 
@@ -313,4 +314,45 @@ func TestMustHelpersReturnValues(t *testing.T) {
 
 	current, offer := refinanceOffers()
 	assert.Equal(t, 24, MustCompare(current, offer).BreakEvenPeriods)
+}
+
+// Builder inputs that have no decimal value are reported by every
+// error-returning method instead of panicking inside the setter.
+func TestInvalidFloatInputsReturnErrors(t *testing.T) {
+	nan := math.NaN()
+
+	tests := []struct {
+		name string
+		loan Config
+	}{
+		{"principal", NewLoan().Principal(nan, money.USD).AnnualRate(0.065).Years(30)},
+		{"rate", mortgage().Rate(nan)},
+		{"annual rate", mortgage().AnnualRate(math.Inf(1))},
+		{"fees", mortgage().Fees(nan)},
+		{"extra payment", mortgage().ExtraPayment(math.Inf(-1))},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NotPanics(t, func() {
+				_, err := tt.loan.Payment()
+				assert.Error(t, err, "Payment")
+
+				_, err = tt.loan.NetProceeds()
+				assert.Error(t, err, "NetProceeds")
+
+				_, err = tt.loan.APR()
+				assert.Error(t, err, "APR")
+
+				_, err = tt.loan.Payoff()
+				assert.Error(t, err, "Payoff")
+
+				_, err = tt.loan.Savings()
+				assert.Error(t, err, "Savings")
+
+				_, err = Compare(tt.loan, mortgage())
+				assert.Error(t, err, "Compare")
+			})
+		})
+	}
 }

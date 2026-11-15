@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/yeferson59/gofinance/v2/decimal"
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
@@ -39,6 +40,19 @@ func TestBuilderFutureValue(t *testing.T) {
 	}
 }
 
+// mustPeriodicRate returns the builder's periodic rate, failing the test if
+// it can't be computed.
+func mustPeriodicRate(t *testing.T, s SimpleConfig) decimal.Decimal {
+	t.Helper()
+
+	rate, err := s.periodicRate()
+	if err != nil {
+		t.Fatalf("periodicRate: %v", err)
+	}
+
+	return rate
+}
+
 func TestAnnualRateRespectsPeriodType(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -53,7 +67,7 @@ func TestAnnualRateRespectsPeriodType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.config.periodicRate().InexactFloat64(); math.Abs(got-tt.expected) > 1e-9 {
+			if got := mustPeriodicRate(t, tt.config).InexactFloat64(); math.Abs(got-tt.expected) > 1e-9 {
 				t.Errorf("expected rate %v, got %v", tt.expected, got)
 			}
 		})
@@ -92,8 +106,8 @@ func TestAnnualRateIsOrderIndependent(t *testing.T) {
 
 	for _, pair := range pairs {
 		t.Run(pair.name, func(t *testing.T) {
-			before := pair.before.periodicRate().InexactFloat64()
-			after := pair.after.periodicRate().InexactFloat64()
+			before := mustPeriodicRate(t, pair.before).InexactFloat64()
+			after := mustPeriodicRate(t, pair.after).InexactFloat64()
 
 			if math.Abs(before-after) > 1e-9 {
 				t.Errorf("order changed the rate: %v before the period type, %v after", before, after)
@@ -110,13 +124,13 @@ func TestAnnualRateIsOrderIndependent(t *testing.T) {
 // than compounding.
 func TestRateOverridesAnnualRate(t *testing.T) {
 	// A periodic rate set last must be used as given, not divided again.
-	periodic := NewSimple().Years().AnnualRate(0.12).Rate(0.02).periodicRate()
+	periodic := mustPeriodicRate(t, NewSimple().Years().AnnualRate(0.12).Rate(0.02))
 	if got := periodic.InexactFloat64(); math.Abs(got-0.02) > 1e-9 {
 		t.Errorf("expected 0.02, got %v", got)
 	}
 
 	// And an annual rate set last must be converted.
-	annual := NewSimple().Months().Rate(0.02).AnnualRate(0.12).periodicRate()
+	annual := mustPeriodicRate(t, NewSimple().Months().Rate(0.02).AnnualRate(0.12))
 	if got := annual.InexactFloat64(); math.Abs(got-0.01) > 1e-9 {
 		t.Errorf("expected 0.01, got %v", got)
 	}

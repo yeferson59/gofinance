@@ -30,20 +30,36 @@ type SimpleConfig struct {
 	annual     bool
 	periods    int
 	periodType Periods
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// and Build has no error to return, so it travels into the built
+	// SimpleInterest, whose calculations report it.
+	err error
+}
+
+// withErr records err as the builder's error unless one is already held, so
+// the first problem is the one reported. A nil err leaves s unchanged.
+func (s SimpleConfig) withErr(err error) SimpleConfig {
+	if s.err == nil {
+		s.err = err
+	}
+
+	return s
 }
 
 // periodsPerYear returns how many periods of the configured type fit in a
 // year, the divisor that turns an annual rate into a periodic one.
-func (s SimpleConfig) periodsPerYear() float64 {
+func (s SimpleConfig) periodsPerYear() int64 {
 	switch s.periodType {
 	case Days:
-		return 365.0
+		return 365
 	case Weeks:
-		return 52.0
+		return 52
 	case Years:
-		return 1.0
+		return 1
 	default:
-		return 12.0
+		return 12
 	}
 }
 
@@ -51,12 +67,17 @@ func (s SimpleConfig) periodsPerYear() float64 {
 // when one was set. The conversion happens here rather than in AnnualRate so
 // it uses the period type the builder ends up with, whatever order the methods
 // were called in.
-func (s SimpleConfig) periodicRate() decimal.Decimal {
+func (s SimpleConfig) periodicRate() (decimal.Decimal, error) {
 	if !s.annual {
-		return s.rate
+		return s.rate, nil
 	}
 
-	return s.rate.MustDiv(decimal.MustFromFloat64(s.periodsPerYear()))
+	periodsPerYear, err := decimal.NewFromInt64(s.periodsPerYear(), 0)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return s.rate.Div(periodsPerYear)
 }
 
 // NewSimple creates a new SimpleConfig builder instance with default values.
@@ -91,8 +112,10 @@ func NewSimple() SimpleConfig {
 //
 //	.NewSimple().Present(5000, money.USD)  // $5,000 principal
 func (s SimpleConfig) Present(amount float64, currency money.Currency) SimpleConfig {
-	s.present = money.MustMoneyFromFloat64(amount, currency)
-	return s
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+	s.present = m
+
+	return s.withErr(err)
 }
 
 // Future sets the future value (target amount) for the simple interest calculation.
@@ -106,8 +129,10 @@ func (s SimpleConfig) Present(amount float64, currency money.Currency) SimpleCon
 //
 //	.NewSimple().Future(6000, money.USD)  // $6,000 target amount
 func (s SimpleConfig) Future(amount float64, currency money.Currency) SimpleConfig {
-	s.future = money.MustMoneyFromFloat64(amount, currency)
-	return s
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+	s.future = m
+
+	return s.withErr(err)
 }
 
 // Interest sets the interest amount for the simple interest calculation.
@@ -121,8 +146,10 @@ func (s SimpleConfig) Future(amount float64, currency money.Currency) SimpleConf
 //
 //	.NewSimple().Interest(900, money.USD)  // $900 interest
 func (s SimpleConfig) Interest(amount float64, currency money.Currency) SimpleConfig {
-	s.interest = money.MustMoneyFromFloat64(amount, currency)
-	return s
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+	s.interest = m
+
+	return s.withErr(err)
 }
 
 // Rate sets the periodic interest rate for the simple interest calculation.
@@ -138,10 +165,11 @@ func (s SimpleConfig) Interest(amount float64, currency money.Currency) SimpleCo
 //
 //	.NewSimple().Rate(0.01)  // 1% monthly rate
 func (s SimpleConfig) Rate(r float64) SimpleConfig {
-	s.rate = decimal.MustFromFloat64(r)
+	rate, err := decimal.NewFromFloat64(r)
+	s.rate = rate
 	s.annual = false
 
-	return s
+	return s.withErr(err)
 }
 
 // AnnualRate sets the annual interest rate, which is divided by the number of
@@ -164,10 +192,11 @@ func (s SimpleConfig) Rate(r float64) SimpleConfig {
 //
 //	.NewSimple().AnnualRate(0.12)  // 12% annual rate, converts to 1% monthly
 func (s SimpleConfig) AnnualRate(r float64) SimpleConfig {
-	s.rate = decimal.MustFromFloat64(r)
+	rate, err := decimal.NewFromFloat64(r)
+	s.rate = rate
 	s.annual = true
 
-	return s
+	return s.withErr(err)
 }
 
 // Periods sets the number of time periods for the simple interest calculation.
@@ -242,6 +271,11 @@ func (s SimpleConfig) Weeks() SimpleConfig {
 
 // Build creates and returns a SimpleInterest instance based on the configured parameters.
 //
+// Build has no error to return. If a setter received an invalid input (NaN or
+// ±Inf), or the annual rate can't be converted to a periodic one, the error is
+// carried by the returned SimpleInterest and every calculation on it returns
+// that error.
+//
 // Returns:
 //   - A SimpleInterest instance with all configured parameters
 //
@@ -256,8 +290,16 @@ func (s SimpleConfig) Weeks() SimpleConfig {
 //
 //	future, _ := si.Future()
 func (s SimpleConfig) Build() SimpleInterest {
-	period := NewPeriod(decimal.MustFromFloat64(float64(s.periods)), s.periodType)
-	return New(s.future, s.present, s.interest, s.periodicRate(), period)
+	periods, err := decimal.NewFromInt64(int64(s.periods), 0)
+	s = s.withErr(err)
+
+	rate, err := s.periodicRate()
+	s = s.withErr(err)
+
+	si := New(s.future, s.present, s.interest, rate, NewPeriod(periods, s.periodType))
+	si.err = s.err
+
+	return si
 }
 
 // FutureValue calculates the future value based on the present value, rate, and periods.

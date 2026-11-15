@@ -11,10 +11,41 @@ import (
 type seriesConfig struct {
 	firstPayment money.Money
 	periods      int
-	rate         float64
+	rate         decimal.Decimal
 	annual       bool
 	frequency    compoundinterest.CompoundingFrequency
 	rateType     compoundinterest.TypeRate
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// so it is kept here and reported by Build.
+	err error
+}
+
+// record keeps err as the builder's error unless one is already held, so the
+// first problem is the one reported. A nil err changes nothing.
+func (c *seriesConfig) record(err error) {
+	if c.err == nil {
+		c.err = err
+	}
+}
+
+// moneyInput converts a float amount for a setter, recording a conversion
+// failure instead of panicking.
+func (c *seriesConfig) moneyInput(amount float64, currency money.Currency) money.Money {
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+	c.record(err)
+
+	return m
+}
+
+// decimalInput converts a float rate for a setter, recording a conversion
+// failure instead of panicking.
+func (c *seriesConfig) decimalInput(r float64) decimal.Decimal {
+	d, err := decimal.NewFromFloat64(r)
+	c.record(err)
+
+	return d
 }
 
 func newSeriesConfig() seriesConfig {
@@ -32,7 +63,7 @@ func newSeriesConfig() seriesConfig {
 // The periods per year come from the shared finance/term vocabulary rather
 // than a table of this package's own, so the two cannot disagree.
 func (c seriesConfig) periodicRate() (decimal.Decimal, error) {
-	rate := decimal.MustFromFloat64(c.rate)
+	rate := c.rate
 	if !c.annual {
 		return rate, nil
 	}
@@ -46,6 +77,10 @@ func (c seriesConfig) periodicRate() (decimal.Decimal, error) {
 }
 
 func (c seriesConfig) buildPeriodAndRate() (compoundinterest.Period, compoundinterest.RateInterest, error) {
+	if c.err != nil {
+		return compoundinterest.Period{}, compoundinterest.RateInterest{}, c.err
+	}
+
 	periodic, err := c.periodicRate()
 	if err != nil {
 		return compoundinterest.Period{}, compoundinterest.RateInterest{}, err
@@ -56,7 +91,12 @@ func (c seriesConfig) buildPeriodAndRate() (compoundinterest.Period, compoundint
 		return compoundinterest.Period{}, compoundinterest.RateInterest{}, err
 	}
 
-	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(float64(c.periods)), c.frequency)
+	periods, err := decimal.NewFromInt64(int64(c.periods), 0)
+	if err != nil {
+		return compoundinterest.Period{}, compoundinterest.RateInterest{}, err
+	}
+
+	period, err := compoundinterest.NewPeriod(periods, c.frequency)
 	if err != nil {
 		return compoundinterest.Period{}, compoundinterest.RateInterest{}, err
 	}
@@ -88,14 +128,14 @@ func NewArithmeticSeries() ArithmeticConfig {
 
 // FirstPayment sets the payment made at the end of the first period.
 func (a ArithmeticConfig) FirstPayment(amount float64, currency money.Currency) ArithmeticConfig {
-	a.firstPayment = money.MustMoneyFromFloat64(amount, currency)
+	a.firstPayment = a.moneyInput(amount, currency)
 	return a
 }
 
 // Gradient sets the constant amount added to each subsequent payment
 // (negative for a decreasing series).
 func (a ArithmeticConfig) Gradient(amount float64, currency money.Currency) ArithmeticConfig {
-	a.gradient = money.MustMoneyFromFloat64(amount, currency)
+	a.gradient = a.moneyInput(amount, currency)
 	return a
 }
 
@@ -108,7 +148,7 @@ func (a ArithmeticConfig) Periods(n int) ArithmeticConfig {
 // Rate sets the periodic interest rate directly. It replaces any rate set
 // with AnnualRate.
 func (a ArithmeticConfig) Rate(r float64) ArithmeticConfig {
-	a.rate = r
+	a.rate = a.decimalInput(r)
 	a.annual = false
 
 	return a
@@ -119,7 +159,7 @@ func (a ArithmeticConfig) Rate(r float64) ArithmeticConfig {
 // whatever order the builder methods are called in. It replaces any rate set
 // with Rate.
 func (a ArithmeticConfig) AnnualRate(r float64) ArithmeticConfig {
-	a.rate = r
+	a.rate = a.decimalInput(r)
 	a.annual = true
 	a.rateType = compoundinterest.RateEffectyPeriodic
 
@@ -228,14 +268,14 @@ func NewGeometricSeries() GeometricConfig {
 
 // FirstPayment sets the payment made at the end of the first period.
 func (g GeometricConfig) FirstPayment(amount float64, currency money.Currency) GeometricConfig {
-	g.firstPayment = money.MustMoneyFromFloat64(amount, currency)
+	g.firstPayment = g.moneyInput(amount, currency)
 	return g
 }
 
 // GrowthRate sets the constant percentage each subsequent payment grows by,
 // as a decimal (e.g. 0.08 for 8%; negative for a shrinking series).
 func (g GeometricConfig) GrowthRate(r float64) GeometricConfig {
-	g.growthRate = decimal.MustFromFloat64(r)
+	g.growthRate = g.decimalInput(r)
 	return g
 }
 
@@ -248,7 +288,7 @@ func (g GeometricConfig) Periods(n int) GeometricConfig {
 // Rate sets the periodic interest rate directly. It replaces any rate set
 // with AnnualRate.
 func (g GeometricConfig) Rate(r float64) GeometricConfig {
-	g.rate = r
+	g.rate = g.decimalInput(r)
 	g.annual = false
 
 	return g
@@ -259,7 +299,7 @@ func (g GeometricConfig) Rate(r float64) GeometricConfig {
 // whatever order the builder methods are called in. It replaces any rate set
 // with Rate.
 func (g GeometricConfig) AnnualRate(r float64) GeometricConfig {
-	g.rate = r
+	g.rate = g.decimalInput(r)
 	g.annual = true
 	g.rateType = compoundinterest.RateEffectyPeriodic
 

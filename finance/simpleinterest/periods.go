@@ -10,6 +10,10 @@ import (
 // Formula: Periods = Interest / (Present × Rate)
 // Returns an error if present or rate is zero.
 func (s SimpleInterest) Periods() (decimal.Decimal, error) {
+	if s.err != nil {
+		return decimal.Decimal{}, s.err
+	}
+
 	if s.present.IsZero() || s.rateInterest.IsZero() {
 		return decimal.Decimal{}, errors.New("invalid present or rate interest for operation")
 	}
@@ -21,6 +25,10 @@ func (s SimpleInterest) Periods() (decimal.Decimal, error) {
 // Formula: Periods = (Future / Present - 1) / Rate
 // Returns an error if present or rate is zero.
 func (s SimpleInterest) PeriodsWithPresentAndFuture() (decimal.Decimal, error) {
+	if s.err != nil {
+		return decimal.Decimal{}, s.err
+	}
+
 	if s.present.IsZero() || s.rateInterest.IsZero() {
 		return decimal.Decimal{}, errors.New("invalid present or rate interest for operation")
 	}

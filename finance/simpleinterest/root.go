@@ -82,11 +82,12 @@ type SimpleInterest struct {
 	interest     money.Money
 	rateInterest decimal.Decimal
 	periods      Period
+
+	// err is an input error from the builder that produced this value. Every
+	// calculation returns it instead of computing from a zeroed field.
+	err error
 }
 
-// New creates a new SimpleInterest instance with the provided values.
-// Parameters can be 0 if they will be calculated later.
-// periods can be an empty Period for calculations that do not need it.
 // currency returns the single currency the configured amounts are expressed
 // in, ignoring the ones a given calculation does not need.
 //
@@ -102,6 +103,9 @@ func (s SimpleInterest) currency() (money.Currency, error) {
 	return money.ResolveCurrency(s.future, s.present, s.interest)
 }
 
+// New creates a new SimpleInterest instance with the provided values.
+// Parameters can be 0 if they will be calculated later.
+// periods can be an empty Period for calculations that do not need it.
 func New(future, present, interest money.Money, rateInterest decimal.Decimal, periods Period) SimpleInterest {
 	return SimpleInterest{
 		future:       future,
@@ -115,6 +119,10 @@ func New(future, present, interest money.Money, rateInterest decimal.Decimal, pe
 // GetPeriods returns the period value from the associated Period.
 // Returns an error if periods is invalid.
 func (s SimpleInterest) GetPeriods() (decimal.Decimal, error) {
+	if s.err != nil {
+		return decimal.Decimal{}, s.err
+	}
+
 	periods, err := s.periods.getPeriod()
 	return periods, err
 }

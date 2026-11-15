@@ -29,12 +29,45 @@ type AnnuityConfig struct {
 	present          money.Money
 	future           money.Money
 	periods          int
-	rate             float64
+	rate             decimal.Decimal
+	annual           bool
 	frequency        compoundinterest.CompoundingFrequency
 	rateType         compoundinterest.TypeRate
 	paymentFrequency compoundinterest.CompoundingFrequency
 	hasPaymentFreq   bool
 	deferPeriods     int
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// so it is kept here and reported by Build and every method built on it.
+	err error
+}
+
+// withErr records err as the builder's error unless one is already held, so
+// the first problem is the one reported. A nil err leaves a unchanged.
+func (a AnnuityConfig) withErr(err error) AnnuityConfig {
+	if a.err == nil {
+		a.err = err
+	}
+
+	return a
+}
+
+// periodicRate returns the rate handed to the compound interest engine. An
+// annual rate is divided by the compounding frequency's periods per year
+// here, rather than in AnnualRate, so the result depends on the frequency the
+// builder ends up with and not on the order the methods were called in.
+func (a AnnuityConfig) periodicRate() (decimal.Decimal, error) {
+	if !a.annual {
+		return a.rate, nil
+	}
+
+	periodsPerYear, err := a.frequency.PeriodsPerYear()
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return a.rate.Div(periodsPerYear)
 }
 
 // NewAnnuity creates a new AnnuityConfig builder instance with default values.
@@ -73,8 +106,10 @@ func NewAnnuity() AnnuityConfig {
 //
 //	.NewAnnuity().Value(500, money.USD)
 func (a AnnuityConfig) Value(amount float64, currency money.Currency) AnnuityConfig {
-	a.value = money.MustMoneyFromFloat64(amount, currency)
-	return a
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+	a.value = m
+
+	return a.withErr(err)
 }
 
 // Present sets the present value (current loan amount or initial investment).
@@ -89,8 +124,10 @@ func (a AnnuityConfig) Value(amount float64, currency money.Currency) AnnuityCon
 //
 //	.NewAnnuity().Present(300000, money.USD)  // $300,000 mortgage
 func (a AnnuityConfig) Present(amount float64, currency money.Currency) AnnuityConfig {
-	a.present = money.MustMoneyFromFloat64(amount, currency)
-	return a
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+	a.present = m
+
+	return a.withErr(err)
 }
 
 // Future sets the future value (target amount to accumulate).
@@ -104,8 +141,10 @@ func (a AnnuityConfig) Present(amount float64, currency money.Currency) AnnuityC
 //
 //	.NewAnnuity().Future(1000000, money.USD)  // Save $1,000,000
 func (a AnnuityConfig) Future(amount float64, currency money.Currency) AnnuityConfig {
-	a.future = money.MustMoneyFromFloat64(amount, currency)
-	return a
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+	a.future = m
+
+	return a.withErr(err)
 }
 
 // Periods sets the total number of payment periods for the annuity.
@@ -174,8 +213,12 @@ func (a AnnuityConfig) Years(n int) AnnuityConfig {
 //
 //	.NewAnnuity().Rate(0.005)  // 0.5% monthly rate
 func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
-	a.rate = r
-	return a
+	rate, err := decimal.NewFromFloat64(r)
+	a.rate = rate
+	a.annual = false
+	a.rateType = compoundinterest.RateEffectyPeriodic
+
+	return a.withErr(err)
 }
 
 // AnnualRate sets the annual interest rate and automatically converts it to the periodic rate
@@ -190,6 +233,11 @@ func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
 //   - Daily: annual_rate / 365
 //   - etc.
 //
+// The division happens when the annuity is built, using the frequency
+// configured at that point, so AnnualRate may be called before or after
+// Monthly(), Quarterly(), etc. It replaces any rate set with Rate or
+// EffectiveAnnualRate.
+//
 // Parameters:
 //   - r: The annual interest rate as a decimal (e.g., 0.06 for 6% annual rate)
 //
@@ -197,26 +245,12 @@ func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
 //
 //	.NewAnnuity().AnnualRate(0.06)  // 6% annual rate, converts to ~0.5% monthly
 func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
-	divisor := 12.0
-	switch a.frequency {
-	case compoundinterest.Daily:
-		divisor = 365.0
-	case compoundinterest.Bimonthly:
-		divisor = 6.0
-	case compoundinterest.Quarterly:
-		divisor = 4.0
-	case compoundinterest.FourMonthly:
-		divisor = 3.0
-	case compoundinterest.SemiAnnually:
-		divisor = 2.0
-	case compoundinterest.Annually:
-		divisor = 1.0
-	}
-
-	a.rate = r / divisor
+	rate, err := decimal.NewFromFloat64(r)
+	a.rate = rate
+	a.annual = true
 	a.rateType = compoundinterest.RateEffectyPeriodic
 
-	return a
+	return a.withErr(err)
 }
 
 // EffectiveAnnualRate sets the effective annual interest rate and automatically converts
@@ -235,10 +269,12 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 //
 //	.NewAnnuity().EffectiveAnnualRate(0.2668)  // 26.68% effective annual, converts to ~2% monthly
 func (a AnnuityConfig) EffectiveAnnualRate(r float64) AnnuityConfig {
-	a.rate = r
+	rate, err := decimal.NewFromFloat64(r)
+	a.rate = rate
+	a.annual = false
 	a.rateType = compoundinterest.RateEffectyAnnually
 
-	return a
+	return a.withErr(err)
 }
 
 // Monthly sets the payment frequency to monthly (12 payments per year).
@@ -331,11 +367,21 @@ func (a AnnuityConfig) Defer(periods int) AnnuityConfig {
 //	    Monthly().
 //	    Build()
 func (a AnnuityConfig) Build() (Annuity, error) {
-	rate, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(a.rate),
-		a.frequency,
-		a.rateType,
-	)
+	if a.err != nil {
+		return Annuity{}, a.err
+	}
+
+	periodicRate, err := a.periodicRate()
+	if err != nil {
+		return Annuity{}, err
+	}
+
+	rate, err := compoundinterest.NewRateInterest(periodicRate, a.frequency, a.rateType)
+	if err != nil {
+		return Annuity{}, err
+	}
+
+	periods, err := decimal.NewFromInt64(int64(a.periods), 0)
 	if err != nil {
 		return Annuity{}, err
 	}
@@ -345,10 +391,7 @@ func (a AnnuityConfig) Build() (Annuity, error) {
 		periodFrequency = a.paymentFrequency
 	}
 
-	period, err := compoundinterest.NewPeriod(
-		decimal.MustFromFloat64(float64(a.periods)),
-		periodFrequency,
-	)
+	period, err := compoundinterest.NewPeriod(periods, periodFrequency)
 	if err != nil {
 		return Annuity{}, err
 	}

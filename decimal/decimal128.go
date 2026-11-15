@@ -97,9 +97,23 @@ func decFromFloat64(f float64) (decimal128, error) {
 		return decimal128{}, ErrInvalidFormat
 	}
 
+	// The shortest form that round-trips is preferred, so 0.1 stays 0.1
+	// rather than its full binary expansion.
 	s := strconv.FormatFloat(f, 'f', -1, 64)
+	if dot := strings.IndexByte(s, '.'); dot < 0 || len(s)-dot-1 <= int(maxScale) {
+		return parseDecimal(s)
+	}
 
-	return parseDecimal(s)
+	// The shortest form needs more fractional digits than a decimal128 keeps
+	// (e.g. 1/4100 or 0.001/12). The float is itself only an approximation,
+	// so rejecting it would protect no real precision: round its exact binary
+	// value to maxScale digits instead, and drop the zeros that leaves.
+	d, err := parseDecimal(strconv.FormatFloat(f, 'f', int(maxScale), 64))
+	if err != nil {
+		return decimal128{}, err
+	}
+
+	return d.trimTrailingZeros(), nil
 }
 
 // parseDecimal parses a string of the form [+-]digits[.digits] into a

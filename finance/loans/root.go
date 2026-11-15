@@ -76,6 +76,9 @@ var (
 // Config is a fluent builder describing an amortizing loan. Create one with
 // NewLoan, set its terms, then call Payment, APR, Payoff, Savings, or pass it
 // to Compare.
+//
+// A setter given a float with no decimal value (NaN or ±Inf) does not panic:
+// the first such error is kept and returned by every calculation.
 type Config struct {
 	principal money.Money
 	rate      decimal.Decimal
@@ -85,6 +88,21 @@ type Config struct {
 	freq      int
 	fees      decimal.Decimal
 	extra     decimal.Decimal
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// so it is kept here and reported by every calculation.
+	err error
+}
+
+// withErr records err as the loan's error unless one is already held, so the
+// first problem is the one reported. A nil err leaves l unchanged.
+func (l Config) withErr(err error) Config {
+	if l.err == nil {
+		l.err = err
+	}
+
+	return l
 }
 
 // NewLoan returns a Config defaulting to monthly payments (12 per year) with
@@ -101,27 +119,31 @@ func NewLoan() Config {
 // Principal sets the amount borrowed and the currency every other amount of
 // the loan is expressed in.
 func (l Config) Principal(amount float64, currency money.Currency) Config {
-	l.principal = money.MustMoneyFromFloat64(amount, currency)
-	return l
+	principal, err := money.NewMoneyFromFloat64(amount, currency)
+	l.principal = principal
+
+	return l.withErr(err)
 }
 
 // Rate sets the interest rate charged each payment period as a fraction (e.g.
 // 0.005 for 0.5% per month). It replaces any rate set with AnnualRate.
 func (l Config) Rate(rate float64) Config {
-	l.rate = decimal.MustFromFloat64(rate)
+	d, err := decimal.NewFromFloat64(rate)
+	l.rate = d
 	l.annual = false
 
-	return l
+	return l.withErr(err)
 }
 
 // AnnualRate sets the nominal annual rate as a fraction (e.g. 0.065 for 6.5%).
 // It is divided by the payments per year to obtain the periodic rate, whatever
 // order the builder methods are called in. It replaces any rate set with Rate.
 func (l Config) AnnualRate(rate float64) Config {
-	l.rate = decimal.MustFromFloat64(rate)
+	d, err := decimal.NewFromFloat64(rate)
+	l.rate = d
 	l.annual = true
 
-	return l
+	return l.withErr(err)
 }
 
 // Periods sets the total number of payments. It takes precedence over Years.
@@ -171,16 +193,20 @@ func (l Config) Annually() Config {
 // pays to obtain the loan, in the principal's currency. They are deducted from
 // the cash actually received, which is what makes the APR exceed the note rate.
 func (l Config) Fees(amount float64) Config {
-	l.fees = decimal.MustFromFloat64(amount)
-	return l
+	d, err := decimal.NewFromFloat64(amount)
+	l.fees = d
+
+	return l.withErr(err)
 }
 
 // ExtraPayment sets an additional amount paid on top of the scheduled payment
 // every period, in the principal's currency. It is what Payoff amortizes and
 // what Savings measures against the scheduled payment.
 func (l Config) ExtraPayment(amount float64) Config {
-	l.extra = decimal.MustFromFloat64(amount)
-	return l
+	d, err := decimal.NewFromFloat64(amount)
+	l.extra = d
+
+	return l.withErr(err)
 }
 
 // PeriodicRate returns the interest rate charged each payment period, dividing
@@ -218,6 +244,10 @@ func (l Config) NumberOfPayments() (int, error) {
 // terms validates the configuration and returns the periodic rate together
 // with the total number of payments.
 func (l Config) terms() (decimal.Decimal, int, error) {
+	if l.err != nil {
+		return decimal.Decimal{}, 0, l.err
+	}
+
 	if l.freq < 1 {
 		return decimal.Decimal{}, 0, ErrInvalidFrequency
 	}
