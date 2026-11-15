@@ -1,7 +1,6 @@
 package simpleinterest
 
 import (
-	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,7 +57,8 @@ func TestRateInterestPropagatesOverflowFromDivision(t *testing.T) {
 	periods := NewPeriod(numPeriods, Days)
 
 	present, _ := money.New(1, 19, money.COP)
-	interest, _ := money.New(math.MaxInt64, 0, money.COP)
+	// 1e38 / 1e-19 = 1e57, far past decimal128's ~3.4e38.
+	interest, _ := money.NewMoneyFromString("100000000000000000000000000000000000000", money.COP)
 
 	simpleInterest := New(money.Money{}, present, interest, decimal.Decimal{}, periods)
 
@@ -114,7 +114,8 @@ func TestRateInterestWithPresentAndFuturePropagatesOverflowFromRatio(t *testing.
 	periods := NewPeriod(numPeriods, Days)
 
 	present, _ := money.New(1, 19, money.COP)
-	future, _ := money.New(math.MaxInt64, 0, money.COP)
+	// 1e38 / 1e-19 = 1e57, far past decimal128's ~3.4e38.
+	future, _ := money.NewMoneyFromString("100000000000000000000000000000000000000", money.COP)
 
 	simpleInterest := New(future, present, money.Money{}, decimal.Decimal{}, periods)
 
@@ -129,8 +130,9 @@ func TestRateInterestWithPresentAndFuturePropagatesOverflowFromDivision(t *testi
 	require.NoError(t, err)
 	periods := NewPeriod(tinyPeriods, Days)
 
-	future, _ := money.New(1_000_000, 2, money.COP)
-	present, _ := money.New(1_000, 2, money.COP)
+	// (1e30/1 - 1) / 1e-19 ≈ 1e49: the ratio fits, the division doesn't.
+	future, _ := money.NewMoneyFromString("1000000000000000000000000000000", money.COP)
+	present, _ := money.New(1, 0, money.COP)
 
 	simpleInterest := New(future, present, money.Money{}, decimal.Decimal{}, periods)
 

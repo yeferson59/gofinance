@@ -1,7 +1,6 @@
 package compoundinterest
 
 import (
-	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -323,7 +322,8 @@ func TestPeriodsPropagatesOverflowFromRatio(t *testing.T) {
 
 	present, err := money.New(1, 19, money.USD)
 	require.NoError(t, err)
-	future, err := money.New(math.MaxInt64, 0, money.USD)
+	// 1e38 / 1e-19 = 1e57, far past decimal128's ~3.4e38.
+	future, err := money.NewMoneyFromString("100000000000000000000000000000000000000", money.USD)
 	require.NoError(t, err)
 
 	ci, err := New(present, future, rateInterest, period)

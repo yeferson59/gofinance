@@ -347,12 +347,20 @@ func TestMoneyMulInt64OverflowPanics(t *testing.T) {
 	m.MulInt64(math.MaxInt64)
 }
 
-func TestMoneyDivInt64Overflow(t *testing.T) {
-	// Dividing by a tiny divisor forces the result's coefficient past 128
-	// bits once rescaled to maxScale digits of precision.
+// Dividing by an integer never grows the magnitude, so even the largest
+// amount divides: the quotient gives up fractional digits rather than
+// overflowing. It used to fail, because division always worked at 19
+// fractional digits.
+func TestMoneyDivInt64LargestAmount(t *testing.T) {
 	m := hugeMoney(USD)
-	if _, err := m.DivInt64(1); !errors.Is(err, decimal.ErrOverflow) {
-		t.Errorf("expected ErrOverflow, got %v", err)
+
+	q, err := m.DivInt64(1)
+	if err != nil {
+		t.Fatalf("huge / 1: %v", err)
+	}
+
+	if !q.Equal(m) {
+		t.Errorf("huge / 1 = %s, want %s", q, m)
 	}
 }
 

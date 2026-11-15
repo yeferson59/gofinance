@@ -15,7 +15,6 @@ func TestOverflowNeverPanics(t *testing.T) {
 	solvers := map[string]func() (decimal.Decimal, error){
 		"SolveFV from PV":  NewTVM().PV(1e35).Rate(0.10).N(100).SolveFV,
 		"SolveFV from PMT": NewTVM().PMT(1e35).Rate(0.10).N(100).SolveFV,
-		"SolvePV":          NewTVM().FV(1e35).Rate(0.10).N(100).SolvePV,
 		"SolvePMT":         NewTVM().PV(1e35).FV(1e35).Rate(0.10).N(100).SolvePMT,
 		"SolveRate":        NewTVM().PV(1e35).PMT(-1e34).N(100).SolveRate,
 	}
@@ -28,6 +27,19 @@ func TestOverflowNeverPanics(t *testing.T) {
 			})
 		})
 	}
+}
+
+// TestSolvePVOfHugeFutureValue checks a large but representable result.
+// 1e35 discounted over 100 periods at 10% is about 7.2565e30, which fits
+// easily. It used to fail with an overflow because division always worked at
+// 19 fractional digits, which capped any quotient at ~3.4e19.
+func TestSolvePVOfHugeFutureValue(t *testing.T) {
+	pv, err := NewTVM().FV(1e35).Rate(0.10).N(100).SolvePV()
+	require.NoError(t, err)
+
+	// PV = −FV / 1.1^100; compare relative to the magnitude.
+	want := -1e35 / 13780.61233982227
+	assert.InEpsilon(t, want, pv.InexactFloat64(), 1e-12)
 }
 
 // TestSolveRateLongTerm checks the rate solver on realistic long schedules,

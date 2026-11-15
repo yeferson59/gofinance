@@ -2,6 +2,7 @@ package decimal
 
 import (
 	"math"
+	"math/bits"
 	"strconv"
 	"strings"
 )
@@ -280,7 +281,43 @@ func (a decimal128) GreaterThan(b decimal128) bool        { return a.Cmp(b) > 0 
 func (a decimal128) GreaterThanOrEqual(b decimal128) bool { return a.Cmp(b) >= 0 }
 
 // Add returns a+b.
+//
+// Aligning the operands' scales multiplies one coefficient by a power of ten,
+// which can overflow even when the sum itself is small — a quotient such as
+// 1/2 carries 19 fractional digits (0.5000000000000000000), and lining a
+// large integer up with it needs 19 more digits than the integer has. On
+// overflow Add therefore retries once with both operands' trailing zeros
+// dropped; the retry costs nothing unless the first attempt overflowed.
 func (a decimal128) Add(b decimal128) (decimal128, error) {
+	return a.add(b, true)
+}
+
+// addOverflow is add's overflow path: retry once with trailing zeros dropped
+// when retry allows and trimming changed something.
+func (a decimal128) addOverflow(b decimal128, retry bool) (decimal128, error) {
+	if !retry {
+		return decimal128{}, ErrOverflow
+	}
+
+	if at, bt, trimmed := trimBoth(a, b); trimmed {
+		return at.add(bt, false)
+	}
+
+	return decimal128{}, ErrOverflow
+}
+
+// trimBoth drops trailing fractional zeros from a and b, reporting whether
+// either changed: if neither did, retrying an overflowed operation on them
+// cannot help.
+func trimBoth(a, b decimal128) (decimal128, decimal128, bool) {
+	at, bt := a.trimTrailingZeros(), b.trimTrailingZeros()
+
+	return at, bt, at.scale != a.scale || bt.scale != b.scale
+}
+
+// add returns a+b; on overflow it defers to addOverflow, which retries only
+// when retry is true so the retry itself cannot recurse.
+func (a decimal128) add(b decimal128, retry bool) (decimal128, error) {
 	scale := a.scale
 	ac, bc := a.coef, b.coef
 	var ok bool
@@ -289,18 +326,18 @@ func (a decimal128) Add(b decimal128) (decimal128, error) {
 	case a.scale < b.scale:
 		scale = b.scale
 		if ac, ok = mulPow10(ac, b.scale-a.scale); !ok {
-			return decimal128{}, ErrOverflow
+			return a.addOverflow(b, retry)
 		}
 	case a.scale > b.scale:
 		if bc, ok = mulPow10(bc, a.scale-b.scale); !ok {
-			return decimal128{}, ErrOverflow
+			return a.addOverflow(b, retry)
 		}
 	}
 
 	if a.neg == b.neg {
 		sum, ok := ac.Add(bc)
 		if !ok {
-			return decimal128{}, ErrOverflow
+			return a.addOverflow(b, retry)
 		}
 
 		return newDec(a.neg, sum, scale), nil
@@ -326,8 +363,27 @@ func (a decimal128) Sub(b decimal128) (decimal128, error) {
 }
 
 // Mul returns a*b, truncated to at most maxScale digits after the decimal
-// point (no rounding is applied when truncating excess precision).
+// point (no rounding is applied when truncating excess precision). Like Add,
+// it retries once with trailing zeros dropped if the product overflows.
 func (a decimal128) Mul(b decimal128) (decimal128, error) {
+	return a.mul(b, true)
+}
+
+// mulOverflow is mul's overflow path, the counterpart of addOverflow.
+func (a decimal128) mulOverflow(b decimal128, retry bool) (decimal128, error) {
+	if !retry {
+		return decimal128{}, ErrOverflow
+	}
+
+	if at, bt, trimmed := trimBoth(a, b); trimmed {
+		return at.mul(bt, false)
+	}
+
+	return decimal128{}, ErrOverflow
+}
+
+// mul returns a*b; on overflow it defers to mulOverflow.
+func (a decimal128) mul(b decimal128, retry bool) (decimal128, error) {
 	if a.coef.IsZero() || b.coef.IsZero() {
 		return decimal128{}, nil
 	}
@@ -338,7 +394,7 @@ func (a decimal128) Mul(b decimal128) (decimal128, error) {
 
 	if totalScale <= int(maxScale) {
 		if !prod.carry.IsZero() {
-			return decimal128{}, ErrOverflow
+			return a.mulOverflow(b, retry)
 		}
 		//nolint:gosec // totalScale <= maxScale (19)
 		return newDec(neg, u128{hi: prod.hi, lo: prod.lo}, uint8(totalScale)), nil
@@ -347,14 +403,39 @@ func (a decimal128) Mul(b decimal128) (decimal128, error) {
 	excess := totalScale - int(maxScale)
 	q, _, ok := prod.QuoRem128(pow10[excess])
 	if !ok {
-		return decimal128{}, ErrOverflow
+		return a.mulOverflow(b, retry)
 	}
 
 	return newDec(neg, q, maxScale), nil
 }
 
-// Div returns a/b with the result always expressed to maxScale digits
-// after the decimal point (truncated, not rounded).
+// quoDensest returns trunc(coef/10^coefScale ÷ den/10^denScale) as a
+// coefficient at the largest scale in [0, maxScale] whose coefficient fits in
+// 128 bits, together with that scale. ok is false only when even the integer
+// part doesn't fit.
+//
+// Working at maxScale is the norm and costs one division. A quotient too
+// large for 19 fractional digits — 1e20/1, say — gives up fractional digits
+// one at a time rather than overflowing, the same "densest representable
+// scale" rule Pow follows. The search stops at coefScale-denScale, where the
+// numerator needs no scaling at all and the quotient (at most coef) is
+// guaranteed to fit.
+func quoDensest(coef u128, coefScale uint8, den u128, denScale uint8) (u128, uint8, bool) {
+	minScale := max(int(coefScale)-int(denScale), 0)
+
+	for sc := int(maxScale); sc >= minScale; sc-- {
+		factor := sc - int(coefScale) + int(denScale) // in [0, 38]
+
+		if q, _, ok := coef.MulFull(pow10[factor]).QuoRem128(den); ok {
+			return q, uint8(sc), true
+		}
+	}
+
+	return u128{}, 0, false
+}
+
+// Div returns a/b truncated to maxScale digits after the decimal point, or to
+// fewer when the quotient is too large to carry all of them.
 func (a decimal128) Div(b decimal128) (decimal128, error) {
 	if b.coef.IsZero() {
 		return decimal128{}, ErrDivideByZero
@@ -364,20 +445,23 @@ func (a decimal128) Div(b decimal128) (decimal128, error) {
 		return decimal128{}, nil
 	}
 
-	neg := a.neg != b.neg
+	// The common case: one division at maxScale. quoDensest is only for a
+	// quotient too large to carry every fractional digit.
 	factor := int(maxScale) - int(a.scale) + int(b.scale)
+	if q, _, ok := a.coef.MulFull(pow10[factor]).QuoRem128(b.coef); ok {
+		return newDec(a.neg != b.neg, q, maxScale), nil
+	}
 
-	num := a.coef.MulFull(pow10[factor])
-	q, _, ok := num.QuoRem128(b.coef)
+	q, scale, ok := quoDensest(a.coef, a.scale, b.coef, b.scale)
 	if !ok {
 		return decimal128{}, ErrOverflow
 	}
 
-	return newDec(neg, q, maxScale), nil
+	return newDec(a.neg != b.neg, q, scale), nil
 }
 
-// Div64 returns a/v with the result always expressed to maxScale digits
-// after the decimal point (truncated, not rounded).
+// Div64 returns a/v with the same precision rules as Div. Dividing by an
+// integer never grows the magnitude, so it cannot overflow.
 func (a decimal128) Div64(v uint64) (decimal128, error) {
 	if v == 0 {
 		return decimal128{}, ErrDivideByZero
@@ -387,13 +471,16 @@ func (a decimal128) Div64(v uint64) (decimal128, error) {
 		return decimal128{}, nil
 	}
 
-	num := a.coef.MulFull(pow10[maxScale-a.scale])
-	q, _, ok := num.QuoRem128(u128FromU64(v))
+	if q, _, ok := a.coef.MulFull(pow10[maxScale-a.scale]).QuoRem128(u128FromU64(v)); ok {
+		return newDec(a.neg, q, maxScale), nil
+	}
+
+	q, scale, ok := quoDensest(a.coef, a.scale, u128FromU64(v), 0)
 	if !ok {
 		return decimal128{}, ErrOverflow
 	}
 
-	return newDec(a.neg, q, maxScale), nil
+	return newDec(a.neg, q, scale), nil
 }
 
 // QuoRem returns q = trunc(a/b) (scale 0) and r = a - q*b (same sign as a,
@@ -584,19 +671,39 @@ func (a decimal128) trimTrailingZeros() decimal128 {
 		return a
 	}
 
-	coef := a.coef
-	scale := a.scale
-	for scale > 0 {
-		q, r := coef.QuoRem64(10)
-		if r != 0 {
-			break
-		}
-
-		coef = q
-		scale--
+	// Most coefficients — any inexact quotient — end in no zero at all, so
+	// test divisibility by 10 without dividing: it needs an even coefficient
+	// that is also a multiple of 5, and because 2^64 ≡ 1 (mod 5), the
+	// coefficient's residue mod 5 is that of hi + lo. The compiler turns a
+	// constant % 5 into multiplications, not a hardware division.
+	if a.coef.lo&1 != 0 || (a.coef.hi%5+a.coef.lo%5)%5 != 0 {
+		return a
 	}
 
-	return decimal128{coef: coef, neg: a.neg, scale: scale}
+	// 10^k divides the coefficient only if 2^k does, so its trailing zero
+	// bits bound how many decimal zeros it can end in.
+	tz := bits.TrailingZeros64(a.coef.lo)
+	if a.coef.lo == 0 {
+		tz = 64 + bits.TrailingZeros64(a.coef.hi)
+	}
+
+	// Binary search for the largest k ≤ min(tz, scale) with 10^k dividing the
+	// coefficient: divisibility by 10^k implies it for every smaller power,
+	// so at most five divisions settle it instead of one per digit.
+	lo, hi := 0, min(tz, int(a.scale))
+	coef := a.coef
+
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+
+		if q, r := a.coef.QuoRem64(pow10[mid].lo); r == 0 {
+			lo, coef = mid, q
+		} else {
+			hi = mid - 1
+		}
+	}
+
+	return decimal128{coef: coef, neg: a.neg, scale: a.scale - uint8(lo)}
 }
 
 // rescale returns a with scale == prec, only ever increasing precision

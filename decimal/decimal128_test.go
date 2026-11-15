@@ -107,8 +107,14 @@ func TestDecimal128MulPrecisionCap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if d.scale != maxScale {
+	if d.scale > maxScale {
 		t.Errorf("expected result scale capped at %d, got %d", maxScale, d.scale)
+	}
+
+	// The exact square, 1.000000000000002000000000000001, truncated to 19
+	// places leaves 1.0000000000000020000, whose trailing zeros are dropped.
+	if got := d.String(); got != "1.000000000000002" {
+		t.Errorf("1.000000000000001^2 = %s, want 1.000000000000002", got)
 	}
 }
 
@@ -421,10 +427,29 @@ func TestDecimal128Div64ZeroDividend(t *testing.T) {
 	}
 }
 
-func TestDecimal128Div64Overflow(t *testing.T) {
+// Dividing by an integer never grows the magnitude, so even the largest
+// coefficient divides without overflow: the quotient gives up fractional
+// digits instead (here it needs none).
+func TestDecimal128Div64LargestValue(t *testing.T) {
 	huge := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
-	if _, err := huge.Div64(1); !errors.Is(err, ErrOverflow) {
-		t.Errorf("expected ErrOverflow, got %v", err)
+
+	q, err := huge.Div64(1)
+	if err != nil {
+		t.Fatalf("huge / 1: %v", err)
+	}
+
+	if !q.Equal(huge) {
+		t.Errorf("huge / 1 = %s, want %s", q, huge)
+	}
+}
+
+// Div still overflows when the integer part itself doesn't fit.
+func TestDecimal128DivOverflow(t *testing.T) {
+	huge := decimal128{coef: u128{hi: ^uint64(0), lo: ^uint64(0)}, scale: 0}
+	tenth := mustParseDec(t, "0.1")
+
+	if _, err := huge.Div(tenth); !errors.Is(err, ErrOverflow) {
+		t.Errorf("huge / 0.1: expected ErrOverflow, got %v", err)
 	}
 }
 

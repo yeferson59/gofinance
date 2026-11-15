@@ -43,12 +43,18 @@ func XIRR(flows []DatedCashFlow) (_ decimal.Decimal, err error) {
 			break
 		}
 
-		next := rate.Sub(step)
+		// A step too large to apply means Newton has left any useful region;
+		// the bracketed search is the fallback, not an overflow panic.
+		next, err := rate.TrySub(step)
+		if err != nil {
+			break
+		}
 		if next.LessThanOrEqual(irrMinusOne) {
 			break
 		}
 
-		if next.Sub(rate).Abs().LessThan(irrRateTol) {
+		// next − rate is exactly −step.
+		if step.Abs().LessThan(irrRateTol) {
 			return next, nil
 		}
 

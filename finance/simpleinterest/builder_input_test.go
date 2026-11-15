@@ -108,16 +108,17 @@ func TestBuilderValidInputStillComputes(t *testing.T) {
 	}
 }
 
-// Converting an annual rate to a periodic one can overflow the decimal
-// engine. Build used to panic there; the error now reaches the caller.
-func TestBuilderReportsRateConversionOverflow(t *testing.T) {
+// A rate large enough to overflow the growth factor is reported as an error
+// by the error-returning shortcut instead of panicking inside the decimal
+// engine's Mul.
+func TestBuilderReportsGrowthOverflow(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			t.Fatalf("panicked: %v", r)
 		}
 	}()
 
-	_, err := NewSimple().Present(5000, money.USD).AnnualRate(1e20).Periods(1).Years().FutureValue()
+	_, err := NewSimple().Present(5000, money.USD).AnnualRate(1e30).Periods(1_000_000_000).Years().FutureValue()
 	if !errors.Is(err, decimal.ErrOverflow) {
 		t.Fatalf("FutureValue error = %v, want ErrOverflow", err)
 	}
