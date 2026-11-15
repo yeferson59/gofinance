@@ -108,9 +108,16 @@ func NewAnnuity() AnnuityConfig {
 //	.NewAnnuity().Value(500, money.USD)
 func (a AnnuityConfig) Value(amount float64, currency money.Currency) AnnuityConfig {
 	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return a.withErr(err).ValueMoney(m)
+}
+
+// ValueMoney is like Value but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (a AnnuityConfig) ValueMoney(m money.Money) AnnuityConfig {
 	a.value = m
 
-	return a.withErr(err)
+	return a
 }
 
 // Present sets the present value (current loan amount or initial investment).
@@ -126,9 +133,16 @@ func (a AnnuityConfig) Value(amount float64, currency money.Currency) AnnuityCon
 //	.NewAnnuity().Present(300000, money.USD)  // $300,000 mortgage
 func (a AnnuityConfig) Present(amount float64, currency money.Currency) AnnuityConfig {
 	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return a.withErr(err).PresentMoney(m)
+}
+
+// PresentMoney is like Present but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (a AnnuityConfig) PresentMoney(m money.Money) AnnuityConfig {
 	a.present = m
 
-	return a.withErr(err)
+	return a
 }
 
 // Future sets the future value (target amount to accumulate).
@@ -143,9 +157,16 @@ func (a AnnuityConfig) Present(amount float64, currency money.Currency) AnnuityC
 //	.NewAnnuity().Future(1000000, money.USD)  // Save $1,000,000
 func (a AnnuityConfig) Future(amount float64, currency money.Currency) AnnuityConfig {
 	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return a.withErr(err).FutureMoney(m)
+}
+
+// FutureMoney is like Future but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (a AnnuityConfig) FutureMoney(m money.Money) AnnuityConfig {
 	a.future = m
 
-	return a.withErr(err)
+	return a
 }
 
 // Periods sets the total number of payment periods for the annuity.
@@ -215,11 +236,18 @@ func (a AnnuityConfig) Years(n int) AnnuityConfig {
 //	.NewAnnuity().Rate(0.005)  // 0.5% monthly rate
 func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
 	rate, err := decimal.NewFromFloat64(r)
-	a.rate = rate
+
+	return a.withErr(err).RateDecimal(rate)
+}
+
+// RateDecimal is like Rate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (a AnnuityConfig) RateDecimal(d decimal.Decimal) AnnuityConfig {
+	a.rate = d
 	a.annual = false
 	a.rateType = compoundinterest.RateEffectivePeriodic
 
-	return a.withErr(err)
+	return a
 }
 
 // AnnualRate sets the annual interest rate and automatically converts it to the periodic rate
@@ -247,11 +275,18 @@ func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
 //	.NewAnnuity().AnnualRate(0.06)  // 6% annual rate, converts to ~0.5% monthly
 func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 	rate, err := decimal.NewFromFloat64(r)
-	a.rate = rate
+
+	return a.withErr(err).AnnualRateDecimal(rate)
+}
+
+// AnnualRateDecimal is like AnnualRate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (a AnnuityConfig) AnnualRateDecimal(d decimal.Decimal) AnnuityConfig {
+	a.rate = d
 	a.annual = true
 	a.rateType = compoundinterest.RateEffectivePeriodic
 
-	return a.withErr(err)
+	return a
 }
 
 // EffectiveAnnualRate sets the effective annual interest rate and automatically converts
@@ -271,11 +306,18 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 //	.NewAnnuity().EffectiveAnnualRate(0.2668)  // 26.68% effective annual, converts to ~2% monthly
 func (a AnnuityConfig) EffectiveAnnualRate(r float64) AnnuityConfig {
 	rate, err := decimal.NewFromFloat64(r)
-	a.rate = rate
+
+	return a.withErr(err).EffectiveAnnualRateDecimal(rate)
+}
+
+// EffectiveAnnualRateDecimal is like EffectiveAnnualRate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (a AnnuityConfig) EffectiveAnnualRateDecimal(d decimal.Decimal) AnnuityConfig {
+	a.rate = d
 	a.annual = false
 	a.rateType = compoundinterest.RateEffectiveAnnually
 
-	return a.withErr(err)
+	return a
 }
 
 // Monthly sets the payment frequency to monthly (12 payments per year).

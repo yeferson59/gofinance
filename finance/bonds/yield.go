@@ -23,6 +23,10 @@ var (
 func (b Config) YTM() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
+	if b.err != nil {
+		return decimal.Decimal{}, b.err
+	}
+
 	if !b.price.IsPos() {
 		return decimal.Decimal{}, ErrNonPositivePrice
 	}

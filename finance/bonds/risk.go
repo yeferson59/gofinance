@@ -16,6 +16,10 @@ import (
 func (b Config) MacaulayDuration() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
+	if b.err != nil {
+		return decimal.Decimal{}, b.err
+	}
+
 	y, err := b.periodicYield()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -53,6 +57,10 @@ func (b Config) MustMacaulayDuration() decimal.Decimal {
 func (b Config) ModifiedDuration() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
+	if b.err != nil {
+		return decimal.Decimal{}, b.err
+	}
+
 	macaulay, err := b.MacaulayDuration()
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -87,6 +95,10 @@ func (b Config) MustModifiedDuration() decimal.Decimal {
 // invalid terms.
 func (b Config) Convexity() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
+
+	if b.err != nil {
+		return decimal.Decimal{}, b.err
+	}
 
 	y, err := b.periodicYield()
 	if err != nil {

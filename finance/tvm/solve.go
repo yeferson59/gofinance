@@ -44,6 +44,10 @@ func (t Config) factors(rate decimal.Decimal) (pow, pmtCoef decimal.Decimal, err
 func (t Config) SolveFV() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
+	if t.err != nil {
+		return decimal.Decimal{}, t.err
+	}
+
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -93,6 +97,10 @@ func (t Config) MustSolveFV() decimal.Decimal {
 func (t Config) SolvePV() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
+	if t.err != nil {
+		return decimal.Decimal{}, t.err
+	}
+
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -129,6 +137,10 @@ func (t Config) MustSolvePV() decimal.Decimal {
 // when N is zero).
 func (t Config) SolvePMT() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
+
+	if t.err != nil {
+		return decimal.Decimal{}, t.err
+	}
 
 	pow, pmtCoef, err := t.factors(t.rate)
 	if err != nil {
@@ -179,6 +191,10 @@ func (t Config) MustSolvePMT() decimal.Decimal {
 // or when the only root is negative.
 func (t Config) SolveN() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
+
+	if t.err != nil {
+		return decimal.Decimal{}, t.err
+	}
 
 	periods, err := t.solveN()
 	if err != nil {

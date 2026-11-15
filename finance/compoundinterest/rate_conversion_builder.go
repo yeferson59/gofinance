@@ -28,6 +28,21 @@ type RateConversionConfig struct {
 	rate      decimal.Decimal
 	frequency CompoundingFrequency
 	rateType  TypeRate
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// so it is kept here and reported by Build and every conversion.
+	err error
+}
+
+// withErr records err as the builder's error unless one is already held, so
+// the first problem is the one reported. A nil err leaves r unchanged.
+func (r RateConversionConfig) withErr(err error) RateConversionConfig {
+	if r.err == nil {
+		r.err = err
+	}
+
+	return r
 }
 
 // NewRateConversion creates a new RateConversionConfig builder instance.
@@ -50,8 +65,9 @@ func NewRateConversion() RateConversionConfig {
 //
 //	.NewRateConversion().Rate(0.12)
 func (r RateConversionConfig) Rate(rate float64) RateConversionConfig {
-	r.rate = decimal.MustFromFloat64(rate)
-	return r
+	d, err := decimal.NewFromFloat64(rate)
+
+	return r.withErr(err).RateDecimal(d)
 }
 
 // RateDecimal sets the source interest rate using an existing Decimal instance.
@@ -160,6 +176,10 @@ func (r RateConversionConfig) isAnticipated() bool {
 func (r RateConversionConfig) Build() (_ RateInterest, err error) {
 	defer guard.Recover(&err)
 
+	if r.err != nil {
+		return RateInterest{}, r.err
+	}
+
 	return NewRateInterest(r.rate, r.frequency, r.rateType)
 }
 
@@ -222,7 +242,7 @@ func (r RateConversionConfig) ToEffectiveAnnual() (_ decimal.Decimal, err error)
 	}
 
 	if r.isAnticipated() {
-		return rt.RateAnticipateEffectyAnnually()
+		return rt.RateEffectiveAnnually()
 	}
 
 	return rt.RateEffectiveAnnually()

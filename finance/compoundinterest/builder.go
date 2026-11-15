@@ -27,6 +27,21 @@ type CompoundConfig struct {
 	periods   int
 	frequency CompoundingFrequency
 	rateType  TypeRate
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// so it is kept here and reported by Build.
+	err error
+}
+
+// withErr records err as the builder's error unless one is already held, so
+// the first problem is the one reported. A nil err leaves c unchanged.
+func (c CompoundConfig) withErr(err error) CompoundConfig {
+	if c.err == nil {
+		c.err = err
+	}
+
+	return c
 }
 
 // NewCompound creates a new CompoundConfig builder instance.
@@ -50,8 +65,9 @@ func NewCompound() CompoundConfig {
 //
 //	.NewCompound().Present(1000, money.USD)
 func (c CompoundConfig) Present(amount float64, currency money.Currency) CompoundConfig {
-	c.present = money.MustMoneyFromFloat64(amount, currency)
-	return c
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return c.withErr(err).PresentMoney(m)
 }
 
 // PresentMoney sets the present value using an existing Money instance.
@@ -75,8 +91,9 @@ func (c CompoundConfig) PresentMoney(m money.Money) CompoundConfig {
 //
 //	.NewCompound().Future(1500, money.USD)
 func (c CompoundConfig) Future(amount float64, currency money.Currency) CompoundConfig {
-	c.future = money.MustMoneyFromFloat64(amount, currency)
-	return c
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return c.withErr(err).FutureMoney(m)
 }
 
 // FutureMoney sets the future value using an existing Money instance.
@@ -102,18 +119,24 @@ func (c CompoundConfig) FutureMoney(m money.Money) CompoundConfig {
 //
 //	.NewCompound().Rate(0.05)  // 5% interest rate
 func (c CompoundConfig) Rate(rate float64) CompoundConfig {
-	c.rate = decimal.MustFromFloat64(rate)
+	d, err := decimal.NewFromFloat64(rate)
+
+	return c.withErr(err).RateDecimal(d)
+}
+
+// RateDecimal is like Rate but takes the rate as a decimal.Decimal, so a rate
+// a float64 can't hold exactly keeps every digit.
+func (c CompoundConfig) RateDecimal(r decimal.Decimal) CompoundConfig {
+	c.rate = r
 	return c
 }
 
-// RateMoney sets the interest rate using an existing Decimal instance.
-// Use this when you already have a Decimal value.
+// RateMoney sets the interest rate from a Decimal.
 //
-// Parameters:
-//   - r: An existing Decimal instance representing the interest rate
+// Deprecated: the name is misleading — a rate is not an amount of money. Use
+// RateDecimal, which does the same.
 func (c CompoundConfig) RateMoney(r decimal.Decimal) CompoundConfig {
-	c.rate = r
-	return c
+	return c.RateDecimal(r)
 }
 
 // Periods sets the number of compounding periods for the calculation.
@@ -226,7 +249,16 @@ func (c CompoundConfig) Daily() CompoundConfig {
 func (c CompoundConfig) Build() (_ CompoundInterest, err error) {
 	defer guard.Recover(&err)
 
-	period, err := NewPeriod(decimal.MustFromFloat64(float64(c.periods)), c.frequency)
+	if c.err != nil {
+		return CompoundInterest{}, c.err
+	}
+
+	periods, err := decimal.NewFromInt64(int64(c.periods), 0)
+	if err != nil {
+		return CompoundInterest{}, err
+	}
+
+	period, err := NewPeriod(periods, c.frequency)
 	if err != nil {
 		return CompoundInterest{}, err
 	}

@@ -122,19 +122,33 @@ func NewLoan() Config {
 // the loan is expressed in.
 func (l Config) Principal(amount float64, currency money.Currency) Config {
 	principal, err := money.NewMoneyFromFloat64(amount, currency)
-	l.principal = principal
 
-	return l.withErr(err)
+	return l.withErr(err).PrincipalMoney(principal)
+}
+
+// PrincipalMoney is like Principal but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (l Config) PrincipalMoney(m money.Money) Config {
+	l.principal = m
+
+	return l
 }
 
 // Rate sets the interest rate charged each payment period as a fraction (e.g.
 // 0.005 for 0.5% per month). It replaces any rate set with AnnualRate.
 func (l Config) Rate(rate float64) Config {
 	d, err := decimal.NewFromFloat64(rate)
+
+	return l.withErr(err).RateDecimal(d)
+}
+
+// RateDecimal is like Rate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (l Config) RateDecimal(d decimal.Decimal) Config {
 	l.rate = d
 	l.annual = false
 
-	return l.withErr(err)
+	return l
 }
 
 // AnnualRate sets the nominal annual rate as a fraction (e.g. 0.065 for 6.5%).
@@ -142,10 +156,17 @@ func (l Config) Rate(rate float64) Config {
 // order the builder methods are called in. It replaces any rate set with Rate.
 func (l Config) AnnualRate(rate float64) Config {
 	d, err := decimal.NewFromFloat64(rate)
+
+	return l.withErr(err).AnnualRateDecimal(d)
+}
+
+// AnnualRateDecimal is like AnnualRate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (l Config) AnnualRateDecimal(d decimal.Decimal) Config {
 	l.rate = d
 	l.annual = true
 
-	return l.withErr(err)
+	return l
 }
 
 // Periods sets the total number of payments. It takes precedence over Years.
@@ -196,9 +217,16 @@ func (l Config) Annually() Config {
 // the cash actually received, which is what makes the APR exceed the note rate.
 func (l Config) Fees(amount float64) Config {
 	d, err := decimal.NewFromFloat64(amount)
+
+	return l.withErr(err).FeesDecimal(d)
+}
+
+// FeesDecimal is like Fees but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (l Config) FeesDecimal(d decimal.Decimal) Config {
 	l.fees = d
 
-	return l.withErr(err)
+	return l
 }
 
 // ExtraPayment sets an additional amount paid on top of the scheduled payment
@@ -206,9 +234,16 @@ func (l Config) Fees(amount float64) Config {
 // what Savings measures against the scheduled payment.
 func (l Config) ExtraPayment(amount float64) Config {
 	d, err := decimal.NewFromFloat64(amount)
+
+	return l.withErr(err).ExtraPaymentDecimal(d)
+}
+
+// ExtraPaymentDecimal is like ExtraPayment but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (l Config) ExtraPaymentDecimal(d decimal.Decimal) Config {
 	l.extra = d
 
-	return l.withErr(err)
+	return l
 }
 
 // PeriodicRate returns the interest rate charged each payment period, dividing

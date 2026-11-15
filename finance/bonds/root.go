@@ -60,6 +60,21 @@ type Config struct {
 	periods    int
 	yield      decimal.Decimal
 	price      decimal.Decimal
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// so it is kept here and reported by every terminal method.
+	err error
+}
+
+// withErr records err as the bond's error unless one is already held, so the
+// first problem is the one reported. A nil err leaves b unchanged.
+func (b Config) withErr(err error) Config {
+	if b.err == nil {
+		b.err = err
+	}
+
+	return b
 }
 
 // NewBond returns a Config defaulting to semiannual coupons (frequency 2) with
@@ -75,13 +90,29 @@ func NewBond() Config {
 
 // Face sets the face (par) value and its currency.
 func (b Config) Face(amount float64, currency money.Currency) Config {
-	b.face = money.MustMoneyFromFloat64(amount, currency)
+	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return b.withErr(err).FaceMoney(m)
+}
+
+// FaceMoney is like Face but takes the face value as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (b Config) FaceMoney(m money.Money) Config {
+	b.face = m
 	return b
 }
 
 // CouponRate sets the annual coupon rate as a fraction (e.g. 0.05 for 5%).
 func (b Config) CouponRate(rate float64) Config {
-	b.couponRate = decimal.MustFromFloat64(rate)
+	d, err := decimal.NewFromFloat64(rate)
+
+	return b.withErr(err).CouponRateDecimal(d)
+}
+
+// CouponRateDecimal is like CouponRate but takes the coupon rate as a decimal.Decimal, so a rate a
+// float64 can't hold exactly keeps every digit.
+func (b Config) CouponRateDecimal(d decimal.Decimal) Config {
+	b.couponRate = d
 	return b
 }
 
@@ -100,14 +131,30 @@ func (b Config) Periods(n int) Config {
 // Yield sets the annual yield to maturity as a fraction (e.g. 0.06 for 6%),
 // used by Price and the risk measures.
 func (b Config) Yield(y float64) Config {
-	b.yield = decimal.MustFromFloat64(y)
+	d, err := decimal.NewFromFloat64(y)
+
+	return b.withErr(err).YieldDecimal(d)
+}
+
+// YieldDecimal is like Yield but takes the yield as a decimal.Decimal, so a rate a
+// float64 can't hold exactly keeps every digit.
+func (b Config) YieldDecimal(d decimal.Decimal) Config {
+	b.yield = d
 	return b
 }
 
 // MarketPrice sets the observed clean price, used by YTM to solve for the
 // yield.
 func (b Config) MarketPrice(p float64) Config {
-	b.price = decimal.MustFromFloat64(p)
+	d, err := decimal.NewFromFloat64(p)
+
+	return b.withErr(err).MarketPriceDecimal(d)
+}
+
+// MarketPriceDecimal is like MarketPrice but takes the price as a decimal.Decimal, so a price a
+// float64 can't hold exactly keeps every digit.
+func (b Config) MarketPriceDecimal(d decimal.Decimal) Config {
+	b.price = d
 	return b
 }
 
@@ -117,6 +164,10 @@ func (b Config) MarketPrice(p float64) Config {
 // It returns ErrInvalidFrequency if the frequency is not at least 1.
 func (b Config) CouponPayment() (_ money.Money, err error) {
 	defer guard.Recover(&err)
+
+	if b.err != nil {
+		return money.Money{}, b.err
+	}
 
 	if b.freq < 1 {
 		return money.Money{}, ErrInvalidFrequency

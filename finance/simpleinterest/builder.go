@@ -114,9 +114,16 @@ func NewSimple() SimpleConfig {
 //	.NewSimple().Present(5000, money.USD)  // $5,000 principal
 func (s SimpleConfig) Present(amount float64, currency money.Currency) SimpleConfig {
 	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return s.withErr(err).PresentMoney(m)
+}
+
+// PresentMoney is like Present but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (s SimpleConfig) PresentMoney(m money.Money) SimpleConfig {
 	s.present = m
 
-	return s.withErr(err)
+	return s
 }
 
 // Future sets the future value (target amount) for the simple interest calculation.
@@ -131,9 +138,16 @@ func (s SimpleConfig) Present(amount float64, currency money.Currency) SimpleCon
 //	.NewSimple().Future(6000, money.USD)  // $6,000 target amount
 func (s SimpleConfig) Future(amount float64, currency money.Currency) SimpleConfig {
 	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return s.withErr(err).FutureMoney(m)
+}
+
+// FutureMoney is like Future but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (s SimpleConfig) FutureMoney(m money.Money) SimpleConfig {
 	s.future = m
 
-	return s.withErr(err)
+	return s
 }
 
 // Interest sets the interest amount for the simple interest calculation.
@@ -148,9 +162,16 @@ func (s SimpleConfig) Future(amount float64, currency money.Currency) SimpleConf
 //	.NewSimple().Interest(900, money.USD)  // $900 interest
 func (s SimpleConfig) Interest(amount float64, currency money.Currency) SimpleConfig {
 	m, err := money.NewMoneyFromFloat64(amount, currency)
+
+	return s.withErr(err).InterestMoney(m)
+}
+
+// InterestMoney is like Interest but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (s SimpleConfig) InterestMoney(m money.Money) SimpleConfig {
 	s.interest = m
 
-	return s.withErr(err)
+	return s
 }
 
 // Rate sets the periodic interest rate for the simple interest calculation.
@@ -167,10 +188,17 @@ func (s SimpleConfig) Interest(amount float64, currency money.Currency) SimpleCo
 //	.NewSimple().Rate(0.01)  // 1% monthly rate
 func (s SimpleConfig) Rate(r float64) SimpleConfig {
 	rate, err := decimal.NewFromFloat64(r)
-	s.rate = rate
+
+	return s.withErr(err).RateDecimal(rate)
+}
+
+// RateDecimal is like Rate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (s SimpleConfig) RateDecimal(d decimal.Decimal) SimpleConfig {
+	s.rate = d
 	s.annual = false
 
-	return s.withErr(err)
+	return s
 }
 
 // AnnualRate sets the annual interest rate, which is divided by the number of
@@ -194,10 +222,17 @@ func (s SimpleConfig) Rate(r float64) SimpleConfig {
 //	.NewSimple().AnnualRate(0.12)  // 12% annual rate, converts to 1% monthly
 func (s SimpleConfig) AnnualRate(r float64) SimpleConfig {
 	rate, err := decimal.NewFromFloat64(r)
-	s.rate = rate
+
+	return s.withErr(err).AnnualRateDecimal(rate)
+}
+
+// AnnualRateDecimal is like AnnualRate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (s SimpleConfig) AnnualRateDecimal(d decimal.Decimal) SimpleConfig {
+	s.rate = d
 	s.annual = true
 
-	return s.withErr(err)
+	return s
 }
 
 // Periods sets the number of time periods for the simple interest calculation.

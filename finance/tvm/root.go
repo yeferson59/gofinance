@@ -65,6 +65,21 @@ type Config struct {
 	pmt  decimal.Decimal
 	fv   decimal.Decimal
 	due  bool
+
+	// err holds the first invalid input a setter received (a NaN or infinite
+	// float, say). Setters can't return an error without breaking the chain,
+	// so it is kept here and reported by every Solve method.
+	err error
+}
+
+// withErr records err as the builder's error unless one is already held, so
+// the first problem is the one reported. A nil err leaves t unchanged.
+func (t Config) withErr(err error) Config {
+	if t.err == nil {
+		t.err = err
+	}
+
+	return t
 }
 
 // NewTVM returns a Config with every variable initialized to zero and an
@@ -81,32 +96,72 @@ func NewTVM() Config {
 
 // N sets the number of periods.
 func (t Config) N(n float64) Config {
-	t.n = decimal.MustFromFloat64(n)
+	d, err := decimal.NewFromFloat64(n)
+
+	return t.withErr(err).NDecimal(d)
+}
+
+// NDecimal is like N but takes the number of periods as a decimal.Decimal, so a
+// value a float64 can't hold exactly keeps every digit.
+func (t Config) NDecimal(n decimal.Decimal) Config {
+	t.n = n
 	return t
 }
 
 // Rate sets the interest rate per period as a fraction (e.g. 0.005 for
 // 0.5% per period).
 func (t Config) Rate(rate float64) Config {
-	t.rate = decimal.MustFromFloat64(rate)
+	d, err := decimal.NewFromFloat64(rate)
+
+	return t.withErr(err).RateDecimal(d)
+}
+
+// RateDecimal is like Rate but takes the rate per period as a decimal.Decimal, so a
+// value a float64 can't hold exactly keeps every digit.
+func (t Config) RateDecimal(rate decimal.Decimal) Config {
+	t.rate = rate
 	return t
 }
 
 // PV sets the present value.
 func (t Config) PV(pv float64) Config {
-	t.pv = decimal.MustFromFloat64(pv)
+	d, err := decimal.NewFromFloat64(pv)
+
+	return t.withErr(err).PVDecimal(d)
+}
+
+// PVDecimal is like PV but takes the present value as a decimal.Decimal, so a
+// value a float64 can't hold exactly keeps every digit.
+func (t Config) PVDecimal(pv decimal.Decimal) Config {
+	t.pv = pv
 	return t
 }
 
 // PMT sets the payment made each period.
 func (t Config) PMT(pmt float64) Config {
-	t.pmt = decimal.MustFromFloat64(pmt)
+	d, err := decimal.NewFromFloat64(pmt)
+
+	return t.withErr(err).PMTDecimal(d)
+}
+
+// PMTDecimal is like PMT but takes the payment as a decimal.Decimal, so a
+// value a float64 can't hold exactly keeps every digit.
+func (t Config) PMTDecimal(pmt decimal.Decimal) Config {
+	t.pmt = pmt
 	return t
 }
 
 // FV sets the future value.
 func (t Config) FV(fv float64) Config {
-	t.fv = decimal.MustFromFloat64(fv)
+	d, err := decimal.NewFromFloat64(fv)
+
+	return t.withErr(err).FVDecimal(d)
+}
+
+// FVDecimal is like FV but takes the future value as a decimal.Decimal, so a
+// value a float64 can't hold exactly keeps every digit.
+func (t Config) FVDecimal(fv decimal.Decimal) Config {
+	t.fv = fv
 	return t
 }
 

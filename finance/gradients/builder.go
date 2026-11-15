@@ -129,14 +129,32 @@ func NewArithmeticSeries() ArithmeticConfig {
 
 // FirstPayment sets the payment made at the end of the first period.
 func (a ArithmeticConfig) FirstPayment(amount float64, currency money.Currency) ArithmeticConfig {
-	a.firstPayment = a.moneyInput(amount, currency)
+	m := a.moneyInput(amount, currency)
+
+	return a.FirstPaymentMoney(m)
+}
+
+// FirstPaymentMoney is like FirstPayment but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (a ArithmeticConfig) FirstPaymentMoney(m money.Money) ArithmeticConfig {
+	a.firstPayment = m
+
 	return a
 }
 
 // Gradient sets the constant amount added to each subsequent payment
 // (negative for a decreasing series).
 func (a ArithmeticConfig) Gradient(amount float64, currency money.Currency) ArithmeticConfig {
-	a.gradient = a.moneyInput(amount, currency)
+	m := a.moneyInput(amount, currency)
+
+	return a.GradientMoney(m)
+}
+
+// GradientMoney is like Gradient but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (a ArithmeticConfig) GradientMoney(m money.Money) ArithmeticConfig {
+	a.gradient = m
+
 	return a
 }
 
@@ -149,7 +167,15 @@ func (a ArithmeticConfig) Periods(n int) ArithmeticConfig {
 // Rate sets the periodic interest rate directly. It replaces any rate set
 // with AnnualRate.
 func (a ArithmeticConfig) Rate(r float64) ArithmeticConfig {
-	a.rate = a.decimalInput(r)
+	d := a.decimalInput(r)
+
+	return a.RateDecimal(d)
+}
+
+// RateDecimal is like Rate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (a ArithmeticConfig) RateDecimal(d decimal.Decimal) ArithmeticConfig {
+	a.rate = d
 	a.annual = false
 
 	return a
@@ -160,7 +186,15 @@ func (a ArithmeticConfig) Rate(r float64) ArithmeticConfig {
 // whatever order the builder methods are called in. It replaces any rate set
 // with Rate.
 func (a ArithmeticConfig) AnnualRate(r float64) ArithmeticConfig {
-	a.rate = a.decimalInput(r)
+	d := a.decimalInput(r)
+
+	return a.AnnualRateDecimal(d)
+}
+
+// AnnualRateDecimal is like AnnualRate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (a ArithmeticConfig) AnnualRateDecimal(d decimal.Decimal) ArithmeticConfig {
+	a.rate = d
 	a.annual = true
 	a.rateType = compoundinterest.RateEffectivePeriodic
 
@@ -275,14 +309,32 @@ func NewGeometricSeries() GeometricConfig {
 
 // FirstPayment sets the payment made at the end of the first period.
 func (g GeometricConfig) FirstPayment(amount float64, currency money.Currency) GeometricConfig {
-	g.firstPayment = g.moneyInput(amount, currency)
+	m := g.moneyInput(amount, currency)
+
+	return g.FirstPaymentMoney(m)
+}
+
+// FirstPaymentMoney is like FirstPayment but takes the amount as a money.Money, so an amount a
+// float64 can't hold exactly keeps every digit.
+func (g GeometricConfig) FirstPaymentMoney(m money.Money) GeometricConfig {
+	g.firstPayment = m
+
 	return g
 }
 
 // GrowthRate sets the constant percentage each subsequent payment grows by,
 // as a decimal (e.g. 0.08 for 8%; negative for a shrinking series).
 func (g GeometricConfig) GrowthRate(r float64) GeometricConfig {
-	g.growthRate = g.decimalInput(r)
+	d := g.decimalInput(r)
+
+	return g.GrowthRateDecimal(d)
+}
+
+// GrowthRateDecimal is like GrowthRate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (g GeometricConfig) GrowthRateDecimal(d decimal.Decimal) GeometricConfig {
+	g.growthRate = d
+
 	return g
 }
 
@@ -295,7 +347,15 @@ func (g GeometricConfig) Periods(n int) GeometricConfig {
 // Rate sets the periodic interest rate directly. It replaces any rate set
 // with AnnualRate.
 func (g GeometricConfig) Rate(r float64) GeometricConfig {
-	g.rate = g.decimalInput(r)
+	d := g.decimalInput(r)
+
+	return g.RateDecimal(d)
+}
+
+// RateDecimal is like Rate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (g GeometricConfig) RateDecimal(d decimal.Decimal) GeometricConfig {
+	g.rate = d
 	g.annual = false
 
 	return g
@@ -306,7 +366,15 @@ func (g GeometricConfig) Rate(r float64) GeometricConfig {
 // whatever order the builder methods are called in. It replaces any rate set
 // with Rate.
 func (g GeometricConfig) AnnualRate(r float64) GeometricConfig {
-	g.rate = g.decimalInput(r)
+	d := g.decimalInput(r)
+
+	return g.AnnualRateDecimal(d)
+}
+
+// AnnualRateDecimal is like AnnualRate but takes the value as a decimal.Decimal, so a value a
+// float64 can't hold exactly keeps every digit.
+func (g GeometricConfig) AnnualRateDecimal(d decimal.Decimal) GeometricConfig {
+	g.rate = d
 	g.annual = true
 	g.rateType = compoundinterest.RateEffectivePeriodic
 

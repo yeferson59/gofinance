@@ -123,6 +123,10 @@ func (b Config) periodicYield() (decimal.Decimal, error) {
 func (b Config) Price() (_ money.Money, err error) {
 	defer guard.Recover(&err)
 
+	if b.err != nil {
+		return money.Money{}, b.err
+	}
+
 	y, err := b.periodicYield()
 	if err != nil {
 		return money.Money{}, err

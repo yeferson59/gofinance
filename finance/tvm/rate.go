@@ -40,6 +40,10 @@ func (t Config) residual(rate decimal.Decimal) (decimal.Decimal, error) {
 func (t Config) SolveRate() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
+	if t.err != nil {
+		return decimal.Decimal{}, t.err
+	}
+
 	var (
 		prevRate  decimal.Decimal
 		prevRes   decimal.Decimal
