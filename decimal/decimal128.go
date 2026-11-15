@@ -93,13 +93,20 @@ func decFromHiLo(neg bool, hi, lo uint64, scale uint8) (decimal128, error) {
 }
 
 func decFromFloat64(f float64) (decimal128, error) {
+	return decFromFloat(f, 64)
+}
+
+// decFromFloat converts a float of the given bit size (32 or 64) held in f.
+// The bit size picks which shortest form is used, so a float32 0.1 converts
+// to 0.1 rather than to its float64 widening, 0.10000000149011612.
+func decFromFloat(f float64, bitSize int) (decimal128, error) {
 	if math.IsNaN(f) || math.IsInf(f, 0) {
 		return decimal128{}, ErrInvalidFormat
 	}
 
 	// The shortest form that round-trips is preferred, so 0.1 stays 0.1
 	// rather than its full binary expansion.
-	s := strconv.FormatFloat(f, 'f', -1, 64)
+	s := strconv.FormatFloat(f, 'f', -1, bitSize)
 	if dot := strings.IndexByte(s, '.'); dot < 0 || len(s)-dot-1 <= int(maxScale) {
 		return parseDecimal(s)
 	}
@@ -108,7 +115,7 @@ func decFromFloat64(f float64) (decimal128, error) {
 	// (e.g. 1/4100 or 0.001/12). The float is itself only an approximation,
 	// so rejecting it would protect no real precision: round its exact binary
 	// value to maxScale digits instead, and drop the zeros that leaves.
-	d, err := parseDecimal(strconv.FormatFloat(f, 'f', int(maxScale), 64))
+	d, err := parseDecimal(strconv.FormatFloat(f, 'f', int(maxScale), bitSize))
 	if err != nil {
 		return decimal128{}, err
 	}
@@ -540,16 +547,28 @@ func (a decimal128) Ceil() decimal128 {
 // Int64 returns the integer part of a, truncated toward zero.
 func (a decimal128) Int64() (int64, error) {
 	t := a.Trunc(0)
-	if t.coef.hi != 0 || t.coef.lo > uint64(math.MaxInt64) {
+	if t.coef.hi != 0 {
 		return 0, ErrIntPartOverflow
 	}
 
-	v := int64(t.coef.lo)
+	// A negative value reaches one further than a positive one: MinInt64's
+	// magnitude, 2^63, has no positive int64 counterpart.
 	if t.neg {
-		v = -v
+		switch {
+		case t.coef.lo == uint64(math.MaxInt64)+1:
+			return math.MinInt64, nil
+		case t.coef.lo > uint64(math.MaxInt64):
+			return 0, ErrIntPartOverflow
+		default:
+			return -int64(t.coef.lo), nil
+		}
 	}
 
-	return v, nil
+	if t.coef.lo > uint64(math.MaxInt64) {
+		return 0, ErrIntPartOverflow
+	}
+
+	return int64(t.coef.lo), nil
 }
 
 func (a decimal128) InexactFloat64() float64 {
@@ -613,14 +632,30 @@ func (a decimal128) String() string {
 	return a.formatString(a.scale, true)
 }
 
-// StringFixed returns the string representation of a with fixed prec.
-// Trailing zeros are not removed; if a already has more digits than prec,
-// it's returned unchanged (at its own precision).
+// StringFixed returns a formatted with exactly prec fractional digits,
+// rounding half away from zero when a carries more and padding with zeros
+// when it carries fewer. prec is capped at maxScale.
 func (a decimal128) StringFixed(prec uint8) string {
-	d := a.rescale(prec)
-	if prec < d.scale {
-		return d.String()
+	return a.stringFixedWith(prec, decimal128.RoundHAZ)
+}
+
+// StringFixedBank is like StringFixed but rounds half to even.
+func (a decimal128) StringFixedBank(prec uint8) string {
+	return a.stringFixedWith(prec, decimal128.RoundBank)
+}
+
+// stringFixedWith formats a at exactly prec fractional digits, using round to
+// drop any digits beyond prec.
+func (a decimal128) stringFixedWith(prec uint8, round func(decimal128, uint8) decimal128) string {
+	prec = min(prec, maxScale)
+	if prec < a.scale {
+		a = round(a, prec)
 	}
+
+	// After rounding a never carries more than prec digits, so rescale only
+	// pads. It returns fewer digits only for a coefficient too close to the
+	// 128-bit ceiling to pad, which is then printed at its own precision.
+	d := a.rescale(prec)
 
 	return d.formatString(d.scale, false)
 }

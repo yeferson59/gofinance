@@ -226,7 +226,7 @@ func TestDecimal128StringFixed(t *testing.T) {
 		{"1.23", 4, "1.2300"},
 		{"-1.23", 4, "-1.2300"},
 		{"5", 2, "5.00"},
-		{"5.123", 2, "5.123"}, // prec < stored precision: stays unchanged
+		{"5.123", 2, "5.12"}, // prec < stored precision: rounds half away from zero
 		{"0", 5, "0.00000"},
 	}
 

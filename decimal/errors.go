@@ -22,4 +22,8 @@ var (
 	// version byte names a layout this build does not know, which is what
 	// stops it from reading a newer encoding as if it were this one.
 	ErrUnknownBinaryVersion = errors.New("unknown binary encoding version")
+
+	// ErrScanNull is returned by Scan for a NULL column, which has no Decimal
+	// value. Scan into a *Decimal to read a nullable column.
+	ErrScanNull = errors.New("decimal: can't scan NULL into a Decimal; scan into *Decimal for a nullable column")
 )

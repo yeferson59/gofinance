@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/json/jsontext"
 	json "encoding/json/v2"
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -441,10 +440,25 @@ func (d Decimal) String() string {
 	return d.value.String()
 }
 
+// StringFixed returns d with exactly prec digits after the decimal point,
+// rounding half away from zero when d carries more (StringFixed(2) of 1.239
+// is "1.24") and padding with zeros when it carries fewer (StringFixed(2) of
+// 5 is "5.00"). prec is capped at 19.
 func (d Decimal) StringFixed(prec uint8) string {
 	return d.value.StringFixed(prec)
 }
 
+// StringFixedBank is like StringFixed but rounds half to even (banker's
+// rounding): StringFixedBank(2) of 5.125 is "5.12".
+func (d Decimal) StringFixedBank(prec uint8) string {
+	return d.value.StringFixedBank(prec)
+}
+
+// Float64 returns the nearest float64 to d.
+//
+// Deprecated: the error is always nil — every Decimal is within float64's
+// range — so the signature promises a failure that cannot happen. Use
+// InexactFloat64, which returns the same value.
 func (d Decimal) Float64() (float64, error) {
 	return d.value.InexactFloat64(), nil
 }
@@ -827,6 +841,13 @@ func parseDecimalJSONValue(value jsontext.Value) (decimal128, error) {
 	}
 }
 
+// Scan implements sql.Scanner. It accepts text in the form NewFromString
+// parses, every Go integer kind, and float32/float64 (converted as
+// NewFromFloat64 does).
+//
+// A NULL column returns ErrScanNull and leaves d unchanged, following
+// database/sql's convention for non-nullable types. To read a nullable
+// column, scan into a *Decimal: database/sql sets it to nil for NULL.
 func (d *Decimal) Scan(src any) error {
 	var (
 		dec decimal128
@@ -838,20 +859,34 @@ func (d *Decimal) Scan(src any) error {
 		dec, err = parseDecimal(string(v))
 	case string:
 		dec, err = parseDecimal(v)
-	case uint64:
-		dec, err = decFromUint64(v, 0)
 	case int64:
 		dec, err = decFromInt64(v, 0)
 	case int:
 		dec, err = decFromInt64(int64(v), 0)
 	case int32:
 		dec, err = decFromInt64(int64(v), 0)
+	case int16:
+		dec, err = decFromInt64(int64(v), 0)
+	case int8:
+		dec, err = decFromInt64(int64(v), 0)
+	case uint64:
+		dec, err = decFromUint64(v, 0)
+	case uint:
+		dec, err = decFromUint64(uint64(v), 0)
+	case uint32:
+		dec, err = decFromUint64(uint64(v), 0)
+	case uint16:
+		dec, err = decFromUint64(uint64(v), 0)
+	case uint8:
+		dec, err = decFromUint64(uint64(v), 0)
 	case float64:
 		dec, err = decFromFloat64(v)
+	case float32:
+		dec, err = decFromFloat(float64(v), 32)
 	case nil:
-		err = errors.New("can't scan nil")
+		err = ErrScanNull
 	default:
-		err = fmt.Errorf("can't scan %T", src)
+		err = fmt.Errorf("decimal: can't scan %T", src)
 	}
 
 	if err != nil {
