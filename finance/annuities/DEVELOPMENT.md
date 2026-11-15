@@ -69,7 +69,7 @@ The interest rate applied in each compounding period.
 rate, err := compoundinterest.NewRateInterest(
     0.01,                                    // value
     compoundinterest.Monthly,               // frequency
-    compoundinterest.RateEffectyPeriodic,   // type
+    compoundinterest.RateEffectivePeriodic,   // type
 )
 ```
 
@@ -186,7 +186,7 @@ go tool cover -html=coverage.out
 ```go
 func TestNewFunctionality(t *testing.T) {
     // Arrange: Prepare data
-    rate, err := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+    rate, err := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
     require.NoError(t, err)
 
     period, err := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
@@ -217,7 +217,7 @@ func TestNewFunctionality(t *testing.T) {
 
 ```go
 // $10,000 loan with 1% monthly for 12 months
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 ann, _ := annuities.New(0, 10000, 0, period, rate)
 payment, _ := ann.PaymentFromPresentValue()
@@ -227,7 +227,7 @@ payment, _ := ann.PaymentFromPresentValue()
 
 ```go
 // $500 monthly savings at 0.5% monthly for 12 months
-rate, _ := compoundinterest.NewRateInterest(0.005, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.005, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 ann, _ := annuities.New(500, 0, 0, period, rate)
 future, _ := ann.Future()
@@ -237,7 +237,7 @@ future, _ := ann.Future()
 
 ```go
 // $100,000 goal in 5 years at 6% annual
-rate, _ := compoundinterest.NewRateInterest(0.06, compoundinterest.Annually, compoundinterest.RateEffectyAnnually)
+rate, _ := compoundinterest.NewRateInterest(0.06, compoundinterest.Annually, compoundinterest.RateEffectiveAnnually)
 period, _ := compoundinterest.NewPeriod(5, compoundinterest.Annually)
 ann, _ := annuities.New(0, 0, 100000, period, rate)
 payment, _ := ann.PaymentFromFutureValue()
@@ -256,12 +256,12 @@ payment, _ := ann.PaymentFromFutureValue()
 ```go
 // ❌ Inefficient: Creates rate 1000 times
 for i := 0; i < 1000; i++ {
-    rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+    rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
     // ...
 }
 
 // ✅ Efficient: Creates once
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 for i := 0; i < 1000; i++ {
     // Reuse rate
 }
@@ -274,7 +274,7 @@ for i := 0; i < 1000; i++ {
 1. **Print intermediate values:**
 
 ```go
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 ann, _ := annuities.New(100, 0, 0, period, rate)
 

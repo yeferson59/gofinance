@@ -29,7 +29,7 @@ type Geometric struct {
 // Example:
 //
 //	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(5), compoundinterest.Annually)
-//	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.1), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+//	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.1), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 //	series, _ := NewGeometric(
 //	    money.MustMoneyFromFloat64(1000, money.USD),
 //	    decimal.MustFromFloat64(0.08),

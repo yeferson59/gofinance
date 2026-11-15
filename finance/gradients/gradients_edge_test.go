@@ -18,7 +18,7 @@ func newSeries(t *testing.T, periods, rate float64) (compoundinterest.Period, co
 	require.NoError(t, err)
 
 	rateInterest, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(rate), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(rate), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	return period, rateInterest
@@ -511,7 +511,7 @@ func TestOverflowingTermReportsError(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(100000), compoundinterest.Annually)
 	require.NoError(t, err)
 
-	rate, err := compoundinterest.NewRateInterest(decimal.One, compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+	rate, err := compoundinterest.NewRateInterest(decimal.One, compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	arithmetic, err := NewArithmetic(

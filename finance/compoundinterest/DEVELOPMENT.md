@@ -89,7 +89,7 @@ d_a = i_a / (1 + i_a)  (where d_a is annual anticipated rate)
 rate, err := compoundinterest.NewRateInterest(
     0.12,                                    // value
     compoundinterest.Monthly,               // frequency
-    compoundinterest.RateEffectyNominal,    // type
+    compoundinterest.RateEffectiveNominal,    // type
 )
 ```
 
@@ -190,7 +190,7 @@ go tool cover -html=coverage.out
 ```go
 func TestNewFunctionality(t *testing.T) {
     // Arrange: Prepare data
-    rate, err := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+    rate, err := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
     require.NoError(t, err)
 
     period, err := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
@@ -221,7 +221,7 @@ func TestNewFunctionality(t *testing.T) {
 
 ```go
 // $10,000 loan with 2% nominal monthly for 24 months
-rate, _ := compoundinterest.NewRateInterest(0.24, compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
+rate, _ := compoundinterest.NewRateInterest(0.24, compoundinterest.Monthly, compoundinterest.RateEffectiveNominal)
 period, _ := compoundinterest.NewPeriod(24, compoundinterest.Monthly)
 ci, _ := compoundinterest.New(10000, 0, rate, period)
 amount, _ := ci.Future()
@@ -231,7 +231,7 @@ amount, _ := ci.Future()
 
 ```go
 // $5,000 investment with 8% effective annual for 3 years
-rate, _ := compoundinterest.NewRateInterest(0.08, compoundinterest.Annually, compoundinterest.RateEffectyAnnually)
+rate, _ := compoundinterest.NewRateInterest(0.08, compoundinterest.Annually, compoundinterest.RateEffectiveAnnually)
 period, _ := compoundinterest.NewPeriod(3, compoundinterest.Annually)
 ci, _ := compoundinterest.New(5000, 0, rate, period)
 future, _ := ci.Future()
@@ -241,7 +241,7 @@ future, _ := ci.Future()
 
 ```go
 // $50,000 bill discounted at 10% annual anticipated rate
-rate, _ := compoundinterest.NewRateInterest(0.10, compoundinterest.Annually, compoundinterest.RateAnticipateEffectyAnnually)
+rate, _ := compoundinterest.NewRateInterest(0.10, compoundinterest.Annually, compoundinterest.RateAnticipateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(1, compoundinterest.Annually)
 ci, _ := compoundinterest.New(0, 50000, rate, period)
 present, _ := ci.Present()
@@ -260,12 +260,12 @@ present, _ := ci.Present()
 ```go
 // ❌ Inefficient: Creates rate 1000 times
 for i := 0; i < 1000; i++ {
-    rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+    rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
     // ...
 }
 
 // ✅ Efficient: Creates once
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 for i := 0; i < 1000; i++ {
     // Reuse rate
 }
@@ -278,7 +278,7 @@ for i := 0; i < 1000; i++ {
 1. **Print intermediate values:**
 
 ```go
-rate, _ := NewRateInterest(0.12, Monthly, RateEffectyNominal)
+rate, _ := NewRateInterest(0.12, Monthly, RateEffectiveNominal)
 periodic, _ := rate.RatePeriodic()
 log.Printf("Periodic rate: %.6f\n", periodic)
 ```
@@ -298,7 +298,7 @@ fmt.Printf("Original: %.6f\nPeriodic: %.6f\nNominal: %.6f\n", original, periodic
 func debugRate(t *testing.T, rate *RateInterest) {
     periodic, _ := rate.RatePeriodic()
     nominal, _ := rate.RateNominal()
-    annual, _ := rate.RateEffectyAnnually()
+    annual, _ := rate.RateEffectiveAnnually()
     t.Logf("Periodic: %.6f, Nominal: %.6f, Annual: %.6f", periodic, nominal, annual)
 }
 ```

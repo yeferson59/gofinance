@@ -37,22 +37,22 @@ func BenchmarkNewRateInterest(b *testing.B) {
 		{
 			0.10,
 			compoundinterest.Annually,
-			compoundinterest.RateEffectyAnnually,
+			compoundinterest.RateEffectiveAnnually,
 		},
 		{
 			0.24,
 			compoundinterest.Bimonthly,
-			compoundinterest.RateAnticipateEffectyNominal,
+			compoundinterest.RateAnticipateEffectiveNominal,
 		},
 		{
 			0.25,
 			compoundinterest.Annually,
-			compoundinterest.RateAnticipateEffectyPeriodic,
+			compoundinterest.RateAnticipateEffectivePeriodic,
 		},
 		{
 			0.244,
 			compoundinterest.Daily,
-			compoundinterest.RateAnticipateEffectyNominal,
+			compoundinterest.RateAnticipateEffectiveNominal,
 		},
 	}
 
@@ -66,8 +66,8 @@ func BenchmarkNewRateInterest(b *testing.B) {
 }
 
 func BenchmarkRateInterest(b *testing.B) {
-	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.25), compoundinterest.Bimonthly, compoundinterest.RateEffectyAnnually)
-	rateTwo, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.18), compoundinterest.Monthly, compoundinterest.RateEffectyAnnually)
+	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.25), compoundinterest.Bimonthly, compoundinterest.RateEffectiveAnnually)
+	rateTwo, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.18), compoundinterest.Monthly, compoundinterest.RateEffectiveAnnually)
 
 	testcases := []compoundinterest.RateInterest{
 		rate,
@@ -99,7 +99,7 @@ func BenchmarkRateInterest(b *testing.B) {
 			b.ReportAllocs()
 			b.StartTimer()
 			for b.Loop() {
-				_, _ = testcase.RateEffectyAnnually()
+				_, _ = testcase.RateEffectiveAnnually()
 			}
 		}
 	})
@@ -208,7 +208,7 @@ func BenchmarkNewCompoundInterest(b *testing.B) {
 			2,
 			0.24,
 			compoundinterest.Monthly,
-			compoundinterest.RateEffectyNominal,
+			compoundinterest.RateEffectiveNominal,
 			1_000,
 			0,
 		},
@@ -216,7 +216,7 @@ func BenchmarkNewCompoundInterest(b *testing.B) {
 			2.5,
 			0.24,
 			compoundinterest.Monthly,
-			compoundinterest.RateEffectyNominal,
+			compoundinterest.RateEffectiveNominal,
 			0,
 			2_500,
 		},
@@ -248,7 +248,7 @@ func BenchmarkCompoundInterest(b *testing.B) {
 			2,
 			0.25,
 			compoundinterest.Monthly,
-			compoundinterest.RateEffectyNominal,
+			compoundinterest.RateEffectiveNominal,
 			1_000,
 			0,
 		},
@@ -256,7 +256,7 @@ func BenchmarkCompoundInterest(b *testing.B) {
 			2.5,
 			0.24,
 			compoundinterest.Monthly,
-			compoundinterest.RateEffectyNominal,
+			compoundinterest.RateEffectiveNominal,
 			0,
 			2_500,
 		},

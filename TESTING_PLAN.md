@@ -119,7 +119,7 @@ actualizaron al comportamiento correcto.
 `finance/compoundinterest` convierte entre cinco tipos de tasa. La matriz de
 conversión (valor 0.12, capitalización mensual) da esto:
 
-| tipo origen | `RatePeriodic` | `RateNominal` | `RateEffectyAnnually` | `RateAnticipateNominal` | `RateAnticipatePeriodic` |
+| tipo origen | `RatePeriodic` | `RateNominal` | `RateEffectiveAnnually` | `RateAnticipateNominal` | `RateAnticipatePeriodic` |
 | --- | --- | --- | --- | --- | --- |
 | `periodic` | 0.12 | 1.44 | 2.8959… | **0** | **0** |
 | `annual` | 0.00948… | 0.11386… | 0.12 | 0.11279… | 0.00939… |

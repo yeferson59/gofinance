@@ -30,12 +30,12 @@ type CompoundConfig struct {
 }
 
 // NewCompound creates a new CompoundConfig builder instance.
-// The default rate type is RateEffectyPeriodic; use RateType() to change it.
+// The default rate type is RateEffectivePeriodic; use RateType() to change it.
 // You must set at least the present or future value, rate, periods, and frequency
 // before calling Build() or MustBuild().
 func NewCompound() CompoundConfig {
 	return CompoundConfig{
-		rateType: RateEffectyPeriodic,
+		rateType: RateEffectivePeriodic,
 	}
 }
 
@@ -146,11 +146,11 @@ func (c CompoundConfig) Frequency(f CompoundingFrequency) CompoundConfig {
 // RateType sets the type of interest rate being used.
 //
 // Parameters:
-//   - t: The rate type (RateEffectyPeriodic, RateEffectyNominal, RateEffectyAnnually, RateAnticipateEffectyPeriodic, etc.)
+//   - t: The rate type (RateEffectivePeriodic, RateEffectiveNominal, RateEffectiveAnnually, RateAnticipateEffectivePeriodic, etc.)
 //
 // Example:
 //
-//	.NewCompound().RateType(RateEffectyPeriodic)
+//	.NewCompound().RateType(RateEffectivePeriodic)
 func (c CompoundConfig) RateType(t TypeRate) CompoundConfig {
 	c.rateType = t
 	return c

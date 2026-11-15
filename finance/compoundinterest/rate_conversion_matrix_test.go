@@ -13,11 +13,11 @@ import (
 // the silent-zero bug this file guards against lived precisely in the
 // combinations no single-case test visited.
 var allTypeRates = []TypeRate{
-	RateEffectyPeriodic,
-	RateEffectyAnnually,
-	RateEffectyNominal,
-	RateAnticipateEffectyPeriodic,
-	RateAnticipateEffectyNominal,
+	RateEffectivePeriodic,
+	RateEffectiveAnnually,
+	RateEffectiveNominal,
+	RateAnticipateEffectivePeriodic,
+	RateAnticipateEffectiveNominal,
 }
 
 var allFrequencies = []CompoundingFrequency{
@@ -29,7 +29,7 @@ func conversions(rt RateInterest) map[string]func() (decimal.Decimal, error) {
 	return map[string]func() (decimal.Decimal, error){
 		"RatePeriodic":                  rt.RatePeriodic,
 		"RateNominal":                   rt.RateNominal,
-		"RateEffectyAnnually":           rt.RateEffectyAnnually,
+		"RateEffectiveAnnually":         rt.RateEffectiveAnnually,
 		"RateAnticipatePeriodic":        rt.RateAnticipatePeriodic,
 		"RateAnticipateNominal":         rt.RateAnticipateNominal,
 		"RateAnticipateEffectyAnnually": rt.RateAnticipateEffectyAnnually,
@@ -74,10 +74,10 @@ func TestRateConversionNeverSilentlyZero(t *testing.T) {
 func TestEffectiveAnnualIsIndependentOfQuotedForm(t *testing.T) {
 	periodic := decimal.MustFromFloat64(0.01)
 
-	base, err := NewRateInterest(periodic, Monthly, RateEffectyPeriodic)
+	base, err := NewRateInterest(periodic, Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
-	expected, err := base.RateEffectyAnnually()
+	expected, err := base.RateEffectiveAnnually()
 	require.NoError(t, err)
 
 	nominal, err := base.RateNominal()
@@ -93,11 +93,11 @@ func TestEffectiveAnnualIsIndependentOfQuotedForm(t *testing.T) {
 		typeRate TypeRate
 		value    decimal.Decimal
 	}{
-		{RateEffectyPeriodic, periodic},
-		{RateEffectyAnnually, expected},
-		{RateEffectyNominal, nominal},
-		{RateAnticipateEffectyPeriodic, anticipatePeriodic},
-		{RateAnticipateEffectyNominal, anticipateNominal},
+		{RateEffectivePeriodic, periodic},
+		{RateEffectiveAnnually, expected},
+		{RateEffectiveNominal, nominal},
+		{RateAnticipateEffectivePeriodic, anticipatePeriodic},
+		{RateAnticipateEffectiveNominal, anticipateNominal},
 	}
 
 	for _, form := range sameRate {
@@ -105,7 +105,7 @@ func TestEffectiveAnnualIsIndependentOfQuotedForm(t *testing.T) {
 			rateInterest, err := NewRateInterest(form.value, Monthly, form.typeRate)
 			require.NoError(t, err)
 
-			effectiveAnnual, err := rateInterest.RateEffectyAnnually()
+			effectiveAnnual, err := rateInterest.RateEffectiveAnnually()
 			require.NoError(t, err)
 
 			assert.InDelta(t, expected.InexactFloat64(), effectiveAnnual.InexactFloat64(), 1e-12)
@@ -118,7 +118,7 @@ func TestEffectiveAnnualIsIndependentOfQuotedForm(t *testing.T) {
 func TestAnticipatedOrdinaryReciprocity(t *testing.T) {
 	for _, frequency := range allFrequencies {
 		t.Run(string(frequency), func(t *testing.T) {
-			ordinary, err := NewRateInterest(decimal.MustFromFloat64(0.02), frequency, RateEffectyPeriodic)
+			ordinary, err := NewRateInterest(decimal.MustFromFloat64(0.02), frequency, RateEffectivePeriodic)
 			require.NoError(t, err)
 
 			discount, err := ordinary.RateAnticipatePeriodic()
@@ -128,7 +128,7 @@ func TestAnticipatedOrdinaryReciprocity(t *testing.T) {
 			assert.InDelta(t, 0.02/1.02, discount.InexactFloat64(), 1e-12)
 
 			// Going back the other way must recover the ordinary rate.
-			anticipated, err := NewRateInterest(discount, frequency, RateAnticipateEffectyPeriodic)
+			anticipated, err := NewRateInterest(discount, frequency, RateAnticipateEffectivePeriodic)
 			require.NoError(t, err)
 
 			recovered, err := anticipated.RatePeriodic()
@@ -151,27 +151,27 @@ func TestRateConversionRoundTrip(t *testing.T) {
 		backward func(RateInterest) (decimal.Decimal, error)
 	}{
 		{
-			"periodic <-> nominal", RateEffectyPeriodic, RateEffectyNominal, 0.01,
+			"periodic <-> nominal", RateEffectivePeriodic, RateEffectiveNominal, 0.01,
 			RateInterest.RateNominal, RateInterest.RatePeriodic,
 		},
 		{
-			"periodic <-> effective annual", RateEffectyPeriodic, RateEffectyAnnually, 0.01,
-			RateInterest.RateEffectyAnnually, RateInterest.RatePeriodic,
+			"periodic <-> effective annual", RateEffectivePeriodic, RateEffectiveAnnually, 0.01,
+			RateInterest.RateEffectiveAnnually, RateInterest.RatePeriodic,
 		},
 		{
-			"periodic <-> anticipated periodic", RateEffectyPeriodic, RateAnticipateEffectyPeriodic, 0.01,
+			"periodic <-> anticipated periodic", RateEffectivePeriodic, RateAnticipateEffectivePeriodic, 0.01,
 			RateInterest.RateAnticipatePeriodic, RateInterest.RatePeriodic,
 		},
 		{
-			"periodic <-> anticipated nominal", RateEffectyPeriodic, RateAnticipateEffectyNominal, 0.01,
+			"periodic <-> anticipated nominal", RateEffectivePeriodic, RateAnticipateEffectiveNominal, 0.01,
 			RateInterest.RateAnticipateNominal, RateInterest.RatePeriodic,
 		},
 		{
-			"effective annual <-> anticipated nominal", RateEffectyAnnually, RateAnticipateEffectyNominal, 0.1268,
-			RateInterest.RateAnticipateNominal, RateInterest.RateEffectyAnnually,
+			"effective annual <-> anticipated nominal", RateEffectiveAnnually, RateAnticipateEffectiveNominal, 0.1268,
+			RateInterest.RateAnticipateNominal, RateInterest.RateEffectiveAnnually,
 		},
 		{
-			"nominal <-> anticipated periodic", RateEffectyNominal, RateAnticipateEffectyPeriodic, 0.12,
+			"nominal <-> anticipated periodic", RateEffectiveNominal, RateAnticipateEffectivePeriodic, 0.12,
 			RateInterest.RateAnticipatePeriodic, RateInterest.RateNominal,
 		},
 	}
@@ -206,18 +206,18 @@ func TestRateConversionCrossFamilyValues(t *testing.T) {
 		expected float64
 	}{
 		// i = 12% per month -> d = 0.12/1.12
-		{"periodic to anticipated periodic", 0.12, RateEffectyPeriodic, RateInterest.RateAnticipatePeriodic, 0.12 / 1.12},
+		{"periodic to anticipated periodic", 0.12, RateEffectivePeriodic, RateInterest.RateAnticipatePeriodic, 0.12 / 1.12},
 		// d × 12
-		{"periodic to anticipated nominal", 0.12, RateEffectyPeriodic, RateInterest.RateAnticipateNominal, 12 * 0.12 / 1.12},
+		{"periodic to anticipated nominal", 0.12, RateEffectivePeriodic, RateInterest.RateAnticipateNominal, 12 * 0.12 / 1.12},
 		// j = 12% nominal -> i = 1% -> d = 0.01/1.01
-		{"nominal to anticipated periodic", 0.12, RateEffectyNominal, RateInterest.RateAnticipatePeriodic, 0.01 / 1.01},
-		{"nominal to anticipated nominal", 0.12, RateEffectyNominal, RateInterest.RateAnticipateNominal, 12 * 0.01 / 1.01},
+		{"nominal to anticipated periodic", 0.12, RateEffectiveNominal, RateInterest.RateAnticipatePeriodic, 0.01 / 1.01},
+		{"nominal to anticipated nominal", 0.12, RateEffectiveNominal, RateInterest.RateAnticipateNominal, 12 * 0.01 / 1.01},
 		// d = 12% per month -> i = 0.12/0.88
-		{"anticipated periodic to periodic", 0.12, RateAnticipateEffectyPeriodic, RateInterest.RatePeriodic, 0.12 / 0.88},
-		{"anticipated periodic to nominal", 0.12, RateAnticipateEffectyPeriodic, RateInterest.RateNominal, 12 * 0.12 / 0.88},
+		{"anticipated periodic to periodic", 0.12, RateAnticipateEffectivePeriodic, RateInterest.RatePeriodic, 0.12 / 0.88},
+		{"anticipated periodic to nominal", 0.12, RateAnticipateEffectivePeriodic, RateInterest.RateNominal, 12 * 0.12 / 0.88},
 		// f = 12% anticipated nominal -> d = 1% -> i = 0.01/0.99
-		{"anticipated nominal to periodic", 0.12, RateAnticipateEffectyNominal, RateInterest.RatePeriodic, 0.01 / 0.99},
-		{"anticipated nominal to nominal", 0.12, RateAnticipateEffectyNominal, RateInterest.RateNominal, 12 * 0.01 / 0.99},
+		{"anticipated nominal to periodic", 0.12, RateAnticipateEffectiveNominal, RateInterest.RatePeriodic, 0.01 / 0.99},
+		{"anticipated nominal to nominal", 0.12, RateAnticipateEffectiveNominal, RateInterest.RateNominal, 12 * 0.01 / 0.99},
 	}
 
 	for _, test := range tests {
@@ -262,10 +262,10 @@ func TestAnticipatedRateAtOrAboveOne(t *testing.T) {
 		value    float64
 		typeRate TypeRate
 	}{
-		{"100% anticipated periodic", 1, RateAnticipateEffectyPeriodic},
-		{"150% anticipated periodic", 1.5, RateAnticipateEffectyPeriodic},
+		{"100% anticipated periodic", 1, RateAnticipateEffectivePeriodic},
+		{"150% anticipated periodic", 1.5, RateAnticipateEffectivePeriodic},
 		// f = 12 with monthly compounding means d = 1 per period.
-		{"anticipated nominal implying d = 1", 12, RateAnticipateEffectyNominal},
+		{"anticipated nominal implying d = 1", 12, RateAnticipateEffectiveNominal},
 	}
 
 	for _, test := range tests {
@@ -276,7 +276,7 @@ func TestAnticipatedRateAtOrAboveOne(t *testing.T) {
 			_, err = rateInterest.RatePeriodic()
 			assert.ErrorIs(t, err, ErrInvalidAnticipatedRate)
 
-			_, err = rateInterest.RateEffectyAnnually()
+			_, err = rateInterest.RateEffectiveAnnually()
 			assert.ErrorIs(t, err, ErrInvalidAnticipatedRate)
 		})
 	}

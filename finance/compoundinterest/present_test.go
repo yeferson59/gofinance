@@ -10,7 +10,7 @@ import (
 )
 
 func TestPresentWithPeriodicRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -30,7 +30,7 @@ func TestPresentWithPeriodicRate(t *testing.T) {
 }
 
 func TestPresentWithNominalRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectiveNominal)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -50,7 +50,7 @@ func TestPresentWithNominalRate(t *testing.T) {
 }
 
 func TestPresentWithAnnuallyRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Annually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Annually, RateEffectiveAnnually)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(1), Annually)
@@ -70,7 +70,7 @@ func TestPresentWithAnnuallyRate(t *testing.T) {
 }
 
 func TestPresentWithDailyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), Daily, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), Daily, RateEffectiveAnnually)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(365), Daily)
@@ -92,7 +92,7 @@ func TestPresentWithDailyCompounding(t *testing.T) {
 }
 
 func TestPresentWithQuarterlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Quarterly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Quarterly, RateEffectiveNominal)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(4), Quarterly)
@@ -113,7 +113,7 @@ func TestPresentWithQuarterlyCompounding(t *testing.T) {
 }
 
 func TestPresentWithSemiAnnuallyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), SemiAnnually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), SemiAnnually, RateEffectiveAnnually)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(2), SemiAnnually)
@@ -136,7 +136,7 @@ func TestPresentWithSemiAnnuallyCompounding(t *testing.T) {
 }
 
 func TestPresentWithZeroFuture(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -170,7 +170,7 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 			future:   1126.825,
 			rate:     0.01,
 			freq:     Monthly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  12,
 			expected: 1000.0,
 		},
@@ -179,7 +179,7 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 			future:   1050.0,
 			rate:     0.05,
 			freq:     Annually,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  1,
 			expected: 1000.0,
 		},
@@ -188,7 +188,7 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 			future:   2342.7,
 			rate:     0.02,
 			freq:     Quarterly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  8,
 			// PV = 2342.70 / 1.02^8 = 1999.4719
 			expected: 1999.4719,
@@ -219,7 +219,7 @@ func TestPresentWithMultipleDataSets(t *testing.T) {
 }
 
 func TestPresentWithTwelveMonthlyPeriods(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -239,7 +239,7 @@ func TestPresentWithTwelveMonthlyPeriods(t *testing.T) {
 }
 
 func TestPresentWithBimonthlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.06), Bimonthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.06), Bimonthly, RateEffectiveNominal)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(6), Bimonthly)
@@ -267,12 +267,12 @@ func TestPresentWithDifferentRateTypes(t *testing.T) {
 		expected float64
 	}{
 		// periodic 1% monthly: PV = 1000 / 1.01^12 = 887.4492
-		{"periodic", 0.01, RateEffectyPeriodic, 887.4492},
+		{"periodic", 0.01, RateEffectivePeriodic, 887.4492},
 		// 12% nominal monthly => i = 0.01: same as above
-		{"nominal", 0.12, RateEffectyNominal, 887.4492},
+		{"nominal", 0.12, RateEffectiveNominal, 887.4492},
 		// 12.68% effective annual over 12 months = exactly one year:
 		// PV = 1000 / 1.1268 = 887.4689
-		{"annual", 0.1268, RateEffectyAnnually, 887.4689},
+		{"annual", 0.1268, RateEffectiveAnnually, 887.4689},
 	}
 
 	for _, tc := range testCases {
@@ -299,7 +299,7 @@ func TestPresentWithDifferentRateTypes(t *testing.T) {
 }
 
 func TestPresentConsistencyWithFuture(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)

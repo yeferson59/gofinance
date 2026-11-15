@@ -180,7 +180,7 @@ func main() {
         Rate(0.05).
         Periods(12).
         Monthly().
-        RateType(compoundinterest.RateEffectyPeriodic).
+        RateType(compoundinterest.RateEffectivePeriodic).
         MustBuild()
 
     future, err := ci.Future()

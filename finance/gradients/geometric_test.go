@@ -16,7 +16,7 @@ func TestGeometricPresent(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(5), compoundinterest.Annually)
 	require.NoError(t, err)
 
-	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	series, err := NewGeometric(
@@ -35,7 +35,7 @@ func TestGeometricFuture(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(5), compoundinterest.Annually)
 	require.NoError(t, err)
 
-	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	series, err := NewGeometric(
@@ -54,7 +54,7 @@ func TestGeometricPresentGrowthEqualsRate(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(5), compoundinterest.Annually)
 	require.NoError(t, err)
 
-	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	series, err := NewGeometric(
@@ -73,7 +73,7 @@ func TestGeometricFutureGrowthEqualsRate(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(5), compoundinterest.Annually)
 	require.NoError(t, err)
 
-	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	series, err := NewGeometric(
@@ -93,7 +93,7 @@ func TestGeometricZeroGrowthMatchesOrdinaryAnnuity(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(5), compoundinterest.Annually)
 	require.NoError(t, err)
 
-	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+	rate, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.10), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	series, err := NewGeometric(

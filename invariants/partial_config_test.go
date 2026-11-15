@@ -71,7 +71,7 @@ func TestAnnuityPartialConfigurations(t *testing.T) {
 	require.NoError(t, err)
 
 	rate, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	configurations := []struct {
@@ -151,7 +151,7 @@ func TestCompoundInterestPartialConfigurations(t *testing.T) {
 	require.NoError(t, err)
 
 	rate, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	configurations := []struct {
@@ -213,7 +213,7 @@ func TestMixedCurrenciesAreRejectedEverywhere(t *testing.T) {
 	require.NoError(t, err)
 
 	rate, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	_, err = annuities.New(dollars, euros, unset(), period, rate)

@@ -40,7 +40,7 @@ func TestCompoundConfigMoneySetters(t *testing.T) {
 		FutureMoney(future).
 		RateMoney(rate).
 		Frequency(Monthly).
-		RateType(RateEffectyNominal)
+		RateType(RateEffectiveNominal)
 
 	if !config.present.Equal(present) {
 		t.Errorf("expected present %v, got %v", present, config.present)
@@ -54,8 +54,8 @@ func TestCompoundConfigMoneySetters(t *testing.T) {
 	if config.frequency != Monthly {
 		t.Errorf("expected Monthly, got %v", config.frequency)
 	}
-	if config.rateType != RateEffectyNominal {
-		t.Errorf("expected RateEffectyNominal, got %v", config.rateType)
+	if config.rateType != RateEffectiveNominal {
+		t.Errorf("expected RateEffectiveNominal, got %v", config.rateType)
 	}
 }
 

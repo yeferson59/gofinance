@@ -225,12 +225,12 @@ func TestNewPeriodErrorWithEmptyPeriod(t *testing.T) {
 }
 
 func TestNewRateInterest(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	assert.Equal(t, 0.05, rateInterest.value.InexactFloat64())
 	assert.Equal(t, Monthly, rateInterest.compoundingFrequency)
-	assert.Equal(t, RateEffectyPeriodic, rateInterest.typeRate)
+	assert.Equal(t, RateEffectivePeriodic, rateInterest.typeRate)
 }
 
 func TestNewRateInterestWithDifferentTypes(t *testing.T) {
@@ -240,12 +240,12 @@ func TestNewRateInterestWithDifferentTypes(t *testing.T) {
 		freq     CompoundingFrequency
 		typeRate TypeRate
 	}{
-		{"periodic", 0.01, Monthly, RateEffectyPeriodic},
-		{"nominal", 0.12, Monthly, RateEffectyNominal},
-		{"annual", 0.1268, Monthly, RateEffectyAnnually},
-		{"anticipate periodic", 0.01, Monthly, RateAnticipateEffectyPeriodic},
-		{"anticipate nominal", 0.12, Monthly, RateAnticipateEffectyNominal},
-		{"anticipate annual", 0.1268, Monthly, RateEffectyAnnually},
+		{"periodic", 0.01, Monthly, RateEffectivePeriodic},
+		{"nominal", 0.12, Monthly, RateEffectiveNominal},
+		{"annual", 0.1268, Monthly, RateEffectiveAnnually},
+		{"anticipate periodic", 0.01, Monthly, RateAnticipateEffectivePeriodic},
+		{"anticipate nominal", 0.12, Monthly, RateAnticipateEffectiveNominal},
+		{"anticipate annual", 0.1268, Monthly, RateEffectiveAnnually},
 	}
 
 	for _, tc := range testCases {

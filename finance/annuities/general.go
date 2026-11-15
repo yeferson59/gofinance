@@ -25,7 +25,7 @@ import (
 //
 //	// Monthly payments against a quarterly-compounded 8% nominal rate.
 //	rate, _ := compoundinterest.NewRateInterest(
-//	    decimal.MustFromFloat64(0.08), compoundinterest.Quarterly, compoundinterest.RateEffectyNominal)
+//	    decimal.MustFromFloat64(0.08), compoundinterest.Quarterly, compoundinterest.RateEffectiveNominal)
 //	annuity, _ := NewGeneral(
 //	    money.MustMoneyFromFloat64(100, money.USD),
 //	    money.MoneyZero, money.MoneyZero,

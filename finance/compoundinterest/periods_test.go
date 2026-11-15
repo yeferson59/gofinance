@@ -34,7 +34,7 @@ func newPeriodsCase(t *testing.T, present, future int64, rate float64, freq Comp
 func TestPeriodsReturnsConfiguredPeriod(t *testing.T) {
 	// When a non-zero period is configured, Periods() returns it directly
 	// without computing anything from present/future/rate.
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(18), Monthly)
@@ -55,7 +55,7 @@ func TestPeriodsReturnsConfiguredPeriod(t *testing.T) {
 
 func TestPeriodsWithPeriodicRate(t *testing.T) {
 	// n = ln(1126.83/1000) / ln(1.01) = 12.0004
-	ci := newPeriodsCase(t, 100000, 112683, 0.01, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 100000, 112683, 0.01, Monthly, RateEffectivePeriodic)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -65,7 +65,7 @@ func TestPeriodsWithPeriodicRate(t *testing.T) {
 
 func TestPeriodsWithNominalRate(t *testing.T) {
 	// 12% nominal monthly => i = 0.01, n = ln(1.12683) / ln(1.01) = 12.0004
-	ci := newPeriodsCase(t, 100000, 112683, 0.12, Monthly, RateEffectyNominal)
+	ci := newPeriodsCase(t, 100000, 112683, 0.12, Monthly, RateEffectiveNominal)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestPeriodsWithNominalRate(t *testing.T) {
 
 func TestPeriodsWithAnnuallyRate(t *testing.T) {
 	// 12.68% effective annual => n = ln(1.12683) / ln(1.1268) = 1.0002
-	ci := newPeriodsCase(t, 100000, 112683, 0.1268, Annually, RateEffectyAnnually)
+	ci := newPeriodsCase(t, 100000, 112683, 0.1268, Annually, RateEffectiveAnnually)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestPeriodsWithAnnuallyRate(t *testing.T) {
 
 func TestPeriodsWithQuarterlyCompounding(t *testing.T) {
 	// 12% nominal quarterly => i = 0.03, n = ln(1.1268) / ln(1.03) = 4.0388
-	ci := newPeriodsCase(t, 100000, 112680, 0.12, Quarterly, RateEffectyNominal)
+	ci := newPeriodsCase(t, 100000, 112680, 0.12, Quarterly, RateEffectiveNominal)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -97,7 +97,7 @@ func TestPeriodsWithDailyCompounding(t *testing.T) {
 	// 10% effective annual => daily i = 1.10^(1/365) - 1
 	// n = ln(1.105) / ln(1+i) = 382.3678 days (more than a 365-day year,
 	// because 10.5% growth exceeds the 10% effective annual rate)
-	ci := newPeriodsCase(t, 100000, 110500, 0.10, Daily, RateEffectyAnnually)
+	ci := newPeriodsCase(t, 100000, 110500, 0.10, Daily, RateEffectiveAnnually)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -108,7 +108,7 @@ func TestPeriodsWithDailyCompounding(t *testing.T) {
 func TestPeriodsWithSemiAnnuallyCompounding(t *testing.T) {
 	// 10% effective annual => semi-annual i = 1.10^(1/2) - 1
 	// n = ln(1.1025) / ln(1+i) = 2.0476
-	ci := newPeriodsCase(t, 500000, 551250, 0.10, SemiAnnually, RateEffectyAnnually)
+	ci := newPeriodsCase(t, 500000, 551250, 0.10, SemiAnnually, RateEffectiveAnnually)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -118,7 +118,7 @@ func TestPeriodsWithSemiAnnuallyCompounding(t *testing.T) {
 
 func TestPeriodsWithFivePercentPeriodicRate(t *testing.T) {
 	// n = ln(1.06167) / ln(1.05) = 1.2265
-	ci := newPeriodsCase(t, 100000, 106167, 0.05, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 100000, 106167, 0.05, Monthly, RateEffectivePeriodic)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -142,7 +142,7 @@ func TestPeriodsWithMultipleDataSets(t *testing.T) {
 			future:   1126.825,
 			rate:     0.01,
 			freq:     Monthly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			// 1126.825 truncates to 1126.82 when stored as cents:
 			// n = ln(1.12682) / ln(1.01) = 11.9996
 			periods: 11.9996,
@@ -153,7 +153,7 @@ func TestPeriodsWithMultipleDataSets(t *testing.T) {
 			future:   1050.0,
 			rate:     0.05,
 			freq:     Annually,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			// n = ln(1.05) / ln(1.05) = 1
 			periods: 1.0,
 		},
@@ -163,7 +163,7 @@ func TestPeriodsWithMultipleDataSets(t *testing.T) {
 			future:   2342.7,
 			rate:     0.02,
 			freq:     Quarterly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			// 2342.70 loses a cent to float truncation when stored (2342.69):
 			// n = ln(2342.69/2000) / ln(1.02) = 7.9864
 			periods: 7.9864,
@@ -184,7 +184,7 @@ func TestPeriodsWithMultipleDataSets(t *testing.T) {
 
 func TestPeriodsWithTenPercentGrowth(t *testing.T) {
 	// n = ln(1.10) / ln(1.01) = 9.5786
-	ci := newPeriodsCase(t, 100000, 110000, 0.01, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 100000, 110000, 0.01, Monthly, RateEffectivePeriodic)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -194,7 +194,7 @@ func TestPeriodsWithTenPercentGrowth(t *testing.T) {
 
 func TestPeriodsWithBimonthlyCompounding(t *testing.T) {
 	// 6% nominal bimonthly => i = 0.01, n = ln(1.06136) / ln(1.01) = 5.9848
-	ci := newPeriodsCase(t, 100000, 106136, 0.06, Bimonthly, RateEffectyNominal)
+	ci := newPeriodsCase(t, 100000, 106136, 0.06, Bimonthly, RateEffectiveNominal)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -210,12 +210,12 @@ func TestPeriodsWithDifferentRateTypes(t *testing.T) {
 		expected float64
 	}{
 		// n = ln(1.12683) / ln(1.01) = 12.0004
-		{"periodic", 0.01, RateEffectyPeriodic, 12.0004},
+		{"periodic", 0.01, RateEffectivePeriodic, 12.0004},
 		// 12% nominal monthly => i = 0.01: same as above
-		{"nominal", 0.12, RateEffectyNominal, 12.0004},
+		{"nominal", 0.12, RateEffectiveNominal, 12.0004},
 		// 12.68% effective annual => monthly i = 1.1268^(1/12) - 1
 		// n = ln(1.12683) / ln(1+i) = 12.0027
-		{"annual", 0.1268, RateEffectyAnnually, 12.0027},
+		{"annual", 0.1268, RateEffectiveAnnually, 12.0027},
 	}
 
 	for _, tc := range testCases {
@@ -232,7 +232,7 @@ func TestPeriodsWithDifferentRateTypes(t *testing.T) {
 
 func TestPeriodsToTripleInvestment(t *testing.T) {
 	// n = ln(3) / ln(1.05) = 22.5171
-	ci := newPeriodsCase(t, 100000, 300000, 0.05, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 100000, 300000, 0.05, Monthly, RateEffectivePeriodic)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -242,7 +242,7 @@ func TestPeriodsToTripleInvestment(t *testing.T) {
 
 func TestPeriodsWithFractionalPeriods(t *testing.T) {
 	// 10% nominal monthly => i = 0.1/12, n = ln(1.05114) / ln(1+i) = 6.0099
-	ci := newPeriodsCase(t, 100000, 105114, 0.10, Monthly, RateEffectyNominal)
+	ci := newPeriodsCase(t, 100000, 105114, 0.10, Monthly, RateEffectiveNominal)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -251,7 +251,7 @@ func TestPeriodsWithFractionalPeriods(t *testing.T) {
 }
 
 func TestPeriodsConsistencyWithFuture(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	originalPeriods := 12.0
@@ -283,7 +283,7 @@ func TestPeriodsConsistencyWithFuture(t *testing.T) {
 
 func TestPeriodsWithSmallInterestRate(t *testing.T) {
 	// n = ln(1.06167) / ln(1.001) = 59.8731
-	ci := newPeriodsCase(t, 100000, 106167, 0.001, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 100000, 106167, 0.001, Monthly, RateEffectivePeriodic)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -293,7 +293,7 @@ func TestPeriodsWithSmallInterestRate(t *testing.T) {
 
 func TestPeriodsWithHighInterestRate(t *testing.T) {
 	// n = ln(10.9605) / ln(1.10) = 25.1211
-	ci := newPeriodsCase(t, 100000, 1096050, 0.10, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 100000, 1096050, 0.10, Monthly, RateEffectivePeriodic)
 
 	periods, err := ci.Periods()
 	require.NoError(t, err)
@@ -314,7 +314,7 @@ func TestPeriodsPropagatesPeriodError(t *testing.T) {
 func TestPeriodsPropagatesOverflowFromRatio(t *testing.T) {
 	// future/present computed at an extreme magnitude mismatch overflows
 	// decimal128's 128-bit coefficient.
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(0), Monthly)
@@ -335,7 +335,7 @@ func TestPeriodsPropagatesOverflowFromRatio(t *testing.T) {
 
 func TestPeriodsPropagatesLnErrorWhenRatioIsNegative(t *testing.T) {
 	// A negative future/present ratio has no logarithm.
-	ci := newPeriodsCase(t, 100000, -50000, 0.01, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 100000, -50000, 0.01, Monthly, RateEffectivePeriodic)
 
 	_, err := ci.Periods()
 	require.Error(t, err)
@@ -344,7 +344,7 @@ func TestPeriodsPropagatesLnErrorWhenRatioIsNegative(t *testing.T) {
 func TestPeriodsWithZeroPresent(t *testing.T) {
 	// With no configured period and no present value there is nothing to
 	// derive the periods from, so Periods() must return an error.
-	ci := newPeriodsCase(t, 0, 1096050, 0.10, Monthly, RateEffectyPeriodic)
+	ci := newPeriodsCase(t, 0, 1096050, 0.10, Monthly, RateEffectivePeriodic)
 
 	periods, err := ci.Periods()
 	require.Error(t, err)

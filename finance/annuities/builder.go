@@ -72,7 +72,7 @@ func (a AnnuityConfig) periodicRate() (decimal.Decimal, error) {
 }
 
 // NewAnnuity creates a new AnnuityConfig builder instance with default values.
-// Default frequency is Monthly and default rate type is RateEffectyPeriodic.
+// Default frequency is Monthly and default rate type is RateEffectivePeriodic.
 //
 // After creating the builder, chain the necessary methods to configure:
 //   - Present or Future value (the loan amount or savings goal)
@@ -90,7 +90,7 @@ func (a AnnuityConfig) periodicRate() (decimal.Decimal, error) {
 func NewAnnuity() AnnuityConfig {
 	return AnnuityConfig{
 		frequency: compoundinterest.Monthly,
-		rateType:  compoundinterest.RateEffectyPeriodic,
+		rateType:  compoundinterest.RateEffectivePeriodic,
 	}
 }
 
@@ -217,7 +217,7 @@ func (a AnnuityConfig) Rate(r float64) AnnuityConfig {
 	rate, err := decimal.NewFromFloat64(r)
 	a.rate = rate
 	a.annual = false
-	a.rateType = compoundinterest.RateEffectyPeriodic
+	a.rateType = compoundinterest.RateEffectivePeriodic
 
 	return a.withErr(err)
 }
@@ -249,7 +249,7 @@ func (a AnnuityConfig) AnnualRate(r float64) AnnuityConfig {
 	rate, err := decimal.NewFromFloat64(r)
 	a.rate = rate
 	a.annual = true
-	a.rateType = compoundinterest.RateEffectyPeriodic
+	a.rateType = compoundinterest.RateEffectivePeriodic
 
 	return a.withErr(err)
 }
@@ -273,7 +273,7 @@ func (a AnnuityConfig) EffectiveAnnualRate(r float64) AnnuityConfig {
 	rate, err := decimal.NewFromFloat64(r)
 	a.rate = rate
 	a.annual = false
-	a.rateType = compoundinterest.RateEffectyAnnually
+	a.rateType = compoundinterest.RateEffectiveAnnually
 
 	return a.withErr(err)
 }

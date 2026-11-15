@@ -52,7 +52,7 @@ func (c *seriesConfig) decimalInput(r float64) decimal.Decimal {
 func newSeriesConfig() seriesConfig {
 	return seriesConfig{
 		frequency: compoundinterest.Monthly,
-		rateType:  compoundinterest.RateEffectyPeriodic,
+		rateType:  compoundinterest.RateEffectivePeriodic,
 	}
 }
 
@@ -162,7 +162,7 @@ func (a ArithmeticConfig) Rate(r float64) ArithmeticConfig {
 func (a ArithmeticConfig) AnnualRate(r float64) ArithmeticConfig {
 	a.rate = a.decimalInput(r)
 	a.annual = true
-	a.rateType = compoundinterest.RateEffectyPeriodic
+	a.rateType = compoundinterest.RateEffectivePeriodic
 
 	return a
 }
@@ -308,7 +308,7 @@ func (g GeometricConfig) Rate(r float64) GeometricConfig {
 func (g GeometricConfig) AnnualRate(r float64) GeometricConfig {
 	g.rate = g.decimalInput(r)
 	g.annual = true
-	g.rateType = compoundinterest.RateEffectyPeriodic
+	g.rateType = compoundinterest.RateEffectivePeriodic
 
 	return g
 }

@@ -31,7 +31,7 @@ func newAnnuity(t *testing.T, payment, present, future, rate float64, periods in
 	require.NoError(t, err)
 
 	rateInterest, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	annuity, err := annuities.New(usd(payment), usd(present), usd(future), period, rateInterest)
@@ -206,7 +206,7 @@ func TestGradientWithoutGrowthIsAnOrdinaryAnnuity(t *testing.T) {
 	require.NoError(t, err)
 
 	rateInterest, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(rate), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(rate), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	annuity, err := annuities.New(usd(payment), usd(0), usd(0), period, rateInterest)
@@ -257,7 +257,7 @@ func TestGradientMatchesNPVOfItsPayments(t *testing.T) {
 	require.NoError(t, err)
 
 	rateInterest, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(rate), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(rate), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	t.Run("arithmetic", func(t *testing.T) {
@@ -345,7 +345,7 @@ func TestCompoundFutureMatchesTVM(t *testing.T) {
 	require.NoError(t, err)
 
 	rateInterest, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	compound, err := compoundinterest.New(usd(present), usd(0), rateInterest, period)

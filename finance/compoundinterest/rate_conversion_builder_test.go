@@ -120,7 +120,7 @@ func TestRateConversionConfigSetters(t *testing.T) {
 	config := NewRateConversion().
 		RateDecimal(rate).
 		Frequency(Quarterly).
-		RateType(RateEffectyNominal)
+		RateType(RateEffectiveNominal)
 
 	if !config.rate.Equal(rate) {
 		t.Errorf("expected rate %v, got %v", rate, config.rate)
@@ -128,8 +128,8 @@ func TestRateConversionConfigSetters(t *testing.T) {
 	if config.frequency != Quarterly {
 		t.Errorf("expected Quarterly, got %v", config.frequency)
 	}
-	if config.rateType != RateEffectyNominal {
-		t.Errorf("expected RateEffectyNominal, got %v", config.rateType)
+	if config.rateType != RateEffectiveNominal {
+		t.Errorf("expected RateEffectiveNominal, got %v", config.rateType)
 	}
 }
 
@@ -157,8 +157,8 @@ func TestRateConversionFrequencyConvenienceMethods(t *testing.T) {
 func TestRateConversionAnticipatedNominal(t *testing.T) {
 	config := NewRateConversion().Rate(0.01).AnticipatedNominal().Monthly()
 
-	if config.rateType != RateAnticipateEffectyNominal {
-		t.Errorf("expected RateAnticipateEffectyNominal, got %v", config.rateType)
+	if config.rateType != RateAnticipateEffectiveNominal {
+		t.Errorf("expected RateAnticipateEffectiveNominal, got %v", config.rateType)
 	}
 	if !config.isAnticipated() {
 		t.Error("expected isAnticipated() to be true")

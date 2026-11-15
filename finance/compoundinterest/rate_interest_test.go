@@ -34,7 +34,7 @@ func newInterestCase(t *testing.T, present, future int64, freq CompoundingFreque
 func TestInterestReturnsConfiguredRate(t *testing.T) {
 	// When a non-zero rate is configured, Interest() returns its raw value
 	// directly without deriving anything from present/future/periods.
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -55,7 +55,7 @@ func TestInterestReturnsConfiguredRate(t *testing.T) {
 
 func TestInterestWithPeriodicRate(t *testing.T) {
 	// r = (1126.83/1000)^(1/12) - 1 = 0.0100004
-	ci := newInterestCase(t, 100000, 112683, Monthly, RateEffectyPeriodic, 12)
+	ci := newInterestCase(t, 100000, 112683, Monthly, RateEffectivePeriodic, 12)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -66,7 +66,7 @@ func TestInterestWithPeriodicRate(t *testing.T) {
 func TestInterestWithNominalRate(t *testing.T) {
 	// The rate type does not change the derivation:
 	// r = (1126.83/1000)^(1/12) - 1 = 0.0100004
-	ci := newInterestCase(t, 100000, 112683, Monthly, RateEffectyNominal, 12)
+	ci := newInterestCase(t, 100000, 112683, Monthly, RateEffectiveNominal, 12)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestInterestWithNominalRate(t *testing.T) {
 
 func TestInterestWithAnnuallyRate(t *testing.T) {
 	// r = (1126.83/1000)^(1/1) - 1 = 0.12683
-	ci := newInterestCase(t, 100000, 112683, Annually, RateEffectyAnnually, 1)
+	ci := newInterestCase(t, 100000, 112683, Annually, RateEffectiveAnnually, 1)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -86,7 +86,7 @@ func TestInterestWithAnnuallyRate(t *testing.T) {
 
 func TestInterestWithQuarterlyCompounding(t *testing.T) {
 	// r = (1126.80/1000)^(1/4) - 1 = 0.0302953
-	ci := newInterestCase(t, 100000, 112680, Quarterly, RateEffectyNominal, 4)
+	ci := newInterestCase(t, 100000, 112680, Quarterly, RateEffectiveNominal, 4)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -96,7 +96,7 @@ func TestInterestWithQuarterlyCompounding(t *testing.T) {
 
 func TestInterestWithDailyCompounding(t *testing.T) {
 	// r = (1105/1000)^(1/365) - 1 = 0.0002736 per day
-	ci := newInterestCase(t, 100000, 110500, Daily, RateEffectyAnnually, 365)
+	ci := newInterestCase(t, 100000, 110500, Daily, RateEffectiveAnnually, 365)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -106,7 +106,7 @@ func TestInterestWithDailyCompounding(t *testing.T) {
 
 func TestInterestWithSemiAnnuallyCompounding(t *testing.T) {
 	// r = (6050.25/5000)^(1/2) - 1 = 0.1000227 per semester
-	ci := newInterestCase(t, 500000, 605025, SemiAnnually, RateEffectyAnnually, 2)
+	ci := newInterestCase(t, 500000, 605025, SemiAnnually, RateEffectiveAnnually, 2)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -117,7 +117,7 @@ func TestInterestWithSemiAnnuallyCompounding(t *testing.T) {
 func TestInterestWithEqualPresentAndFuture(t *testing.T) {
 	// If the money does not grow, the derived rate is exactly zero:
 	// r = (1000/1000)^(1/1) - 1 = 0
-	ci := newInterestCase(t, 100000, 100000, Monthly, RateEffectyPeriodic, 1)
+	ci := newInterestCase(t, 100000, 100000, Monthly, RateEffectivePeriodic, 1)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -140,7 +140,7 @@ func TestInterestWithMultipleDataSets(t *testing.T) {
 			present:  1000,
 			future:   1126.825,
 			freq:     Monthly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  12,
 			// 1126.825 truncates to 1126.82 when stored as cents:
 			// r = 1.12682^(1/12) - 1 = 0.0099996
@@ -151,7 +151,7 @@ func TestInterestWithMultipleDataSets(t *testing.T) {
 			present:  1000,
 			future:   1050.0,
 			freq:     Annually,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  1,
 			// r = 1.05 - 1 = 0.05
 			expected: 0.05,
@@ -161,7 +161,7 @@ func TestInterestWithMultipleDataSets(t *testing.T) {
 			present:  2000,
 			future:   2342.7,
 			freq:     Quarterly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  8,
 			// 2342.70 loses a cent to float truncation when stored (2342.69):
 			// r = (2342.69/2000)^(1/8) - 1 = 0.0199658
@@ -183,7 +183,7 @@ func TestInterestWithMultipleDataSets(t *testing.T) {
 
 func TestInterestWithTenPercentGrowth(t *testing.T) {
 	// r = (1100/1000)^(1/12) - 1 = 0.0079741
-	ci := newInterestCase(t, 100000, 110000, Monthly, RateEffectyPeriodic, 12)
+	ci := newInterestCase(t, 100000, 110000, Monthly, RateEffectivePeriodic, 12)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -193,7 +193,7 @@ func TestInterestWithTenPercentGrowth(t *testing.T) {
 
 func TestInterestWithBimonthlyCompounding(t *testing.T) {
 	// r = (1061.36/1000)^(1/6) - 1 = 0.0099746
-	ci := newInterestCase(t, 100000, 106136, Bimonthly, RateEffectyNominal, 6)
+	ci := newInterestCase(t, 100000, 106136, Bimonthly, RateEffectiveNominal, 6)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)
@@ -208,9 +208,9 @@ func TestInterestWithDifferentRateTypes(t *testing.T) {
 		name     string
 		typeRate TypeRate
 	}{
-		{"periodic", RateEffectyPeriodic},
-		{"nominal", RateEffectyNominal},
-		{"annual", RateEffectyAnnually},
+		{"periodic", RateEffectivePeriodic},
+		{"nominal", RateEffectiveNominal},
+		{"annual", RateEffectiveAnnually},
 	}
 
 	for _, tc := range testCases {
@@ -243,7 +243,7 @@ func TestInterestFutureGreaterThanPresent(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ci := newInterestCase(t, int64(tc.present*100), int64(tc.future*100), Monthly, RateEffectyPeriodic, 12)
+			ci := newInterestCase(t, int64(tc.present*100), int64(tc.future*100), Monthly, RateEffectivePeriodic, 12)
 
 			interestRate, err := ci.Interest()
 			require.NoError(t, err)
@@ -264,14 +264,14 @@ func TestInterestPropagatesPeriodError(t *testing.T) {
 }
 
 func TestInterestErrorsWhenFutureIsZero(t *testing.T) {
-	ci := newInterestCase(t, 100000, 0, Monthly, RateEffectyPeriodic, 12)
+	ci := newInterestCase(t, 100000, 0, Monthly, RateEffectivePeriodic, 12)
 
 	_, err := ci.Interest()
 	require.ErrorIs(t, err, ErrInvalidOperation)
 }
 
 func TestInterestErrorsWhenPresentIsZero(t *testing.T) {
-	ci := newInterestCase(t, 0, 100000, Monthly, RateEffectyPeriodic, 12)
+	ci := newInterestCase(t, 0, 100000, Monthly, RateEffectivePeriodic, 12)
 
 	_, err := ci.Interest()
 	require.ErrorIs(t, err, ErrInvalidOperation)
@@ -280,7 +280,7 @@ func TestInterestErrorsWhenPresentIsZero(t *testing.T) {
 func TestInterestPropagatesOverflowFromRatio(t *testing.T) {
 	// future/present computed at an extreme magnitude mismatch overflows
 	// decimal128's 128-bit coefficient.
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -302,7 +302,7 @@ func TestInterestPropagatesOverflowFromRatio(t *testing.T) {
 func TestInterestPropagatesPowErrorWhenRatioIsNegative(t *testing.T) {
 	// A negative future/present ratio raised to a fractional exponent
 	// (1/n for n != 1) is mathematically undefined.
-	ci := newInterestCase(t, 100000, -50000, Monthly, RateEffectyPeriodic, 12)
+	ci := newInterestCase(t, 100000, -50000, Monthly, RateEffectivePeriodic, 12)
 
 	_, err := ci.Interest()
 	require.Error(t, err)
@@ -311,7 +311,7 @@ func TestInterestPropagatesPowErrorWhenRatioIsNegative(t *testing.T) {
 func TestInterestNegativeWhenFutureLessThanPresent(t *testing.T) {
 	// r = (500/1000)^(1/12) - 1 = -0.0561257: the derived periodic rate is
 	// negative when the money shrinks.
-	ci := newInterestCase(t, 100000, 50000, Monthly, RateEffectyPeriodic, 12)
+	ci := newInterestCase(t, 100000, 50000, Monthly, RateEffectivePeriodic, 12)
 
 	interestRate, err := ci.Interest()
 	require.NoError(t, err)

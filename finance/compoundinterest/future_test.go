@@ -11,7 +11,7 @@ import (
 )
 
 func TestFutureWithPeriodicRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.01), Monthly, RateEffectivePeriodic)
 
 	tx := require.New(t)
 
@@ -35,7 +35,7 @@ func TestFutureWithPeriodicRate(t *testing.T) {
 }
 
 func TestFutureWithNominalRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Monthly, RateEffectiveNominal)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -56,7 +56,7 @@ func TestFutureWithNominalRate(t *testing.T) {
 }
 
 func TestFutureWithAnnuallyRate(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Annually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.1268), Annually, RateEffectiveAnnually)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(1), Annually)
@@ -77,7 +77,7 @@ func TestFutureWithAnnuallyRate(t *testing.T) {
 }
 
 func TestFutureWithDailyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), Daily, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), Daily, RateEffectiveAnnually)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(365), Daily)
@@ -99,7 +99,7 @@ func TestFutureWithDailyCompounding(t *testing.T) {
 }
 
 func TestFutureWithQuarterlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Quarterly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.12), Quarterly, RateEffectiveNominal)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(4), Quarterly)
@@ -120,7 +120,7 @@ func TestFutureWithQuarterlyCompounding(t *testing.T) {
 }
 
 func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), SemiAnnually, RateEffectyAnnually)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.10), SemiAnnually, RateEffectiveAnnually)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(2), SemiAnnually)
@@ -143,7 +143,7 @@ func TestFutureWithSemiAnnuallyCompounding(t *testing.T) {
 }
 
 func TestFutureWithZeroPresent(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectyPeriodic)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(12), Monthly)
@@ -177,7 +177,7 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 			present:  1000,
 			rate:     0.01,
 			freq:     Monthly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  12,
 			expected: 1126.825,
 		},
@@ -186,7 +186,7 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 			present:  1000,
 			rate:     0.05,
 			freq:     Annually,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  1,
 			expected: 1050.0,
 		},
@@ -195,7 +195,7 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 			present:  2000,
 			rate:     0.02,
 			freq:     Quarterly,
-			typeRate: RateEffectyPeriodic,
+			typeRate: RateEffectivePeriodic,
 			periods:  8,
 			// FV = 2000 × 1.02^8 = 2343.3188
 			expected: 2343.3188,
@@ -226,7 +226,7 @@ func TestFutureWithMultipleDataSets(t *testing.T) {
 }
 
 func TestFutureWithBimonthlyCompounding(t *testing.T) {
-	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.06), Bimonthly, RateEffectyNominal)
+	rateInterest, err := NewRateInterest(decimal.MustFromFloat64(0.06), Bimonthly, RateEffectiveNominal)
 	require.NoError(t, err)
 
 	period, err := NewPeriod(decimal.MustFromFloat64(6), Bimonthly)
@@ -254,12 +254,12 @@ func TestFutureWithDifferentRateTypes(t *testing.T) {
 		expected float64
 	}{
 		// periodic 1% monthly: FV = 1000 × 1.01^12 = 1126.8250
-		{"periodic", 0.01, RateEffectyPeriodic, 1126.8250},
+		{"periodic", 0.01, RateEffectivePeriodic, 1126.8250},
 		// 12% nominal monthly => i = 0.01: same as above
-		{"nominal", 0.12, RateEffectyNominal, 1126.8250},
+		{"nominal", 0.12, RateEffectiveNominal, 1126.8250},
 		// 12.68% effective annual over 12 months = exactly one year:
 		// FV = 1000 × 1.1268 = 1126.80
-		{"annual", 0.1268, RateEffectyAnnually, 1126.80},
+		{"annual", 0.1268, RateEffectiveAnnually, 1126.80},
 	}
 
 	for _, tc := range testCases {
@@ -306,7 +306,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(2.5, Annually, 0.09, Monthly, RateEffectyNominal, 4_000_000, 0, tx)
+		cr := createCompoundInterest(2.5, Annually, 0.09, Monthly, RateEffectiveNominal, 4_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -319,7 +319,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with monthly compounding frequency for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(30, Monthly, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(30, Monthly, 0.18, Monthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -332,7 +332,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with bimonth compounding frequency for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(30, Monthly, 0.18, Bimonthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(30, Monthly, 0.18, Bimonthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -345,7 +345,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with quarterly one compounding frequency for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(30, Monthly, 0.18, Quarterly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(30, Monthly, 0.18, Quarterly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -358,7 +358,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with quarterly two compounding frequency for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(30, Monthly, 0.18, FourMonthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(30, Monthly, 0.18, FourMonthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -371,7 +371,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with semi annually compounding frequency for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(30, Monthly, 0.18, SemiAnnually, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(30, Monthly, 0.18, SemiAnnually, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -384,7 +384,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with annually compounding frequency for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(30, Monthly, 0.18, Annually, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(30, Monthly, 0.18, Annually, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -397,7 +397,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with day period for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(912.5, Daily, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(912.5, Daily, 0.18, Monthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -417,7 +417,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with bimonthly period for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(15, Bimonthly, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(15, Bimonthly, 0.18, Monthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -430,7 +430,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with quarterly one period for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(10, Quarterly, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(10, Quarterly, 0.18, Monthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -443,7 +443,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with quarterly two period for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(7.5, FourMonthly, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(7.5, FourMonthly, 0.18, Monthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -456,7 +456,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with semi-annually period for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(5, SemiAnnually, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(5, SemiAnnually, 0.18, Monthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)
@@ -469,7 +469,7 @@ func TestMoreExampleFuture(t *testing.T) {
 	t.Run("run simple operation with annually period for future", func(t *testing.T) {
 		tx := require.New(t)
 
-		cr := createCompoundInterest(2.5, Annually, 0.18, Monthly, RateEffectyNominal, 3_000_000, 0, tx)
+		cr := createCompoundInterest(2.5, Annually, 0.18, Monthly, RateEffectiveNominal, 3_000_000, 0, tx)
 
 		future, err := cr.Future()
 		tx.NoError(err)

@@ -177,7 +177,7 @@ func mustRate(t *testing.T, rate float64) compoundinterest.RateInterest {
 	t.Helper()
 
 	rateInterest, err := compoundinterest.NewRateInterest(
-		decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+		decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	return rateInterest

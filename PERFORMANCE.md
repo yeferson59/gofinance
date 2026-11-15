@@ -282,7 +282,7 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
     
     // Temporarily mutate receiver
     rt.compoundingFrequency = newCompoundingFrequency
-    rt.typeRate = RateEffectyPeriodic
+    rt.typeRate = RateEffectivePeriodic
     rt.value = newPeriodicRate
     
     // Call method with mutated state
@@ -323,7 +323,7 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
     // Create new instance instead of mutating
     newRate := RateInterest{
         compoundingFrequency: newCompoundingFrequency,
-        typeRate:            RateEffectyPeriodic,
+        typeRate:            RateEffectivePeriodic,
         value:               newPeriodicRate,
     }
     

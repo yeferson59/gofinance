@@ -8,18 +8,18 @@ import (
 	"github.com/yeferson59/gofinance/v2/money"
 )
 
-func ExampleRateInterest_RateEffectyAnnually() {
+func ExampleRateInterest_RateEffectiveAnnually() {
 	// A 12% nominal rate compounded monthly is really 12.68% a year.
 	rate, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(0.12),
 		compoundinterest.Monthly,
-		compoundinterest.RateEffectyNominal,
+		compoundinterest.RateEffectiveNominal,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	effective, err := rate.RateEffectyAnnually()
+	effective, err := rate.RateEffectiveAnnually()
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +34,7 @@ func ExampleRateInterest_RateAnticipatePeriodic() {
 	rate, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(0.01),
 		compoundinterest.Monthly,
-		compoundinterest.RateEffectyPeriodic,
+		compoundinterest.RateEffectivePeriodic,
 	)
 	if err != nil {
 		panic(err)
@@ -59,7 +59,7 @@ func ExampleCompoundInterest_Future() {
 	rate, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(0.01),
 		compoundinterest.Monthly,
-		compoundinterest.RateEffectyPeriodic,
+		compoundinterest.RateEffectivePeriodic,
 	)
 	if err != nil {
 		panic(err)
@@ -91,9 +91,9 @@ func ExampleRateInterest_RatePeriodic_anyForm() {
 		value float64
 		kind  compoundinterest.TypeRate
 	}{
-		{"periodic", 0.01, compoundinterest.RateEffectyPeriodic},
-		{"nominal", 0.12, compoundinterest.RateEffectyNominal},
-		{"anticipated periodic", 0.00990099009900990099, compoundinterest.RateAnticipateEffectyPeriodic},
+		{"periodic", 0.01, compoundinterest.RateEffectivePeriodic},
+		{"nominal", 0.12, compoundinterest.RateEffectiveNominal},
+		{"anticipated periodic", 0.00990099009900990099, compoundinterest.RateAnticipateEffectivePeriodic},
 	}
 
 	for _, form := range forms {

@@ -111,7 +111,7 @@ func TestGetEqualsRateInterestPeriods_differentTime(t *testing.T) {
 	tx.NotNil(period)
 	tx.NoError(err)
 
-	rate, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectyNominal)
+	rate, err := NewRateInterest(decimal.MustFromFloat64(0.05), Monthly, RateEffectiveNominal)
 
 	tx.NotNil(rate)
 	tx.NoError(err)

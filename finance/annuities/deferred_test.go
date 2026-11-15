@@ -17,7 +17,7 @@ func TestAnnuityPresentDeferred(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	value := money.MustMoneyFromFloat64(1000, money.USD)
@@ -35,7 +35,7 @@ func TestAnnuityPresentDeferredZeroReducesToPresent(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	value := money.MustMoneyFromFloat64(1000, money.USD)
@@ -57,7 +57,7 @@ func TestAnnuityAnticipatePresentDeferred(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	value := money.MustMoneyFromFloat64(1000, money.USD)
@@ -82,7 +82,7 @@ func TestAnnuityPaymentFromPresentValueDeferred(t *testing.T) {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	present := money.MustMoneyFromFloat64(10924.07, money.USD)
@@ -100,7 +100,7 @@ func TestAnnuityPaymentFromPresentValueDeferredZeroReducesToOrdinary(t *testing.
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.01), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	present := money.MustMoneyFromFloat64(11255.0775, money.USD)

@@ -31,7 +31,7 @@ func main() {
     rate, err := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
     if err != nil {
         log.Fatal(err)
@@ -85,7 +85,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.05,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     period, _ := compoundinterest.NewPeriod(2, compoundinterest.Annually)
@@ -120,7 +120,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
@@ -153,7 +153,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.05,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     period, _ := compoundinterest.NewPeriod(1, compoundinterest.Monthly)
@@ -191,7 +191,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.12,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyNominal,
+        compoundinterest.RateEffectiveNominal,
     )
 
     // Convert to periodic
@@ -221,10 +221,10 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.12,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyNominal,
+        compoundinterest.RateEffectiveNominal,
     )
 
-    annual, _ := rate.RateEffectyAnnually()
+    annual, _ := rate.RateEffectiveAnnually()
 
     fmt.Printf("Annual nominal rate: 12%%\n")
     fmt.Printf("Effective annual rate: %.4f (%.2f%%)\n", annual, annual*100)
@@ -249,7 +249,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     // Convert to equivalent quarterly rate
@@ -278,7 +278,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.10,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     // Convert to anticipated nominal rate
@@ -292,7 +292,7 @@ func main() {
     rate2, _ := compoundinterest.NewRateInterest(
         anticipated,
         compoundinterest.Annually,
-        compoundinterest.RateAnticipateEffectyNominal,
+        compoundinterest.RateAnticipateEffectiveNominal,
     )
     back, _ := rate2.ToNominal()
     fmt.Printf("Reverse conversion: %.4f (matches 10%%)\n", back)
@@ -320,7 +320,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.045,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     period, _ := compoundinterest.NewPeriod(30, compoundinterest.Annually)
@@ -360,7 +360,7 @@ func main() {
     rate1, _ := compoundinterest.NewRateInterest(
         0.06,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyNominal,
+        compoundinterest.RateEffectiveNominal,
     )
     period1, _ := compoundinterest.NewPeriod(float64(years*12), compoundinterest.Monthly)
     ci1, _ := compoundinterest.New(capital, 0, rate1, period1)
@@ -370,7 +370,7 @@ func main() {
     rate2, _ := compoundinterest.NewRateInterest(
         0.0617,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
     period2, _ := compoundinterest.NewPeriod(float64(years), compoundinterest.Annually)
     ci2, _ := compoundinterest.New(capital, 0, rate2, period2)
@@ -380,7 +380,7 @@ func main() {
     rate3, _ := compoundinterest.NewRateInterest(
         0.005,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
     period3, _ := compoundinterest.NewPeriod(float64(years*12), compoundinterest.Monthly)
     ci3, _ := compoundinterest.New(capital, 0, rate3, period3)
@@ -434,7 +434,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.10,
         compoundinterest.Annually,
-        compoundinterest.RateAnticipateEffectyAnnually,
+        compoundinterest.RateAnticipateEffectivePeriodic,
     )
 
     // 6 months is 0.5 years
@@ -478,7 +478,7 @@ func main() {
     baseRate, _ := compoundinterest.NewRateInterest(
         0.12,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyNominal,
+        compoundinterest.RateEffectiveNominal,
     )
 
     frequencies := []struct {

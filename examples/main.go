@@ -333,7 +333,7 @@ func compoundExample() {
 		Rate(0.05).
 		Periods(12).
 		Monthly().
-		RateType(compoundinterest.RateEffectyPeriodic).
+		RateType(compoundinterest.RateEffectivePeriodic).
 		MustBuild()
 
 	future, _ := ci.Future()

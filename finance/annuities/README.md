@@ -54,7 +54,7 @@ import (
 
 func main() {
   // Create a monthly interest rate of 1% (periodic)
-  rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+  rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 
   // Create a period of 12 months
   period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
@@ -74,7 +74,7 @@ func main() {
 
 ```go
 // Calculate monthly payment for a $10,000 loan at 1% monthly for 12 months
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
 ann, _ := annuities.New(0, 10000, 0, period, rate)
@@ -87,7 +87,7 @@ fmt.Printf("Monthly payment: $%.2f\n", payment)
 
 ```go
 // Calculate future value of $100 monthly payments at 1% monthly for 12 months
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
 ann, _ := annuities.New(100, 0, 0, period, rate)
@@ -100,7 +100,7 @@ fmt.Printf("Future value: $%.2f\n", future)
 
 ```go
 // Calculate monthly payment needed to accumulate $10,000 in 12 months at 1% monthly
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
 
 ann, _ := annuities.New(0, 0, 10000, period, rate)
@@ -113,7 +113,7 @@ fmt.Printf("Monthly payment: $%.2f\n", payment)
 
 ```go
 // Calculate how many months are needed for $100 payments to reach present value
-rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ := compoundinterest.NewRateInterest(0.01, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 period, _ := compoundinterest.NewPeriod(1, compoundinterest.Monthly)
 
 ann, _ := annuities.New(100, 5000, 0, period, rate)
@@ -195,7 +195,7 @@ ann, err := annuities.New(payment, present, future, period, rateInterest)
 rate, _ := compoundinterest.NewRateInterest(
     0.045,
     compoundinterest.Annually,
-    compoundinterest.RateEffectyAnnually,
+    compoundinterest.RateEffectiveAnnually,
 )
 
 // Convert to monthly equivalent
@@ -203,7 +203,7 @@ monthlyRate, _ := rate.RatePeriodicToPeriodic(compoundinterest.Monthly)
 rate, _ = compoundinterest.NewRateInterest(
     monthlyRate,
     compoundinterest.Monthly,
-    compoundinterest.RateEffectyPeriodic,
+    compoundinterest.RateEffectivePeriodic,
 )
 
 period, _ := compoundinterest.NewPeriod(360, compoundinterest.Monthly) // 30 years × 12 months
@@ -217,9 +217,9 @@ fmt.Printf("Monthly payment: $%.2f\n", payment)
 
 ```go
 // How much will be accumulated if saving $500/month at 6% annual for 5 years?
-rate, _ := compoundinterest.NewRateInterest(0.06, compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
+rate, _ := compoundinterest.NewRateInterest(0.06, compoundinterest.Monthly, compoundinterest.RateEffectiveNominal)
 monthlyRate, _ := rate.RatePeriodic()
-rate, _ = compoundinterest.NewRateInterest(monthlyRate, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+rate, _ = compoundinterest.NewRateInterest(monthlyRate, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 
 period, _ := compoundinterest.NewPeriod(60, compoundinterest.Monthly) // 5 years × 12 months
 
@@ -232,7 +232,7 @@ fmt.Printf("Accumulated amount: $%.2f\n", future)
 
 ```go
 // Calculate lease payment for equipment worth $50,000 over 5 years at 8% annual
-rate, _ := compoundinterest.NewRateInterest(0.08, compoundinterest.Annually, compoundinterest.RateEffectyAnnually)
+rate, _ := compoundinterest.NewRateInterest(0.08, compoundinterest.Annually, compoundinterest.RateEffectiveAnnually)
 period, _ := compoundinterest.NewPeriod(5, compoundinterest.Annually)
 
 ann, _ := annuities.New(0, 50000, 0, period, rate)

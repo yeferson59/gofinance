@@ -7,7 +7,7 @@
 // Basic usage example:
 //
 //	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(10), compoundinterest.Annually)
-//	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.1), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+//	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.1), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 //
 //	// A series starting at $1000 and growing by $100 every year.
 //	arithmetic, _ := NewArithmetic(

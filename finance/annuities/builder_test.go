@@ -84,8 +84,8 @@ func TestAnnuityConfigFutureSetter(t *testing.T) {
 func TestAnnuityConfigEffectiveAnnualRate(t *testing.T) {
 	config := NewAnnuity().Monthly().EffectiveAnnualRate(0.2668)
 
-	if config.rateType != compoundinterest.RateEffectyAnnually {
-		t.Errorf("expected RateEffectyAnnually, got %v", config.rateType)
+	if config.rateType != compoundinterest.RateEffectiveAnnually {
+		t.Errorf("expected RateEffectiveAnnually, got %v", config.rateType)
 	}
 	if !config.rate.Equal(decimal.MustFromString("0.2668")) {
 		t.Errorf("expected 0.2668, got %v", config.rate)
@@ -134,7 +134,7 @@ func TestFutureFromPaymentsOnly(t *testing.T) {
 	rate, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(0.01),
 		compoundinterest.Monthly,
-		compoundinterest.RateEffectyPeriodic,
+		compoundinterest.RateEffectivePeriodic,
 	)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

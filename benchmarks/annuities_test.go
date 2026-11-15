@@ -11,7 +11,7 @@ import (
 
 func BenchmarkNewAnnuity(b *testing.B) {
 	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
-	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -28,7 +28,7 @@ func BenchmarkNewAnnuity(b *testing.B) {
 
 func BenchmarkAnnuityPresent(b *testing.B) {
 	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
-	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	annuity, _ := annuities.New(
 		money.MustMoneyFromFloat64(100, money.USD),
 		money.MustMoneyFromFloat64(1000, money.USD),
@@ -46,7 +46,7 @@ func BenchmarkAnnuityPresent(b *testing.B) {
 
 func BenchmarkAnnuityFuture(b *testing.B) {
 	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
-	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	annuity, _ := annuities.New(
 		money.MustMoneyFromFloat64(100, money.USD),
 		money.MustMoneyFromFloat64(0, money.USD),
@@ -64,7 +64,7 @@ func BenchmarkAnnuityFuture(b *testing.B) {
 
 func BenchmarkAnnuityPaymentFromPresentValue(b *testing.B) {
 	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(360), compoundinterest.Monthly)
-	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.06), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.06), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	annuity, _ := annuities.New(
 		money.MustMoneyFromFloat64(0, money.USD),
 		money.MustMoneyFromFloat64(300000, money.USD),
@@ -82,7 +82,7 @@ func BenchmarkAnnuityPaymentFromPresentValue(b *testing.B) {
 
 func BenchmarkAnnuityPaymentFromFutureValue(b *testing.B) {
 	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(120), compoundinterest.Monthly)
-	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.08), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.08), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	annuity, _ := annuities.New(
 		money.MustMoneyFromFloat64(0, money.USD),
 		money.MustMoneyFromFloat64(0, money.USD),
@@ -167,7 +167,7 @@ func BenchmarkWriteCSV(b *testing.B) {
 
 func BenchmarkAnnuityAllMethods(b *testing.B) {
 	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(120), compoundinterest.Monthly)
-	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.05), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	annuity, _ := annuities.New(
 		money.MustMoneyFromFloat64(100, money.USD),
 		money.MustMoneyFromFloat64(1000, money.USD),

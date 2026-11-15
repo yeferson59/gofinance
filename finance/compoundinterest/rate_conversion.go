@@ -23,10 +23,10 @@ func (rt RateInterest) periodicEffective() (decimal.Decimal, decimal.Decimal, er
 	}
 
 	switch rt.typeRate {
-	case RateEffectyPeriodic:
+	case RateEffectivePeriodic:
 		return rt.value, periodsPerYear, nil
 
-	case RateEffectyNominal:
+	case RateEffectiveNominal:
 		periodic, err := rt.value.Div(periodsPerYear)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
@@ -34,7 +34,7 @@ func (rt RateInterest) periodicEffective() (decimal.Decimal, decimal.Decimal, er
 
 		return periodic, periodsPerYear, nil
 
-	case RateEffectyAnnually:
+	case RateEffectiveAnnually:
 		exponent, err := decimal.One.Div(periodsPerYear)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
@@ -47,7 +47,7 @@ func (rt RateInterest) periodicEffective() (decimal.Decimal, decimal.Decimal, er
 
 		return growth.Sub(decimal.One), periodsPerYear, nil
 
-	case RateAnticipateEffectyPeriodic:
+	case RateAnticipateEffectivePeriodic:
 		periodic, err := anticipatedToEffective(rt.value)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
@@ -55,7 +55,7 @@ func (rt RateInterest) periodicEffective() (decimal.Decimal, decimal.Decimal, er
 
 		return periodic, periodsPerYear, nil
 
-	case RateAnticipateEffectyNominal:
+	case RateAnticipateEffectiveNominal:
 		discount, err := rt.value.Div(periodsPerYear)
 		if err != nil {
 			return decimal.Decimal{}, decimal.Decimal{}, err
@@ -108,12 +108,12 @@ func effectiveToAnticipated(periodic decimal.Decimal) (decimal.Decimal, error) {
 //
 // Example:
 //
-//	rate, _ := NewRateInterest(0.12, Monthly, RateEffectyNominal)
+//	rate, _ := NewRateInterest(0.12, Monthly, RateEffectiveNominal)
 //	periodicRate, _ := rate.RatePeriodic()  // Converts 12% nominal to ~1% monthly
 func (rt RateInterest) RatePeriodic() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
-	if rt.typeRate == RateEffectyPeriodic {
+	if rt.typeRate == RateEffectivePeriodic {
 		return rt.value, nil
 	}
 
@@ -134,7 +134,7 @@ func (rt RateInterest) RatePeriodic() (_ decimal.Decimal, err error) {
 func (rt RateInterest) RateNominal() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
-	if rt.typeRate == RateEffectyNominal {
+	if rt.typeRate == RateEffectiveNominal {
 		return rt.value, nil
 	}
 
@@ -146,7 +146,7 @@ func (rt RateInterest) RateNominal() (_ decimal.Decimal, err error) {
 	return periodic.Mul(periodsPerYear), nil
 }
 
-// RateEffectyAnnually converts the current interest rate to an effective annual rate.
+// RateEffectiveAnnually converts the current interest rate to an effective annual rate.
 // The effective annual rate accounts for compounding and represents the true yearly
 // return. It accepts any of the five rate types, including the anticipated
 // (discount) ones: the effective annual rate is the same quantity whichever form
@@ -156,10 +156,10 @@ func (rt RateInterest) RateNominal() (_ decimal.Decimal, err error) {
 //   - The effective annual interest rate as a Decimal
 //   - ErrInvalidTypeRate for an unknown rate type, ErrInvalidAnticipatedRate for
 //     an anticipated rate of 100% or more, or an error if the conversion fails
-func (rt RateInterest) RateEffectyAnnually() (_ decimal.Decimal, err error) {
+func (rt RateInterest) RateEffectiveAnnually() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
-	if rt.typeRate == RateEffectyAnnually {
+	if rt.typeRate == RateEffectiveAnnually {
 		return rt.value, nil
 	}
 
@@ -190,7 +190,7 @@ func (rt RateInterest) RateEffectyAnnually() (_ decimal.Decimal, err error) {
 //
 // Example:
 //
-//	rate, _ := NewRateInterest(0.01, Monthly, RateEffectyPeriodic)
+//	rate, _ := NewRateInterest(0.01, Monthly, RateEffectivePeriodic)
 //	quarterlyRate, _ := rate.RatePeriodicToPeriodic(Quarterly)
 func (rt RateInterest) RatePeriodicToPeriodic(newCompoundingFrequency CompoundingFrequency) (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
@@ -235,7 +235,7 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
 		return decimal.Decimal{}, err
 	}
 
-	newRateInterest, err := NewRateInterest(newPeriodicRate, newCompoundingFrequency, RateEffectyPeriodic)
+	newRateInterest, err := NewRateInterest(newPeriodicRate, newCompoundingFrequency, RateEffectivePeriodic)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
@@ -247,7 +247,9 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
 //
 // An effective annual rate is a single quantity regardless of whether the rate was
 // quoted in ordinary or anticipated (discount) form, so this is equivalent to
-// RateEffectyAnnually and is kept for source compatibility.
+// RateEffectiveAnnually and is kept for source compatibility.
+//
+// Deprecated: use RateEffectiveAnnually, which returns the same value.
 //
 // Returns:
 //   - The effective annual rate as a Decimal
@@ -256,7 +258,7 @@ func (rt RateInterest) RateNominalToNominal(newCompoundingFrequency CompoundingF
 func (rt RateInterest) RateAnticipateEffectyAnnually() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
-	return rt.RateEffectyAnnually()
+	return rt.RateEffectiveAnnually()
 }
 
 // RateAnticipateNominal converts the current rate to an anticipated (discount) nominal
@@ -270,7 +272,7 @@ func (rt RateInterest) RateAnticipateEffectyAnnually() (_ decimal.Decimal, err e
 func (rt RateInterest) RateAnticipateNominal() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
-	if rt.typeRate == RateAnticipateEffectyNominal {
+	if rt.typeRate == RateAnticipateEffectiveNominal {
 		return rt.value, nil
 	}
 
@@ -299,7 +301,7 @@ func (rt RateInterest) RateAnticipateNominal() (_ decimal.Decimal, err error) {
 func (rt RateInterest) RateAnticipatePeriodic() (_ decimal.Decimal, err error) {
 	defer guard.Recover(&err)
 
-	if rt.typeRate == RateAnticipateEffectyPeriodic {
+	if rt.typeRate == RateAnticipateEffectivePeriodic {
 		return rt.value, nil
 	}
 

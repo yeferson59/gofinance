@@ -18,7 +18,7 @@ func newZeroRateAnnuity(t *testing.T, value, present, future float64) Annuity {
 	period, err := compoundinterest.NewPeriod(decimal.MustFromFloat64(12), compoundinterest.Monthly)
 	require.NoError(t, err)
 
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.Zero, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.Zero, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	annuity, err := New(
@@ -107,7 +107,7 @@ func TestZeroPeriodsReportsError(t *testing.T) {
 			require.NoError(t, err)
 
 			rateInterest, err := compoundinterest.NewRateInterest(
-				decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+				decimal.MustFromFloat64(rate), compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 			require.NoError(t, err)
 
 			zero := money.MustMoneyFromFloat64(0, money.USD)
@@ -144,7 +144,7 @@ func TestOverflowingTermReportsError(t *testing.T) {
 	require.NoError(t, err)
 
 	rateInterest, err := compoundinterest.NewRateInterest(
-		decimal.One, compoundinterest.Monthly, compoundinterest.RateEffectyPeriodic)
+		decimal.One, compoundinterest.Monthly, compoundinterest.RateEffectivePeriodic)
 	require.NoError(t, err)
 
 	amount := money.MustMoneyFromFloat64(1000, money.USD)
@@ -212,14 +212,14 @@ func TestAnticipatedRateAnnuityIsComputed(t *testing.T) {
 	anticipated, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(0.01).MustDiv(decimal.MustFromFloat64(1.01)),
 		compoundinterest.Monthly,
-		compoundinterest.RateAnticipateEffectyPeriodic,
+		compoundinterest.RateAnticipateEffectivePeriodic,
 	)
 	require.NoError(t, err)
 
 	ordinary, err := compoundinterest.NewRateInterest(
 		decimal.MustFromFloat64(0.01),
 		compoundinterest.Monthly,
-		compoundinterest.RateEffectyPeriodic,
+		compoundinterest.RateEffectivePeriodic,
 	)
 	require.NoError(t, err)
 

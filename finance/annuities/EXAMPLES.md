@@ -32,7 +32,7 @@ func main() {
     rate, err := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
     if err != nil {
         log.Fatal(err)
@@ -86,7 +86,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.005,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
@@ -121,7 +121,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
@@ -156,7 +156,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     period, _ := compoundinterest.NewPeriod(12, compoundinterest.Monthly)
@@ -191,7 +191,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     period, _ := compoundinterest.NewPeriod(1, compoundinterest.Monthly)
@@ -231,7 +231,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.045,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     // Convert to monthly equivalent rate
@@ -242,7 +242,7 @@ func main() {
     monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     // 30 years × 12 months = 360 periods
@@ -284,7 +284,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.06,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyNominal,
+        compoundinterest.RateEffectiveNominal,
     )
 
     // Convert nominal to periodic
@@ -293,7 +293,7 @@ func main() {
     monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     // 5 years × 12 months = 60 periods
@@ -335,7 +335,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.07,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     // Convert to monthly
@@ -344,7 +344,7 @@ func main() {
     monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     // 25 years × 12 months = 300 periods
@@ -386,7 +386,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.08,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     period, _ := compoundinterest.NewPeriod(5, compoundinterest.Annually)
@@ -426,7 +426,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.05,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     // Convert to monthly
@@ -435,7 +435,7 @@ func main() {
     monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     // 10 years × 12 months = 120 periods
@@ -499,14 +499,14 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         annualRate,
         compoundinterest.Annually,
-        compoundinterest.RateEffectyAnnually,
+        compoundinterest.RateEffectiveAnnually,
     )
 
     monthlyRate, _ := rate.RatePeriodicToPeriodic(compoundinterest.Monthly)
     monthlyRateObj, _ := compoundinterest.NewRateInterest(
         monthlyRate,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     for _, term := range terms {
@@ -542,7 +542,7 @@ func main() {
     rate, _ := compoundinterest.NewRateInterest(
         0.01,
         compoundinterest.Monthly,
-        compoundinterest.RateEffectyPeriodic,
+        compoundinterest.RateEffectivePeriodic,
     )
 
     period, _ := compoundinterest.NewPeriodic(12, compoundinterest.Monthly)

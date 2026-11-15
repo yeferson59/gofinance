@@ -31,19 +31,34 @@ const QuarterlyTwo = term.FourMonthly
 
 // Types of interest rates.
 // Ordinary rates (charged at the end of the period):
-//   - RateEffectyPeriodic: Periodic rate (the one that compounds each period)
-//   - RateEffectyNominal: Nominal annual rate
-//   - RateEffectyAnnually: Effective annual rate
+//   - RateEffectivePeriodic: Periodic rate (the one that compounds each period)
+//   - RateEffectiveNominal: Nominal annual rate
+//   - RateEffectiveAnnually: Effective annual rate
 //
 // Anticipated/discount rates (charged at the beginning of the period):
-//   - RateAnticipateEffectyPeriodic: Anticipated periodic rate
-//   - RateAnticipateEffectyNominal: Anticipated nominal rate
+//   - RateAnticipateEffectivePeriodic: Anticipated periodic rate
+//   - RateAnticipateEffectiveNominal: Anticipated nominal rate
 const (
-	RateEffectyPeriodic           TypeRate = "periodic"
-	RateEffectyAnnually           TypeRate = "annual"
-	RateEffectyNominal            TypeRate = "nominal"
-	RateAnticipateEffectyPeriodic TypeRate = "anticipatePeriodic"
-	RateAnticipateEffectyNominal  TypeRate = "anticipateNominal"
+	RateEffectivePeriodic           TypeRate = "periodic"
+	RateEffectiveAnnually           TypeRate = "annual"
+	RateEffectiveNominal            TypeRate = "nominal"
+	RateAnticipateEffectivePeriodic TypeRate = "anticipatePeriodic"
+	RateAnticipateEffectiveNominal  TypeRate = "anticipateNominal"
+)
+
+// The original, misspelled names of the rate types, kept so existing code
+// compiles. They are the same values as the correctly spelled constants.
+const (
+	// Deprecated: use RateEffectivePeriodic.
+	RateEffectyPeriodic = RateEffectivePeriodic
+	// Deprecated: use RateEffectiveAnnually.
+	RateEffectyAnnually = RateEffectiveAnnually
+	// Deprecated: use RateEffectiveNominal.
+	RateEffectyNominal = RateEffectiveNominal
+	// Deprecated: use RateAnticipateEffectivePeriodic.
+	RateAnticipateEffectyPeriodic = RateAnticipateEffectivePeriodic
+	// Deprecated: use RateAnticipateEffectiveNominal.
+	RateAnticipateEffectyNominal = RateAnticipateEffectiveNominal
 )
 
 var (

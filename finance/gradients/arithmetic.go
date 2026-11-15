@@ -29,7 +29,7 @@ type Arithmetic struct {
 // Example:
 //
 //	period, _ := compoundinterest.NewPeriod(decimal.MustFromFloat64(5), compoundinterest.Annually)
-//	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.1), compoundinterest.Annually, compoundinterest.RateEffectyPeriodic)
+//	rate, _ := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.1), compoundinterest.Annually, compoundinterest.RateEffectivePeriodic)
 //	series, _ := NewArithmetic(
 //	    money.MustMoneyFromFloat64(1000, money.USD),
 //	    money.MustMoneyFromFloat64(100, money.USD),

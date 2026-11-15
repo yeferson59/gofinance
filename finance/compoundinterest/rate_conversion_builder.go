@@ -31,7 +31,7 @@ type RateConversionConfig struct {
 }
 
 // NewRateConversion creates a new RateConversionConfig builder instance.
-// Defaults: frequency is Monthly and rate type is RateEffectyPeriodic.
+// Defaults: frequency is Monthly and rate type is RateEffectivePeriodic.
 //
 // Configure the source rate with Rate() or RateDecimal(), its type with
 // Periodic(), Nominal(), EffectiveAnnual(), AnticipatedPeriodic(),
@@ -40,7 +40,7 @@ type RateConversionConfig struct {
 func NewRateConversion() RateConversionConfig {
 	return RateConversionConfig{
 		frequency: Monthly,
-		rateType:  RateEffectyPeriodic,
+		rateType:  RateEffectivePeriodic,
 	}
 }
 
@@ -104,52 +104,52 @@ func (r RateConversionConfig) Annually() RateConversionConfig {
 // RateType sets the type of the source rate.
 //
 // Parameters:
-//   - t: The rate type (RateEffectyPeriodic, RateEffectyNominal,
-//     RateEffectyAnnually, RateAnticipateEffectyPeriodic, RateAnticipateEffectyNominal)
+//   - t: The rate type (RateEffectivePeriodic, RateEffectiveNominal,
+//     RateEffectiveAnnually, RateAnticipateEffectivePeriodic, RateAnticipateEffectiveNominal)
 func (r RateConversionConfig) RateType(t TypeRate) RateConversionConfig {
 	r.rateType = t
 	return r
 }
 
 // Periodic marks the source rate as a periodic (per-period) rate.
-// Equivalent to RateType(RateEffectyPeriodic).
+// Equivalent to RateType(RateEffectivePeriodic).
 func (r RateConversionConfig) Periodic() RateConversionConfig {
-	r.rateType = RateEffectyPeriodic
+	r.rateType = RateEffectivePeriodic
 	return r
 }
 
 // Nominal marks the source rate as a nominal annual rate.
-// Equivalent to RateType(RateEffectyNominal).
+// Equivalent to RateType(RateEffectiveNominal).
 func (r RateConversionConfig) Nominal() RateConversionConfig {
-	r.rateType = RateEffectyNominal
+	r.rateType = RateEffectiveNominal
 	return r
 }
 
 // EffectiveAnnual marks the source rate as an effective annual rate.
-// Equivalent to RateType(RateEffectyAnnually).
+// Equivalent to RateType(RateEffectiveAnnually).
 func (r RateConversionConfig) EffectiveAnnual() RateConversionConfig {
-	r.rateType = RateEffectyAnnually
+	r.rateType = RateEffectiveAnnually
 	return r
 }
 
 // AnticipatedPeriodic marks the source rate as an anticipated (discount) periodic rate.
-// Equivalent to RateType(RateAnticipateEffectyPeriodic).
+// Equivalent to RateType(RateAnticipateEffectivePeriodic).
 func (r RateConversionConfig) AnticipatedPeriodic() RateConversionConfig {
-	r.rateType = RateAnticipateEffectyPeriodic
+	r.rateType = RateAnticipateEffectivePeriodic
 	return r
 }
 
 // AnticipatedNominal marks the source rate as an anticipated (discount) nominal rate.
-// Equivalent to RateType(RateAnticipateEffectyNominal).
+// Equivalent to RateType(RateAnticipateEffectiveNominal).
 func (r RateConversionConfig) AnticipatedNominal() RateConversionConfig {
-	r.rateType = RateAnticipateEffectyNominal
+	r.rateType = RateAnticipateEffectiveNominal
 	return r
 }
 
 // isAnticipated reports whether the configured source rate is an anticipated
 // (discount) rate.
 func (r RateConversionConfig) isAnticipated() bool {
-	return r.rateType == RateAnticipateEffectyPeriodic || r.rateType == RateAnticipateEffectyNominal
+	return r.rateType == RateAnticipateEffectivePeriodic || r.rateType == RateAnticipateEffectiveNominal
 }
 
 // Build creates and returns the RateInterest configured in the builder.
@@ -225,7 +225,7 @@ func (r RateConversionConfig) ToEffectiveAnnual() (_ decimal.Decimal, err error)
 		return rt.RateAnticipateEffectyAnnually()
 	}
 
-	return rt.RateEffectyAnnually()
+	return rt.RateEffectiveAnnually()
 }
 
 // ToAnticipatedPeriodic converts the configured rate to an anticipated

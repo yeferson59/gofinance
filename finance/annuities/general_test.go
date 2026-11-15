@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewGeneralAnnuityMatchesSimpleWhenFrequenciesAgree(t *testing.T) {
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compoundinterest.Monthly, compoundinterest.RateEffectyNominal)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compoundinterest.Monthly, compoundinterest.RateEffectiveNominal)
 	require.NoError(t, err)
 
 	value := money.MustMoneyFromFloat64(1000, money.USD)
@@ -42,7 +42,7 @@ func TestNewGeneralAnnuityQuarterlyRateMonthlyPayments(t *testing.T) {
 	// rebases the 24 monthly payments onto the rate's quarterly frequency
 	// (8 quarters), so the result matches a simple quarterly annuity of the
 	// same payment count and rate.
-	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compoundinterest.Quarterly, compoundinterest.RateEffectyNominal)
+	rateInterest, err := compoundinterest.NewRateInterest(decimal.MustFromFloat64(0.12), compoundinterest.Quarterly, compoundinterest.RateEffectiveNominal)
 	require.NoError(t, err)
 
 	value := money.MustMoneyFromFloat64(100, money.USD)
