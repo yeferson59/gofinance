@@ -8,14 +8,31 @@ import (
 	"github.com/yeferson59/gofinance/v2/decimal"
 )
 
+// MoneyZero is zero US dollars.
+//
+// Deprecated: it hard-codes USD, which makes it the wrong placeholder for an
+// amount that is not set: types with several optional amounts (annuities,
+// compound and simple interest) count it as a USD amount, so mixing it with
+// amounts in any other currency fails with ErrCurrencyMismatch. Leave an
+// unset amount as the zero Money{}, which carries no currency, and write a
+// real zero as NewFromDecimal(decimal.Zero, currency).
 var MoneyZero = Money{decimal.Zero, USD}
+
+// MoneyOne is one US dollar.
+//
+// Deprecated: it hard-codes USD. Use NewFromDecimal(decimal.One, currency).
 var MoneyOne = Money{decimal.One, USD}
 
+// Money is an amount bound to a currency. Arithmetic keeps the currency and
+// refuses to combine different ones; the zero value is an unset amount with no
+// currency (XXX).
 type Money struct {
 	value    decimal.Decimal
 	currency Currency
 }
 
+// New returns value / 10^precision in currency, so New(1050, 2, money.USD) is
+// 10.50 USD. It returns decimal.ErrPrecOutOfRange if precision exceeds 19.
 func New(value int64, precision uint8, currency Currency) (Money, error) {
 	parsedValue, err := decimal.NewFromInt64(value, precision)
 	if err != nil {
@@ -25,6 +42,8 @@ func New(value int64, precision uint8, currency Currency) (Money, error) {
 	return Money{parsedValue, currency}, nil
 }
 
+// NewMoneyFromFloat64 converts f as decimal.NewFromFloat64 does and binds it to
+// currency.
 func NewMoneyFromFloat64(f float64, currency Currency) (Money, error) {
 	parsedValue, err := decimal.NewFromFloat64(f)
 	if err != nil {
@@ -34,6 +53,7 @@ func NewMoneyFromFloat64(f float64, currency Currency) (Money, error) {
 	return Money{parsedValue, currency}, nil
 }
 
+// MustMoneyFromFloat64 is like NewMoneyFromFloat64 but panics on error.
 func MustMoneyFromFloat64(f float64, currency Currency) Money {
 	m, err := NewMoneyFromFloat64(f, currency)
 	if err != nil {
@@ -43,6 +63,8 @@ func MustMoneyFromFloat64(f float64, currency Currency) Money {
 	return m
 }
 
+// NewMoneyFromString parses s as decimal.NewFromString does and binds it to
+// currency.
 func NewMoneyFromString(s string, currency Currency) (Money, error) {
 	parsedValue, err := decimal.NewFromString(s)
 	if err != nil {
@@ -52,6 +74,7 @@ func NewMoneyFromString(s string, currency Currency) (Money, error) {
 	return Money{parsedValue, currency}, nil
 }
 
+// MustMoneyFromString is like NewMoneyFromString but panics on error.
 func MustMoneyFromString(s string, currency Currency) Money {
 	m, err := NewMoneyFromString(s, currency)
 	if err != nil {
@@ -66,14 +89,18 @@ func NewFromDecimal(d decimal.Decimal, currency Currency) Money {
 	return Money{d, currency}
 }
 
+// GetDecimal returns the amount without its currency.
 func (m Money) GetDecimal() decimal.Decimal {
 	return m.value
 }
 
+// GetCurrency returns the amount's currency.
 func (m Money) GetCurrency() Currency {
 	return m.currency
 }
 
+// SetCurrency replaces m's currency without converting the amount. An invalid
+// currency is replaced by USD, and a nil m is left alone.
 func (m *Money) SetCurrency(c Currency) {
 	if m == nil {
 		return
@@ -144,30 +171,39 @@ func (m Money) Sub(other Money) Money {
 	return v
 }
 
+// RoundBank rounds the amount to prec fractional digits, ties to even.
 func (m Money) RoundBank(prec uint8) Money {
 	return Money{m.value.RoundBank(prec), m.currency}
 }
 
+// RoundBankString rounds the amount to prec fractional digits, ties to even,
+// and formats it with exactly prec of them.
 func (m Money) RoundBankString(prec uint8) string {
 	return m.value.RoundBank(prec).StringFixed(prec)
 }
 
+// RoundAway rounds the amount to prec fractional digits away from zero
+// whenever any digit is dropped.
 func (m Money) RoundAway(prec uint8) Money {
 	return Money{m.value.RoundAway(prec), m.currency}
 }
 
+// Trunc drops every fractional digit of the amount past prec.
 func (m Money) Trunc(prec uint8) Money {
 	return Money{m.value.Trunc(prec), m.currency}
 }
 
+// Abs returns the absolute amount, keeping the currency.
 func (m Money) Abs() Money {
 	return Money{m.value.Abs(), m.currency}
 }
 
+// Neg returns the negated amount, keeping the currency.
 func (m Money) Neg() Money {
 	return Money{m.value.Neg(), m.currency}
 }
 
+// IsZero reports whether the amount is zero.
 func (m Money) IsZero() bool {
 	return m.value.IsZero()
 }
@@ -276,6 +312,8 @@ func (m Money) Max(other Money) (Money, error) {
 	return other, nil
 }
 
+// InexactFloat64 returns the amount as the nearest float64, dropping the
+// currency. The conversion is lossy; use it only for display or plotting.
 func (m Money) InexactFloat64() float64 {
 	return m.value.InexactFloat64()
 }
@@ -303,14 +341,18 @@ func (m Money) Cmp(other Money) int {
 	return cmp
 }
 
+// Floor returns the largest whole amount ≤ m, keeping the currency.
 func (m Money) Floor() Money {
 	return Money{m.value.Floor(), m.currency}
 }
 
+// Ceil returns the smallest whole amount ≥ m, keeping the currency.
 func (m Money) Ceil() Money {
 	return Money{m.value.Ceil(), m.currency}
 }
 
+// String returns the amount as decimal.Decimal.String does, without the
+// currency; see StringMoney and Format for that.
 func (m Money) String() string {
 	return m.value.String()
 }
@@ -346,6 +388,8 @@ func (m Money) LessThanOrEqual(other Money) bool {
 	return m.Cmp(other) <= 0
 }
 
+// Equal reports whether m and other are the same amount in the same currency.
+// Amounts in different currencies are never equal.
 func (m Money) Equal(other Money) bool {
 	return m.value.Equal(other.value) && m.currency == other.currency
 }

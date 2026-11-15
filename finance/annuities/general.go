@@ -28,7 +28,7 @@ import (
 //	    decimal.MustFromFloat64(0.08), compoundinterest.Quarterly, compoundinterest.RateEffectiveNominal)
 //	annuity, _ := NewGeneral(
 //	    money.MustMoneyFromFloat64(100, money.USD),
-//	    money.MoneyZero, money.MoneyZero,
+//	    money.Money{}, money.Money{},
 //	    24, compoundinterest.Monthly, rate)
 func NewGeneral(value, present, future money.Money, paymentPeriods int, paymentFrequency compoundinterest.CompoundingFrequency, rateInterest compoundinterest.RateInterest) (_ Annuity, err error) {
 	defer guard.Recover(&err)

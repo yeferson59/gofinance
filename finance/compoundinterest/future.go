@@ -24,7 +24,7 @@ import (
 //
 //	ci, _ := New(
 //	    money.MustMoneyFromFloat64(1000, USD),
-//	    money.MoneyZero,
+//	    money.Money{},
 //	    rateInterest,
 //	    period,
 //	)

@@ -23,7 +23,7 @@ import (
 // Example:
 //
 //	ci, _ := New(
-//	    money.MoneyZero,
+//	    money.Money{},
 //	    money.MustMoneyFromFloat64(1500, USD),
 //	    rateInterest,
 //	    period,

@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+// Currency identifies an ISO 4217 currency. The constants below name them; the
+// zero value is XXX, ISO 4217's code for "no currency", which is what an unset
+// Money carries.
 type Currency uint8
 
 const (
@@ -511,6 +514,8 @@ func (c Currency) String() string {
 	return "Currency(" + strconv.FormatUint(uint64(c), 10) + ")"
 }
 
+// GetCurrencyISOCode returns c's three-letter ISO 4217 code, or an error if c
+// is not a known currency.
 func (c Currency) GetCurrencyISOCode() ([3]byte, error) {
 	isoCode, ok := currencyCode[c]
 	if !ok {
@@ -520,6 +525,9 @@ func (c Currency) GetCurrencyISOCode() ([3]byte, error) {
 	return isoCode, nil
 }
 
+// GetCurrencyPrecisionCode returns c's ISO 4217 minor unit: the number of
+// digits after the decimal point amounts in it are quoted to (2 for USD, 0 for
+// JPY, 3 for KWD). It returns an error if c is not a known currency.
 func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
 	if _, ok := currencyCode[c]; !ok {
 		return 0, errors.New("invalid currency")
@@ -532,6 +540,7 @@ func (c Currency) GetCurrencyPrecisionCode() (uint8, error) {
 	return defaultCurrencyPrec, nil
 }
 
+// Value implements driver.Valuer, storing c as its ISO 4217 code.
 func (c Currency) Value() (driver.Value, error) {
 	return c.String(), nil
 }
@@ -852,6 +861,8 @@ func (c *Currency) Scan(src any) error {
 	return nil
 }
 
+// GetCurrencyFromISOCode returns the currency with the given ISO 4217 code.
+// The code is matched case-insensitively and surrounding space is ignored.
 func GetCurrencyFromISOCode(code string) (Currency, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(code))
 	if normalized == "" {

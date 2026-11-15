@@ -10,7 +10,13 @@ import (
 	"strings"
 )
 
+// Zero is the Decimal 0, and the zero value of Decimal.
+//
+// Treat it as a constant. Go has no constant structs, so it is a variable,
+// and reassigning it would change 0 for every package that reads it.
 var Zero = Decimal{value: decZero}
+
+// One is the Decimal 1. Like Zero, treat it as a constant.
 var One = Decimal{value: decOne}
 
 // Decimal is a fixed-point decimal number with up to 19 digits of
@@ -32,24 +38,34 @@ func NewFromFloat64(f float64) (Decimal, error) {
 	return Decimal{decimal}, err
 }
 
+// NewFromInt64 returns coef / 10^prec, so NewFromInt64(150, 2) is 1.50. It
+// returns ErrPrecOutOfRange if prec exceeds 19.
 func NewFromInt64(coef int64, prec uint8) (Decimal, error) {
 	decimal, err := decFromInt64(coef, prec)
 
 	return Decimal{decimal}, err
 }
 
+// NewFromUint64 is like NewFromInt64 for an unsigned coefficient.
 func NewFromUint64(coef uint64, prec uint8) (Decimal, error) {
 	decimal, err := decFromUint64(coef, prec)
 
 	return Decimal{decimal}, err
 }
 
+// NewFromHiLo builds a Decimal from a full 128-bit coefficient, hi·2^64 + lo,
+// scaled by 10^-prec and negated when neg is true. It returns ErrPrecOutOfRange
+// if prec exceeds 19.
 func NewFromHiLo(neg bool, hi, lo uint64, prec uint8) (Decimal, error) {
 	decimal, err := decFromHiLo(neg, hi, lo, prec)
 
 	return Decimal{decimal}, err
 }
 
+// NewFromString parses s in the form [+-]digits[.digits]. Exponent notation,
+// surrounding space and more than 19 fractional digits are rejected rather
+// than rounded: it returns ErrEmptyString, ErrInvalidFormat,
+// ErrPrecOutOfRange or ErrOverflow.
 func NewFromString(s string) (Decimal, error) {
 	decimal, err := parseDecimal(s)
 
@@ -127,6 +143,8 @@ func NewFractionString(frac string) (Decimal, error) {
 	return newFraction(num, den)
 }
 
+// MustFromFloat64 is like NewFromFloat64 but panics on error. Use it for constants
+// and inputs already known to be valid.
 func MustFromFloat64(f float64) Decimal {
 	d, err := NewFromFloat64(f)
 	if err != nil {
@@ -136,6 +154,8 @@ func MustFromFloat64(f float64) Decimal {
 	return d
 }
 
+// MustFromInt64 is like NewFromInt64 but panics on error. Use it for constants
+// and inputs already known to be valid.
 func MustFromInt64(coef int64, prec uint8) Decimal {
 	d, err := NewFromInt64(coef, prec)
 	if err != nil {
@@ -145,6 +165,8 @@ func MustFromInt64(coef int64, prec uint8) Decimal {
 	return d
 }
 
+// MustFromUint64 is like NewFromUint64 but panics on error. Use it for constants
+// and inputs already known to be valid.
 func MustFromUint64(coef uint64, prec uint8) Decimal {
 	d, err := NewFromUint64(coef, prec)
 	if err != nil {
@@ -154,6 +176,8 @@ func MustFromUint64(coef uint64, prec uint8) Decimal {
 	return d
 }
 
+// MustFromHiLo is like NewFromHiLo but panics on error. Use it for constants
+// and inputs already known to be valid.
 func MustFromHiLo(neg bool, hi, lo uint64, prec uint8) Decimal {
 	d, err := NewFromHiLo(neg, hi, lo, prec)
 	if err != nil {
@@ -163,6 +187,8 @@ func MustFromHiLo(neg bool, hi, lo uint64, prec uint8) Decimal {
 	return d
 }
 
+// MustFromString is like NewFromString but panics on error. Use it for constants
+// and inputs already known to be valid.
 func MustFromString(s string) Decimal {
 	d, err := NewFromString(s)
 	if err != nil {
@@ -172,6 +198,8 @@ func MustFromString(s string) Decimal {
 	return d
 }
 
+// MustFractionFloat64 is like NewFractionFloat64 but panics on error. Use it for constants
+// and inputs already known to be valid.
 func MustFractionFloat64(numerator float64, denominator float64) Decimal {
 	d, err := NewFractionFloat64(numerator, denominator)
 	if err != nil {
@@ -181,6 +209,8 @@ func MustFractionFloat64(numerator float64, denominator float64) Decimal {
 	return d
 }
 
+// MustFractionInt64 is like NewFractionInt64 but panics on error. Use it for constants
+// and inputs already known to be valid.
 func MustFractionInt64(numerator int64, numeratorPrec uint8, denominator int64, denominatorPrec uint8) Decimal {
 	d, err := NewFractionInt64(numerator, numeratorPrec, denominator, denominatorPrec)
 	if err != nil {
@@ -197,6 +227,7 @@ func (d Decimal) TryAdd(other Decimal) (Decimal, error) {
 	return Decimal{v}, err
 }
 
+// Add returns d + other. It panics on overflow; use TryAdd to get the error.
 func (d Decimal) Add(other Decimal) Decimal {
 	v, err := d.TryAdd(other)
 	if err != nil {
@@ -213,6 +244,7 @@ func (d Decimal) TrySub(other Decimal) (Decimal, error) {
 	return Decimal{v}, err
 }
 
+// Sub returns d − other. It panics on overflow; use TrySub to get the error.
 func (d Decimal) Sub(other Decimal) Decimal {
 	v, err := d.TrySub(other)
 	if err != nil {
@@ -229,6 +261,9 @@ func (d Decimal) TryMul(other Decimal) (Decimal, error) {
 	return Decimal{v}, err
 }
 
+// Mul returns d × other. A product needing more than 19 fractional digits is
+// truncated (not rounded) to 19. It panics on overflow; use TryMul to get the
+// error.
 func (d Decimal) Mul(other Decimal) Decimal {
 	v, err := d.TryMul(other)
 	if err != nil {
@@ -238,12 +273,17 @@ func (d Decimal) Mul(other Decimal) Decimal {
 	return v
 }
 
+// Div returns d ÷ other truncated (not rounded) to 19 fractional digits, or to
+// fewer when the quotient is too large to carry them all. Trailing zeros are
+// dropped, so 1/2 is 0.5. It returns ErrDivideByZero, or ErrOverflow when
+// even the integer part does not fit.
 func (d Decimal) Div(other Decimal) (Decimal, error) {
 	div, err := d.value.Div(other.value)
 
 	return Decimal{div}, err
 }
 
+// MustDiv is like Div but panics on error.
 func (d Decimal) MustDiv(other Decimal) Decimal {
 	div, err := d.Div(other)
 	if err != nil {
@@ -376,66 +416,91 @@ func (d Decimal) MustLog(base Decimal) Decimal {
 	return result
 }
 
+// Mod returns the remainder of d ÷ other after truncating the quotient toward
+// zero, with the sign of d (like C's fmod). It returns ErrDivideByZero if
+// other is zero.
 func (d Decimal) Mod(other Decimal) (Decimal, error) {
 	mod, err := d.value.Mod(other.value)
 
 	return Decimal{mod}, err
 }
 
+// Div64 is like Div with a uint64 divisor. Dividing by an integer never grows
+// the magnitude, so its only error is ErrDivideByZero.
 func (d Decimal) Div64(other uint64) (Decimal, error) {
 	div, err := d.value.Div64(other)
 
 	return Decimal{div}, err
 }
 
+// InexactFloat64 returns the float64 nearest to d. The conversion is lossy
+// whenever d has more significant digits than a float64 holds.
 func (d Decimal) InexactFloat64() float64 {
 	return d.value.InexactFloat64()
 }
 
+// RoundBank rounds d to prec fractional digits, rounding ties to the even
+// digit (banker's rounding).
 func (d Decimal) RoundBank(prec uint8) Decimal {
 	return Decimal{d.value.RoundBank(prec)}
 }
 
+// RoundAway rounds d to prec fractional digits away from zero whenever any
+// digit is dropped (ROUND_UP in other libraries).
 func (d Decimal) RoundAway(prec uint8) Decimal {
 	return Decimal{d.value.RoundAway(prec)}
 }
 
+// RoundHAZ rounds d to prec fractional digits, rounding ties away from zero
+// (the usual schoolbook rounding).
 func (d Decimal) RoundHAZ(prec uint8) Decimal {
 	return Decimal{d.value.RoundHAZ(prec)}
 }
 
+// RoundHTZ rounds d to prec fractional digits, rounding ties toward zero.
 func (d Decimal) RoundHTZ(prec uint8) Decimal {
 	return Decimal{d.value.RoundHTZ(prec)}
 }
 
+// Trunc drops every fractional digit past prec, rounding toward zero.
 func (d Decimal) Trunc(prec uint8) Decimal {
 	return Decimal{d.value.Trunc(prec)}
 }
 
+// Abs returns |d|.
 func (d Decimal) Abs() Decimal {
 	return Decimal{d.value.Abs()}
 }
 
+// Floor returns the largest integer ≤ d.
 func (d Decimal) Floor() Decimal {
 	return Decimal{d.value.Floor()}
 }
 
+// Ceil returns the smallest integer ≥ d.
 func (d Decimal) Ceil() Decimal {
 	return Decimal{d.value.Ceil()}
 }
 
+// Neg returns −d.
 func (d Decimal) Neg() Decimal {
 	return Decimal{d.value.Neg()}
 }
 
+// Sign returns −1, 0 or +1 as d is negative, zero or positive.
 func (d Decimal) Sign() int {
 	return d.value.Sign()
 }
 
+// Cmp returns −1, 0 or +1 as d is less than, equal to, or greater than other.
+// Values compare by magnitude, whatever their scale: 1.5 equals 1.50.
 func (d Decimal) Cmp(other Decimal) int {
 	return d.value.Cmp(other.value)
 }
 
+// String returns d in plain decimal notation — an optional minus sign, digits
+// and at most one point, never an exponent — with trailing fractional zeros
+// dropped.
 func (d Decimal) String() string {
 	return d.value.String()
 }
@@ -463,38 +528,49 @@ func (d Decimal) Float64() (float64, error) {
 	return d.value.InexactFloat64(), nil
 }
 
+// Int64 returns the integer part of d, truncated toward zero. It returns
+// ErrIntPartOverflow if that does not fit in an int64.
 func (d Decimal) Int64() (int64, error) {
 	return d.value.Int64()
 }
 
+// IsZero reports whether d == 0.
 func (d Decimal) IsZero() bool {
 	return d.value.IsZero()
 }
 
+// IsNeg reports whether d < 0.
 func (d Decimal) IsNeg() bool {
 	return d.value.IsNeg()
 }
 
+// IsPos reports whether d > 0.
 func (d Decimal) IsPos() bool {
 	return d.value.IsPos()
 }
 
+// GreaterThan reports whether d > other.
 func (d Decimal) GreaterThan(other Decimal) bool {
 	return d.value.GreaterThan(other.value)
 }
 
+// GreaterThanOrEqual reports whether d ≥ other.
 func (d Decimal) GreaterThanOrEqual(other Decimal) bool {
 	return d.value.GreaterThanOrEqual(other.value)
 }
 
+// LessThan reports whether d < other.
 func (d Decimal) LessThan(other Decimal) bool {
 	return d.value.LessThan(other.value)
 }
 
+// LessThanOrEqual reports whether d ≤ other.
 func (d Decimal) LessThanOrEqual(other Decimal) bool {
 	return d.value.LessThanOrEqual(other.value)
 }
 
+// Equal reports whether d and other are the same number, whatever their
+// scale: 1.5 equals 1.50.
 func (d Decimal) Equal(other Decimal) bool {
 	return d.value.Equal(other.value)
 }
@@ -767,6 +843,8 @@ func (d *Decimal) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
+// Value implements driver.Valuer, storing d as the text String returns so it
+// fits a NUMERIC/DECIMAL column without passing through a float.
 func (d Decimal) Value() (driver.Value, error) {
 	return d.String(), nil
 }
