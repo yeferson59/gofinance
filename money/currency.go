@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json/jsontext"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -12,64 +13,68 @@ import (
 type Currency uint8
 
 const (
-	XXX Currency = 0   // No Currency
-	XTS Currency = 1   // Test Currency
-	AED Currency = 2   // U.A.E. Dirham
-	AFN Currency = 3   // Afghani
-	ALL Currency = 4   // Lek
-	AMD Currency = 5   // Armenian Dram
-	ANG Currency = 6   // Netherlands Antillian Guilder
-	AOA Currency = 7   // Kwanza
-	ARS Currency = 8   // Argentine Peso
-	AUD Currency = 9   // Australian Dollar
-	AWG Currency = 10  // Aruban Guilder
-	AZN Currency = 11  // Azerbaijan Manat
-	BAM Currency = 12  // Convertible Mark
-	BBD Currency = 13  // Barbados Dollar
-	BDT Currency = 14  // Taka
-	BGN Currency = 15  // Bulgarian Lev
-	BHD Currency = 16  // Bahraini Dinar
-	BIF Currency = 17  // Burundi Franc
-	BMD Currency = 18  // Bermudian Dollar
-	BND Currency = 19  // Brunei Dollar
-	BOB Currency = 20  // Boliviano
-	BRL Currency = 21  // Brazilian Real
-	BSD Currency = 22  // Bahamian Dollar
-	BTN Currency = 23  // Bhutan Ngultrum
-	BWP Currency = 24  // Pula
-	BYN Currency = 25  // Belarussian Ruble
-	BZD Currency = 26  // Belize Dollar
-	CAD Currency = 27  // Canadian Dollar
-	CDF Currency = 28  // Franc Congolais
-	CHF Currency = 29  // Swiss Franc
-	CLP Currency = 30  // Chilean Peso
-	CNY Currency = 31  // Yuan Renminbi
-	COP Currency = 32  // Colombian Peso
-	CRC Currency = 33  // Costa Rican Colon
-	CUP Currency = 34  // Cuban Peso
-	CVE Currency = 35  // Cape Verde Escudo
-	CZK Currency = 36  // Czech Koruna
-	DJF Currency = 37  // Djibouti Franc
-	DKK Currency = 38  // Danish Krone
-	DOP Currency = 39  // Dominican Peso
-	DZD Currency = 40  // Algerian Dinar
-	EGP Currency = 41  // Egyptian Pound
-	ERN Currency = 42  // Eritean Nakfa
-	ETB Currency = 43  // Ethiopian Birr
-	EUR Currency = 44  // Euro
-	FJD Currency = 45  // Fiji Dollar
-	FKP Currency = 46  // Falkland Islands Pound
-	GBP Currency = 47  // Pound Sterling
-	GEL Currency = 48  // Lari
-	GHS Currency = 49  // Cedi
-	GIP Currency = 50  // Gibraltar Pound
-	GMD Currency = 51  // Dalasi
-	GNF Currency = 52  // Guinea Franc
-	GTQ Currency = 53  // Quetzal
-	GWP Currency = 54  // Guinea-Bissau Peso
-	GYD Currency = 55  // Guyana Dollar
-	HKD Currency = 56  // Hong Kong Dollar
-	HNL Currency = 57  // Lempira
+	XXX Currency = 0 // No Currency
+	XTS Currency = 1 // Test Currency
+	AED Currency = 2 // U.A.E. Dirham
+	AFN Currency = 3 // Afghani
+	ALL Currency = 4 // Lek
+	AMD Currency = 5 // Armenian Dram
+	// Deprecated: replaced by XCG (Caribbean guilder) in 2025. Kept so stored
+	// amounts still decode.
+	ANG Currency = 6  // Netherlands Antillian Guilder
+	AOA Currency = 7  // Kwanza
+	ARS Currency = 8  // Argentine Peso
+	AUD Currency = 9  // Australian Dollar
+	AWG Currency = 10 // Aruban Guilder
+	AZN Currency = 11 // Azerbaijan Manat
+	BAM Currency = 12 // Convertible Mark
+	BBD Currency = 13 // Barbados Dollar
+	BDT Currency = 14 // Taka
+	BGN Currency = 15 // Bulgarian Lev
+	BHD Currency = 16 // Bahraini Dinar
+	BIF Currency = 17 // Burundi Franc
+	BMD Currency = 18 // Bermudian Dollar
+	BND Currency = 19 // Brunei Dollar
+	BOB Currency = 20 // Boliviano
+	BRL Currency = 21 // Brazilian Real
+	BSD Currency = 22 // Bahamian Dollar
+	BTN Currency = 23 // Bhutan Ngultrum
+	BWP Currency = 24 // Pula
+	BYN Currency = 25 // Belarussian Ruble
+	BZD Currency = 26 // Belize Dollar
+	CAD Currency = 27 // Canadian Dollar
+	CDF Currency = 28 // Franc Congolais
+	CHF Currency = 29 // Swiss Franc
+	CLP Currency = 30 // Chilean Peso
+	CNY Currency = 31 // Yuan Renminbi
+	COP Currency = 32 // Colombian Peso
+	CRC Currency = 33 // Costa Rican Colon
+	CUP Currency = 34 // Cuban Peso
+	CVE Currency = 35 // Cape Verde Escudo
+	CZK Currency = 36 // Czech Koruna
+	DJF Currency = 37 // Djibouti Franc
+	DKK Currency = 38 // Danish Krone
+	DOP Currency = 39 // Dominican Peso
+	DZD Currency = 40 // Algerian Dinar
+	EGP Currency = 41 // Egyptian Pound
+	ERN Currency = 42 // Eritean Nakfa
+	ETB Currency = 43 // Ethiopian Birr
+	EUR Currency = 44 // Euro
+	FJD Currency = 45 // Fiji Dollar
+	FKP Currency = 46 // Falkland Islands Pound
+	GBP Currency = 47 // Pound Sterling
+	GEL Currency = 48 // Lari
+	GHS Currency = 49 // Cedi
+	GIP Currency = 50 // Gibraltar Pound
+	GMD Currency = 51 // Dalasi
+	GNF Currency = 52 // Guinea Franc
+	GTQ Currency = 53 // Quetzal
+	GWP Currency = 54 // Guinea-Bissau Peso
+	GYD Currency = 55 // Guyana Dollar
+	HKD Currency = 56 // Hong Kong Dollar
+	HNL Currency = 57 // Lempira
+	// Deprecated: Croatia adopted the euro (EUR) in 2023. Kept so stored
+	// amounts still decode.
 	HRK Currency = 58  // Croatian Kuna
 	HTG Currency = 59  // Gourde
 	HUF Currency = 60  // Forint
@@ -137,6 +142,8 @@ const (
 	SEK Currency = 122 // Swedish Krona
 	SGD Currency = 123 // Singapore Dollar
 	SHP Currency = 124 // St. Helena Pound
+	// Deprecated: replaced by SLE (new leone) after the 2022 redenomination.
+	// Kept so stored amounts still decode.
 	SLL Currency = 125 // Leone
 	SOS Currency = 126 // Somali Shilling
 	SRD Currency = 127 // Surinam Dollar
@@ -169,16 +176,23 @@ const (
 	YER Currency = 154 // Yemeni Rial
 	ZAR Currency = 155 // Rand
 	ZMW Currency = 156 // Zambian Kwacha
+	// Deprecated: replaced by ZWG (Zimbabwe Gold) in 2024. Kept so stored
+	// amounts still decode.
 	ZWL Currency = 157 // Zimbabwe Dollar
+
+	// Codes added to ISO 4217 after the table above was written. They are
+	// appended rather than slotted in alphabetically so every existing
+	// constant keeps its number.
+	SLE Currency = 158 // Leone (2022 redenomination of SLL)
+	ZWG Currency = 159 // Zimbabwe Gold
+	XCG Currency = 160 // Caribbean Guilder
 )
 
+// Valid reports whether c is a currency this package knows: one with an ISO
+// 4217 code in its table.
 func (c Currency) Valid() bool {
-	switch {
-	case c <= 157:
-		return true
-	default:
-		return false
-	}
+	_, ok := currencyCode[c]
+	return ok
 }
 
 var currencyCode = map[Currency][3]byte{
@@ -217,6 +231,9 @@ var currencyCode = map[Currency][3]byte{
 	ZAR: {'Z', 'A', 'R'},
 	ZMW: {'Z', 'M', 'W'},
 	ZWL: {'Z', 'W', 'L'},
+	SLE: {'S', 'L', 'E'},
+	ZWG: {'Z', 'W', 'G'},
+	XCG: {'X', 'C', 'G'},
 	BSD: {'B', 'S', 'D'},
 	BTN: {'B', 'T', 'N'},
 	BWP: {'B', 'W', 'P'},
@@ -794,6 +811,12 @@ func getCurrencyByISOCode(v [3]byte) (Currency, error) {
 	return gv, nil
 }
 
+// errScanNullCurrency is returned by Currency.Scan for a NULL column.
+var errScanNullCurrency = errors.New("money: can't scan NULL into a Currency; scan into *Currency for a nullable column")
+
+// Scan implements sql.Scanner, reading an ISO 4217 code from text, a [3]byte,
+// or a Currency. Any other type, NULL included, is an error and leaves c
+// unchanged; scan into a *Currency to read a nullable column.
 func (c *Currency) Scan(src any) error {
 	var (
 		nc  Currency
@@ -814,6 +837,10 @@ func (c *Currency) Scan(src any) error {
 		}
 
 		nc = v
+	case nil:
+		err = errScanNullCurrency
+	default:
+		err = fmt.Errorf("money: can't scan %T into a Currency", src)
 	}
 
 	if err != nil {

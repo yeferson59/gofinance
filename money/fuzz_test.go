@@ -67,7 +67,7 @@ func FuzzUnmarshalJSON(f *testing.F) {
 // FuzzScan checks the SQL decoder against arbitrary text, and that a value
 // written with Value can always be read back with Scan.
 func FuzzScan(f *testing.F) {
-	for _, seed := range []string{"0", "1234.56", "-1", "1e5", "", "abc", "  12  ", "0.0000000001"} {
+	for _, seed := range []string{"0", "1234.56", "-1", "1e5", "", "abc", "  12  ", "0.0000000001", "COP 1500.50", "ZZZ 1", "usd -3", "XXX 0"} {
 		f.Add(seed)
 	}
 
@@ -79,18 +79,28 @@ func FuzzScan(f *testing.F) {
 		}
 
 		// Value produces what a driver would store; Scan must read it back.
+		// The stored amount carries no currency, so the reader presets it, as
+		// Scan documents for an amount column paired with a currency column.
 		stored, err := scanned.Value()
 		if err != nil {
 			t.Fatalf("scanned %q but could not produce a driver value: %v", text, err)
 		}
 
-		var again Money
+		again := NewFromDecimal(decimal.Zero, scanned.GetCurrency())
 		if err := again.Scan(stored); err != nil {
 			t.Fatalf("stored %q as %v, which no longer scans: %v", text, stored, err)
 		}
 
-		if !again.Equal(scanned) {
-			t.Fatalf("round trip of %q changed %v into %v", text, scanned, again)
+		// XXX is the zero currency, which a receiver can't be preset to: Scan
+		// reads it as "unset" and applies USD. Every other currency survives.
+		roundTripped := again.GetDecimal().Equal(scanned.GetDecimal())
+		if scanned.GetCurrency() != XXX {
+			roundTripped = again.Equal(scanned)
+		}
+
+		if !roundTripped {
+			t.Fatalf("round trip of %q changed %v %v into %v %v",
+				text, scanned, scanned.GetCurrency(), again, again.GetCurrency())
 		}
 
 		// Scanning the same text through []byte must agree with the string

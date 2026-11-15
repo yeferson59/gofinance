@@ -249,11 +249,12 @@ func (m Money) MustDivInt64(n int64) Money {
 // Min returns the smaller of m and other.
 // It returns ErrCurrencyMismatch if the operands have different currencies.
 func (m Money) Min(other Money) (Money, error) {
-	if m.currency != other.currency {
-		return Money{}, ErrCurrencyMismatch
+	cmp, err := m.TryCmp(other)
+	if err != nil {
+		return Money{}, err
 	}
 
-	if m.value.Cmp(other.value) <= 0 {
+	if cmp <= 0 {
 		return m, nil
 	}
 
@@ -263,11 +264,12 @@ func (m Money) Min(other Money) (Money, error) {
 // Max returns the larger of m and other.
 // It returns ErrCurrencyMismatch if the operands have different currencies.
 func (m Money) Max(other Money) (Money, error) {
-	if m.currency != other.currency {
-		return Money{}, ErrCurrencyMismatch
+	cmp, err := m.TryCmp(other)
+	if err != nil {
+		return Money{}, err
 	}
 
-	if m.value.Cmp(other.value) >= 0 {
+	if cmp >= 0 {
 		return m, nil
 	}
 
@@ -278,8 +280,27 @@ func (m Money) InexactFloat64() float64 {
 	return m.value.InexactFloat64()
 }
 
+// TryCmp compares m and other, returning -1, 0 or 1 as m is less than, equal
+// to, or greater than other. It returns ErrCurrencyMismatch if the currencies
+// differ: ordering amounts in different currencies needs an exchange rate,
+// and comparing the bare numbers would rank 10 USD below 5000 COP.
+func (m Money) TryCmp(other Money) (int, error) {
+	if m.currency != other.currency {
+		return 0, ErrCurrencyMismatch
+	}
+
+	return m.value.Cmp(other.value), nil
+}
+
+// Cmp is like TryCmp but, like Add and Sub, panics with ErrCurrencyMismatch
+// if the currencies differ.
 func (m Money) Cmp(other Money) int {
-	return m.value.Cmp(other.value)
+	cmp, err := m.TryCmp(other)
+	if err != nil {
+		panic(err)
+	}
+
+	return cmp
 }
 
 func (m Money) Floor() Money {
@@ -294,24 +315,35 @@ func (m Money) String() string {
 	return m.value.String()
 }
 
+// StringFixed returns the amount with exactly prec digits after the decimal
+// point, rounding half away from zero or padding with zeros as needed. It
+// does not include the currency; see StringMoney and Format for that.
 func (m Money) StringFixed(prec uint8) string {
 	return m.value.StringFixed(prec)
 }
 
+// GreaterThan reports whether m > other. It panics with ErrCurrencyMismatch
+// if the currencies differ; use TryCmp for the error-returning form.
 func (m Money) GreaterThan(other Money) bool {
-	return m.value.GreaterThan(other.value)
+	return m.Cmp(other) > 0
 }
 
+// GreaterThanOrEqual reports whether m >= other. It panics with ErrCurrencyMismatch
+// if the currencies differ; use TryCmp for the error-returning form.
 func (m Money) GreaterThanOrEqual(other Money) bool {
-	return m.value.GreaterThanOrEqual(other.value)
+	return m.Cmp(other) >= 0
 }
 
+// LessThan reports whether m < other. It panics with ErrCurrencyMismatch
+// if the currencies differ; use TryCmp for the error-returning form.
 func (m Money) LessThan(other Money) bool {
-	return m.value.LessThan(other.value)
+	return m.Cmp(other) < 0
 }
 
+// LessThanOrEqual reports whether m <= other. It panics with ErrCurrencyMismatch
+// if the currencies differ; use TryCmp for the error-returning form.
 func (m Money) LessThanOrEqual(other Money) bool {
-	return m.value.LessThanOrEqual(other.value)
+	return m.Cmp(other) <= 0
 }
 
 func (m Money) Equal(other Money) bool {
@@ -585,16 +617,78 @@ func (m *Money) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
+// Value implements driver.Valuer, storing the amount alone as its decimal
+// text so it fits a NUMERIC/DECIMAL column. The currency is not part of it:
+// keep it in a column of its own (Currency implements driver.Valuer and
+// sql.Scanner) and see Scan for reading the pair back.
 func (m Money) Value() (driver.Value, error) {
 	return m.value.String(), nil
 }
 
+// Scan implements sql.Scanner.
+//
+// A column holding only the amount — what Value writes — carries no currency,
+// so Scan keeps the one m already has: preset it, for instance with
+// NewFromDecimal(decimal.Zero, money.COP), to read a COP column back as COP.
+// A receiver with no currency set (the zero Money) gets USD, the same default
+// the JSON decoder applies to a bare amount.
+//
+// Text in the form StringMoney writes, an ISO 4217 code and the amount
+// separated by one space ("COP 1500.50"), names its own currency, which takes
+// precedence over m's.
+//
+// On error m is left unchanged.
 func (m *Money) Scan(src any) error {
-	if err := m.value.Scan(src); err != nil {
+	currency := USD
+	if m.currency != XXX && m.currency.Valid() {
+		currency = m.currency
+	}
+
+	switch v := src.(type) {
+	case string:
+		if code, amount, ok := splitCurrencyPrefix(v); ok {
+			c, err := GetCurrencyFromISOCode(code)
+			if err != nil {
+				return err
+			}
+
+			currency, src = c, amount
+		}
+	case []byte:
+		if code, amount, ok := splitCurrencyPrefix(string(v)); ok {
+			c, err := GetCurrencyFromISOCode(code)
+			if err != nil {
+				return err
+			}
+
+			currency, src = c, amount
+		}
+	}
+
+	var value decimal.Decimal
+	if err := value.Scan(src); err != nil {
 		return err
 	}
 
-	m.SetCurrency(USD)
+	m.value = value
+	m.currency = currency
 
 	return nil
+}
+
+// splitCurrencyPrefix splits text of the form "CCC amount" — three ASCII
+// letters, one space, then the amount — into its code and amount. ok is false
+// for anything else, which is then parsed as a bare amount.
+func splitCurrencyPrefix(s string) (code, amount string, ok bool) {
+	if len(s) < 5 || s[3] != ' ' {
+		return "", "", false
+	}
+
+	for i := range 3 {
+		if c := s[i] | 0x20; c < 'a' || c > 'z' {
+			return "", "", false
+		}
+	}
+
+	return s[:3], s[4:], true
 }
