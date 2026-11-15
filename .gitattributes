@@ -1,0 +1,5 @@
+# Keep every text file LF-terminated in the working tree as well as in the
+# repository, whatever core.autocrlf says. gofmt and goimports expect LF, and
+# Windows/WSL checkouts with autocrlf=true otherwise get CRLF in every file,
+# which makes `gofmt -l` and the CI format check flag the whole tree.
+* text=auto eol=lf
